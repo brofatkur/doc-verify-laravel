@@ -23,6 +23,11 @@ class DocumentController extends Controller
         return mt_rand(100000, 900000) . substr(time(), -4);
     }
 
+    private function normalizeKey($key)
+    {
+        return preg_replace('/[^a-z0-9]/', '', strtolower(trim((string)$key)));
+    }
+
     public function store(Request $request)
     {
         $user = Auth::user();
@@ -130,14 +135,14 @@ class DocumentController extends Controller
         $hasLangPair = false;
 
         foreach ($headers as $header) {
-            $h = strtolower(trim($header));
-            if (in_array($h, ['nama_klien', 'nama klien', 'nama di dokumen', 'client_name', 'client name', 'klien'])) {
+            $h = $this->normalizeKey($header);
+            if (in_array($h, ['namaklien', 'namadidokumen', 'clientname', 'klien'])) {
                 $hasClientName = true;
             }
-            if (in_array($h, ['tipe_dokumen', 'tipe dokumen', 'document_type', 'document type', 'tipe'])) {
+            if (in_array($h, ['tipedokumen', 'documenttype', 'tipe'])) {
                 $hasDocType = true;
             }
-            if (in_array($h, ['arah_bahasa', 'arah bahasa', 'pasangan bahasa', 'language_pair', 'language pair', 'bahasa'])) {
+            if (in_array($h, ['arahbahasa', 'pasanganbahasa', 'languagepair', 'bahasa'])) {
                 $hasLangPair = true;
             }
         }
@@ -154,66 +159,69 @@ class DocumentController extends Controller
         $errors = [];
 
         foreach ($rows as $row) {
+            // Normalize row keys
+            $normalizedRow = [];
+            foreach ($row as $k => $v) {
+                $normalizedRow[$this->normalizeKey($k)] = $v;
+            }
+
             // Find key variants in Excel file columns
-            $regNum = trim(
-                $row["no_register"] ??
-                    ($row["No Register"] ??
-                        ($row["no_registrasi"] ??
-                            ($row["No Registrasi"] ??
-                                ($row["Nomor Registrasi"] ??
-                                    ($row["registration_number"] ?? ""))))),
+            $regNum = isset($normalizedRow['noregister']) ? trim((string)$normalizedRow['noregister']) : (
+                isset($normalizedRow['noregistrasi']) ? trim((string)$normalizedRow['noregistrasi']) : (
+                    isset($normalizedRow['nomorregistrasi']) ? trim((string)$normalizedRow['nomorregistrasi']) : (
+                        isset($normalizedRow['registrationnumber']) ? trim((string)$normalizedRow['registrationnumber']) : ''
+                    )
+                )
             );
             if (empty($regNum)) {
                 $regNum = $this->generateRegNumber();
             }
 
-            $rawDate =
-                $row["tanggal"] ??
-                ($row["Tanggal"] ??
-                    ($row["Tanggal Dokumen"] ??
-                        ($row["date"] ??
-                            ($row["Date"] ??
-                                ($row["document_date"] ?? date("Y-m-d"))))));
+            $rawDate = $normalizedRow['tanggal'] ?? (
+                $normalizedRow['tanggaldokumen'] ?? (
+                    $normalizedRow['date'] ?? (
+                        $normalizedRow['documentdate'] ?? date('Y-m-d')
+                    )
+                )
+            );
 
             // Format dates
             $docDate = date(
                 "Y-m-d",
                 is_numeric($rawDate)
                     ? ($rawDate - 25569) * 86400
-                    : strtotime(str_replace("/", "-", $rawDate)),
+                    : strtotime(str_replace("/", "-", (string)$rawDate)),
             );
 
-            $docType = trim(
-                $row["tipe_dokumen"] ??
-                    ($row["Tipe Dokumen"] ??
-                        ($row["document_type"] ??
-                            ($row["Document Type"] ??
-                                ($row["tipe"] ?? "Dokumen Terjemahan")))),
+            $docType = isset($normalizedRow['tipedokumen']) ? trim((string)$normalizedRow['tipedokumen']) : (
+                isset($normalizedRow['documenttype']) ? trim((string)$normalizedRow['documenttype']) : (
+                    isset($normalizedRow['tipe']) ? trim((string)$normalizedRow['tipe']) : 'Dokumen Terjemahan'
+                )
             );
-            $langPair = trim(
-                $row["arah_bahasa"] ??
-                    ($row["Arah Bahasa"] ??
-                        ($row["Pasangan Bahasa"] ??
-                            ($row["language_pair"] ??
-                                ($row["Language Pair"] ??
-                                    ($row["bahasa"] ?? "N/A"))))),
+            
+            $langPair = isset($normalizedRow['arahbahasa']) ? trim((string)$normalizedRow['arahbahasa']) : (
+                isset($normalizedRow['pasanganbahasa']) ? trim((string)$normalizedRow['pasanganbahasa']) : (
+                    isset($normalizedRow['languagepair']) ? trim((string)$normalizedRow['languagepair']) : (
+                        isset($normalizedRow['bahasa']) ? trim((string)$normalizedRow['bahasa']) : 'N/A'
+                    )
+                )
             );
-            $clientName = trim(
-                $row["nama_klien"] ??
-                    ($row["Nama Klien"] ??
-                        ($row["Nama di Dokumen"] ??
-                            ($row["client_name"] ??
-                                ($row["Client Name"] ??
-                                    ($row["klien"] ?? "N/A"))))),
+            
+            $clientName = isset($normalizedRow['namaklien']) ? trim((string)$normalizedRow['namaklien']) : (
+                isset($normalizedRow['namadidokumen']) ? trim((string)$normalizedRow['namadidokumen']) : (
+                    isset($normalizedRow['clientname']) ? trim((string)$normalizedRow['clientname']) : (
+                        isset($normalizedRow['klien']) ? trim((string)$normalizedRow['klien']) : 'N/A'
+                    )
+                )
             );
 
             // Handle QR verification flag
-            $qrRaw =
-                $row["Buat Kode QR Verifikasi"] ??
-                ($row["is_qr_generated"] ?? "Ya");
+            $qrRaw = $normalizedRow['buatkodeqrverifikasi'] ?? (
+                $normalizedRow['isqrgenerated'] ?? 'Ya'
+            );
             $generateQr = is_bool($qrRaw)
                 ? $qrRaw
-                : strtolower(trim($qrRaw)) === "ya";
+                : strtolower(trim((string)$qrRaw)) === "ya";
 
             try {
                 if (Document::where("registration_number", $regNum)->exists()) {
