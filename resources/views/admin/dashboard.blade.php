@@ -234,22 +234,33 @@
             
             <div class="flex items-center gap-3 w-full sm:w-auto">
                 <!-- Excel Import Button -->
-                <div>
-                    <input
-                        type="file"
-                        id="excel-upload-input"
-                        onchange="handleExcelImport(this)"
-                        accept=".xlsx,.xls,.csv"
-                        class="hidden"
-                    />
-                    <label
-                        for="excel-upload-input"
-                        id="btn-import-excel"
-                        class="flex items-center gap-2 border border-slate-200 hover:border-emerald-500 hover:text-emerald-700 bg-white text-gray-700 px-4 py-2.5 rounded-xl font-semibold transition cursor-pointer text-sm shadow-sm"
+                <div class="flex flex-col sm:flex-row items-start sm:items-center gap-2">
+                    <div>
+                        <input
+                            type="file"
+                            id="excel-upload-input"
+                            onchange="handleExcelImport(this)"
+                            accept=".xlsx,.xls,.csv"
+                            class="hidden"
+                        />
+                        <label
+                            for="excel-upload-input"
+                            id="btn-import-excel"
+                            class="flex items-center gap-2 border border-slate-200 hover:border-emerald-500 hover:text-emerald-700 bg-white text-gray-700 px-4 py-2.5 rounded-xl font-semibold transition cursor-pointer text-sm shadow-sm"
+                        >
+                            <i data-lucide="upload" class="w-4 h-4 text-gray-400"></i>
+                            <span>Impor Excel</span>
+                        </label>
+                    </div>
+                    <a
+                        href="/template-impor-dokumen.csv"
+                        download
+                        class="text-xs font-semibold text-emerald-600 hover:text-emerald-700 hover:underline flex items-center gap-1 px-1 py-1"
+                        title="Unduh template Excel/CSV yang benar"
                     >
-                        <i data-lucide="upload" class="w-4 h-4 text-gray-400"></i>
-                        <span>Impor Excel</span>
-                    </label>
+                        <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                        <span>Unduh Template</span>
+                    </a>
                 </div>
 
                 <a
