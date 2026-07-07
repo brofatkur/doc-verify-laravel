@@ -69,6 +69,9 @@
                 @if($errors->any())
                     <div class="bg-rose-500/10 border border-rose-500/20 text-rose-400 p-3.5 rounded-xl text-sm text-center font-medium leading-snug">
                         {{ $errors->first() }}
+                        @if(Illuminate\Support\Str::contains(strtolower($errors->first()), ['salah', 'password', 'invalid']))
+                            <a href="/forgot-password" class="text-emerald-400 hover:text-emerald-350 hover:underline font-bold transition ml-1">Lupa Password?</a>
+                        @endif
                     </div>
                 @endif
 
