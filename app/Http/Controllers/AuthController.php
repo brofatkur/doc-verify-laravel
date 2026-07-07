@@ -193,6 +193,10 @@ class AuthController extends Controller
             return back()->with('status', 'Jika email terdaftar, instruksi reset password telah dikirim.');
         }
 
+        if (str_ends_with($user->email, '@ippti.or.id')) {
+            return back()->withErrors(['email' => 'Akun Anda belum diklaim/diaktifkan. Silakan lakukan pendaftaran terlebih dahulu menggunakan Nomor Anggota Anda.']);
+        }
+
         $token = Str::random(60);
         
         // Save to DB
