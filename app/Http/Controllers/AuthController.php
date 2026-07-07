@@ -292,4 +292,64 @@ class AuthController extends Controller
 
         return view('verify-translator', compact('translator'));
     }
+
+    public function showInstallForm()
+    {
+        try {
+            if (\Illuminate\Support\Facades\Schema::hasTable('users')) {
+                $hasSuperAdmin = User::where('role', 'SUPERADMIN')->exists();
+                if ($hasSuperAdmin) {
+                    return redirect('/login')->withErrors(['email' => 'Super Admin sudah terinstal. Akses konfigurasi /install dinonaktifkan.']);
+                }
+            }
+        } catch (\Exception $e) {
+            // Table might not exist yet, which is fine, we will migrate it on submit
+        }
+
+        return view('auth.install');
+    }
+
+    public function installSuperAdmin(Request $request)
+    {
+        try {
+            \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
+        } catch (\Exception $e) {
+            return back()->withErrors(['email' => 'Gagal menjalankan migrasi database: ' . $e->getMessage()])->withInput();
+        }
+
+        try {
+            $hasSuperAdmin = User::where('role', 'SUPERADMIN')->exists();
+            if ($hasSuperAdmin) {
+                return redirect('/login')->withErrors(['email' => 'Super Admin sudah terinstal. Akses konfigurasi /install dinonaktifkan.']);
+            }
+        } catch (\Exception $e) {
+            return back()->withErrors(['email' => 'Database error: ' . $e->getMessage()])->withInput();
+        }
+
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email',
+            'password' => 'required|string|min:6|confirmed'
+        ], [
+            'name.required' => 'Nama lengkap wajib diisi.',
+            'email.required' => 'Email resmi wajib diisi.',
+            'email.email' => 'Format email tidak valid.',
+            'email.unique' => 'Email ini sudah terdaftar.',
+            'password.required' => 'Password wajib diisi.',
+            'password.min' => 'Password minimal terdiri dari 6 karakter.',
+            'password.confirmed' => 'Konfirmasi password tidak cocok.'
+        ]);
+
+        $user = User::create([
+            'name' => $request->name,
+            'email' => $request->email,
+            'password' => \Illuminate\Support\Facades\Hash::make($request->password),
+            'role' => 'SUPERADMIN',
+            'sk_number' => 'IPPTI-HQ-2026',
+        ]);
+
+        \Illuminate\Support\Facades\Auth::login($user);
+
+        return redirect('/admin')->with('success', 'Instalasi berhasil! Anda telah masuk sebagai Super Admin.');
+    }
 }

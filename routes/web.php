@@ -18,6 +18,10 @@ Route::get('/search-translators', [AuthController::class, 'searchTranslators']);
 Route::get('/verify-translator/{translatorId}', [AuthController::class, 'showPublicTranslator']);
 Route::get('/api/check-member/{memberNo}', [AuthController::class, 'checkMember']);
 
+// Install Super Admin Route
+Route::get('/install', [AuthController::class, 'showInstallForm']);
+Route::post('/install', [AuthController::class, 'installSuperAdmin']);
+
 // Guest Authentication Routes
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'login'])->name('login');
