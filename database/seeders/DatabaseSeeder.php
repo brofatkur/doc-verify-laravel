@@ -57,7 +57,11 @@ class DatabaseSeeder extends Seeder
                 'password' => Hash::make('penerjemah123'),
                 'role' => 'TRANSLATOR',
                 'language_services' => 'Indonesia - Inggris, Inggris - Indonesia, Indonesia - Belanda, Belanda - Indonesia',
-                'bio' => 'AHU-55 AH.03.07.2022 Tanggal 5 Oktober 2022'
+                'bio' => 'AHU-55 AH.03.07.2022 Tanggal 5 Oktober 2022',
+                'no_sk_kemenkum' => 'AHU-55 AH.03.07.2022',
+                'tgl_sk' => '5 Oktober 2022',
+                'masa_aktif' => 'Seumur Hidup',
+                'sk_lengkap' => 'AHU-55 AH.03.07.2022 Tanggal 5 Oktober 2022'
             ]
         );
     }

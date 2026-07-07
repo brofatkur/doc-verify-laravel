@@ -108,10 +108,8 @@
                         </div>
 
                         <!-- Statement Body -->
-                        <div id="statement-body" class="text-slate-300 text-sm font-medium leading-relaxed pt-2 text-left">
-                            <p>
-                                Benar bahwa penerjemah tersumpah atas nama <strong class="text-white font-bold">{{ $translator->name }}</strong> terdaftar resmi sebagai anggota IPPTI dan merupakan penerjemah tersumpah di bawah <strong class="text-white font-bold">Kementerian Hukum dan HAM</strong> sesuai SK nomor <strong class="text-white font-bold">{{ str_replace('Pernyataan verifikasi Kemenkumham: ', '', $translator->bio ?? "AHU-{$translator->sk_number} Tanggal 5 Oktober 2022") }}</strong> dengan arah bahasa <strong class="text-white font-bold">{{ $translator->language_services ?? 'Indonesia - Inggris, Inggris - Indonesia' }}</strong>.
-                            </p>
+                        <div id="statement-body" class="text-slate-300 text-sm font-medium leading-relaxed pt-2 text-left space-y-3">
+                            <!-- Handled dynamically by setLanguage script below on load -->
                         </div>
                     </div>
 
@@ -132,7 +130,7 @@
                             />
                         @else
                             <div class="w-full h-full rounded-xl bg-slate-900 flex flex-col items-center justify-center border border-slate-800/50">
-                                <i data-lucide="user" class="w-16 h-16 text-slate-650"></i>
+                                <i data-lucide="user" class="w-16 h-16 text-slate-655"></i>
                                 <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-2">Foto Resmi</span>
                             </div>
                         @endif
@@ -151,8 +149,12 @@
         lucide.createIcons();
 
         const name = "{{ $translator->name }}";
-        const skDetails = "{{ str_replace('Pernyataan verifikasi Kemenkumham: ', '', $translator->bio ?? "AHU-{$translator->sk_number} Tanggal 5 Oktober 2022") }}";
+        const skNumber = "{{ $translator->sk_number }}";
+        const noSkKemenkum = "{{ $translator->no_sk_kemenkum ?: 'AHU-55 AH.03.07.2022' }}";
+        const tglSk = "{{ $translator->tgl_sk ?: '5 Oktober 2022' }}";
         const languages = "{{ $translator->language_services ?? 'Indonesia - Inggris, Inggris - Indonesia' }}";
+        const masaAktif = "{{ $translator->masa_aktif ?: 'Seumur Hidup' }}";
+        const skLengkap = "{{ $translator->sk_lengkap ?: '' }}";
         const currentYear = "{{ date('Y') }}";
 
         function setLanguage(lang) {
@@ -169,10 +171,29 @@
                 
                 title.innerText = "Hasil Verifikasi Penerjemah Tersumpah";
                 badge.innerText = "Aktif & Terdaftar";
+                
+                let skFullHtml = skLengkap ? `
+                    <div class="col-span-2 border-t border-slate-850 pt-2 mt-1">
+                        <p class="text-[10px] text-slate-500 uppercase tracking-wider font-bold">Keterangan SK Lengkap</p>
+                        <p class="text-slate-300 mt-1 font-medium italic">${skLengkap}</p>
+                    </div>
+                ` : '';
+
                 body.innerHTML = `
                     <p>
-                        Benar bahwa penerjemah tersumpah atas nama <strong class="text-white font-bold">${name}</strong> terdaftar resmi sebagai anggota IPPTI dan merupakan penerjemah tersumpah di bawah <strong class="text-white font-bold">Kementerian Hukum dan HAM</strong> sesuai SK nomor <strong class="text-white font-bold">${skDetails}</strong> dengan arah bahasa <strong class="text-white font-bold">${languages}</strong>.
+                        Benar bahwa penerjemah tersumpah atas nama <strong class="text-white font-bold">${name}</strong> terdaftar resmi sebagai anggota IPPTI dan merupakan penerjemah tersumpah di bawah <strong class="text-white font-bold">Kementerian Hukum dan HAM</strong> sesuai SK nomor <strong class="text-white font-bold">${noSkKemenkum}</strong> yang ditetapkan pada tanggal <strong class="text-white font-bold">${tglSk}</strong>.
                     </p>
+                    <div class="grid grid-cols-2 gap-4 bg-slate-950/60 p-4 border border-slate-800 rounded-2xl text-xs mt-3">
+                        <div>
+                            <p class="text-[10px] text-slate-500 uppercase tracking-wider font-bold">Arah Bahasa</p>
+                            <p class="text-white font-semibold mt-1">${languages}</p>
+                        </div>
+                        <div>
+                            <p class="text-[10px] text-slate-500 uppercase tracking-wider font-bold">Masa Aktif Registrasi</p>
+                            <p class="text-emerald-400 font-bold mt-1">${masaAktif}</p>
+                        </div>
+                        ${skFullHtml}
+                    </div>
                 `;
                 footer.innerHTML = `Kementerian Hukum dan Hak Asasi Manusia Republik Indonesia &copy; Copyright ${currentYear}`;
             } else {
@@ -181,14 +202,38 @@
                 
                 title.innerText = "Sworn Translator Verification Result";
                 badge.innerText = "Active & Registered";
+                
+                let skFullHtml = skLengkap ? `
+                    <div class="col-span-2 border-t border-slate-850 pt-2 mt-1">
+                        <p class="text-[10px] text-slate-500 uppercase tracking-wider font-bold">Decree Full Statement</p>
+                        <p class="text-slate-300 mt-1 font-medium italic">${skLengkap}</p>
+                    </div>
+                ` : '';
+
+                const valMasaAktif = masaAktif === 'Seumur Hidup' ? 'Lifetime' : masaAktif;
+
                 body.innerHTML = `
                     <p>
-                        It is verified that the sworn translator named <strong class="text-white font-bold">${name}</strong> is officially registered as a member of IPPTI and is a sworn translator certified under the <strong class="text-white font-bold">Ministry of Law and Human Rights</strong> of the Republic of Indonesia pursuant to decree number <strong class="text-white font-bold">${skDetails}</strong> with translation language pair(s) <strong class="text-white font-bold">${languages}</strong>.
+                        It is verified that the sworn translator named <strong class="text-white font-bold">${name}</strong> is officially registered as a member of IPPTI and is a sworn translator certified under the <strong class="text-white font-bold">Ministry of Law and Human Rights</strong> of the Republic of Indonesia pursuant to decree number <strong class="text-white font-bold">${noSkKemenkum}</strong> issued on <strong class="text-white font-bold">${tglSk}</strong>.
                     </p>
+                    <div class="grid grid-cols-2 gap-4 bg-slate-950/60 p-4 border border-slate-800 rounded-2xl text-xs mt-3">
+                        <div>
+                            <p class="text-[10px] text-slate-500 uppercase tracking-wider font-bold">Language Pairing</p>
+                            <p class="text-white font-semibold mt-1">${languages}</p>
+                        </div>
+                        <div>
+                            <p class="text-[10px] text-slate-500 uppercase tracking-wider font-bold">Registration Validity</p>
+                            <p class="text-emerald-400 font-bold mt-1">${valMasaAktif}</p>
+                        </div>
+                        ${skFullHtml}
+                    </div>
                 `;
                 footer.innerHTML = `Ministry of Law and Human Rights of the Republic of Indonesia &copy; Copyright ${currentYear}`;
             }
         }
+
+        // Run setLanguage on load
+        setLanguage('id');
     </script>
 </body>
 </html>

@@ -26,6 +26,10 @@ class User extends Authenticatable
         'language_services',
         'bio',
         'profile_picture',
+        'no_sk_kemenkum',
+        'tgl_sk',
+        'masa_aktif',
+        'sk_lengkap',
     ];
 
     /**

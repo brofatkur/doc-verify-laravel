@@ -22,6 +22,10 @@ return new class extends Migration
             $table->text('language_services')->nullable();
             $table->text('bio')->nullable();
             $table->string('profile_picture')->nullable();
+            $table->string('no_sk_kemenkum')->nullable();
+            $table->string('tgl_sk')->nullable();
+            $table->string('masa_aktif')->nullable();
+            $table->text('sk_lengkap')->nullable();
             $table->rememberToken();
             $table->timestamps();
         });
