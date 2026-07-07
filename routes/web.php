@@ -9,6 +9,9 @@ use App\Http\Controllers\AdminController;
 Route::get('/', function () {
     return view('home');
 });
+Route::get('/verify-translator', function () {
+    return view('verify-translator-search');
+});
 Route::get('/search', [DocumentController::class, 'search']);
 Route::get('/verify/{documentId}', [DocumentController::class, 'showPublicVerify']);
 Route::get('/search-translators', [AuthController::class, 'searchTranslators']);

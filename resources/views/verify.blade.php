@@ -25,11 +25,12 @@
         body {
             font-family: "Plus Jakarta Sans", sans-serif;
         }
+        .dir-ltr { direction: ltr !important; }
     </style>
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
 </head>
-<body class="bg-slate-50 text-slate-900 min-h-screen flex flex-col items-center justify-between p-4 sm:p-8 selection:bg-emerald-500 selection:text-slate-950">
+<body id="body-layout" class="bg-slate-50 text-slate-900 min-h-screen flex flex-col items-center justify-between p-4 sm:p-8 selection:bg-emerald-500 selection:text-slate-950">
 
     @if(!$document)
         <!-- Document Not Found Container -->
@@ -55,7 +56,7 @@
                 <img src="/ippti-logo.jpg" alt="IPPTI Logo" class="h-10 w-auto rounded bg-white p-0.5 object-contain shadow-sm" />
                 <span class="text-xl font-bold text-slate-900 tracking-tight">DocVerify</span>
             </div>
-            <p class="text-xs text-slate-500 font-medium">Portal Verifikasi Resmi Terjemahan Tersumpah</p>
+            <p id="sub-header-portal" class="text-xs text-slate-500 font-medium">Portal Verifikasi Resmi Terjemahan Tersumpah</p>
         </div>
 
         <!-- Verification Card -->
@@ -64,25 +65,15 @@
             <div class="px-6 py-3.5 bg-slate-900 border-b border-slate-800 flex items-center justify-between text-white">
                 <div class="flex items-center gap-2">
                     <i data-lucide="shield-check" class="w-4 h-4 text-emerald-400"></i>
-                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest font-mono">
+                    <span id="label-credentials" class="text-[10px] font-bold text-slate-400 uppercase tracking-widest font-mono">
                         Document Credentials
                     </span>
                 </div>
-                <div class="flex bg-slate-800 p-0.5 rounded-lg border border-slate-700">
-                    <button
-                        id="lang-id-btn"
-                        onclick="setLanguage('id')"
-                        class="px-2.5 py-0.5 rounded-md text-[9px] font-extrabold tracking-wider transition cursor-pointer bg-emerald-600 text-white shadow-sm"
-                    >
-                        INDONESIA
-                    </button>
-                    <button
-                        id="lang-en-btn"
-                        onclick="setLanguage('en')"
-                        class="px-2.5 py-0.5 rounded-md text-[9px] font-extrabold tracking-wider transition cursor-pointer text-slate-400 hover:text-slate-200"
-                    >
-                        ENGLISH
-                    </button>
+                <div class="flex bg-slate-800 p-0.5 rounded-lg border border-slate-700 dir-ltr" dir="ltr">
+                    <button onclick="changeLanguage('id')" id="lang-id" class="px-2 py-0.5 rounded text-[9px] font-extrabold tracking-wider transition cursor-pointer text-slate-400 hover:text-slate-200">ID</button>
+                    <button onclick="changeLanguage('en')" id="lang-en" class="px-2 py-0.5 rounded text-[9px] font-extrabold tracking-wider transition cursor-pointer text-slate-400 hover:text-slate-200">EN</button>
+                    <button onclick="changeLanguage('zh')" id="lang-zh" class="px-2 py-0.5 rounded text-[9px] font-extrabold tracking-wider transition cursor-pointer text-slate-400 hover:text-slate-200">ZH</button>
+                    <button onclick="changeLanguage('ar')" id="lang-ar" class="px-2 py-0.5 rounded text-[9px] font-extrabold tracking-wider transition cursor-pointer text-slate-400 hover:text-slate-200">AR</button>
                 </div>
             </div>
 
@@ -92,7 +83,7 @@
                 <div class="absolute inset-0 bg-gradient-to-b from-white/10 to-transparent"></div>
                 
                 <div class="relative z-10 space-y-3">
-                    <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto shadow-md ring-4 ring-emerald-500/30">
+                    <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto shadow-md ring-4 ring-emerald-500/30 animate-pulse">
                         <i data-lucide="check-circle-2" class="w-10 h-10 text-emerald-600"></i>
                     </div>
                     <div>
@@ -104,7 +95,7 @@
 
             <!-- Details list -->
             <div class="p-6 sm:p-8 space-y-6 text-left">
-                <div class="flex flex-col sm:flex-row gap-4 border-b border-slate-100 pb-6">
+                <div id="section-meta-row" class="flex flex-col sm:flex-row gap-4 border-b border-slate-100 pb-6">
                     <div class="flex-1">
                         <p id="label-doc-id" class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">ID Dokumen</p>
                         <p class="text-lg font-mono font-bold text-slate-900">{{ $document->document_id }}</p>
@@ -118,9 +109,7 @@
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-y-6 gap-x-4">
                     <div>
                         <p id="label-date" class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Tanggal Terjemah</p>
-                        <p id="value-date" class="text-base font-semibold text-slate-800">
-                            {{ $document->document_date->translatedFormat('d F Y') }}
-                        </p>
+                        <p id="value-date" class="text-base font-semibold text-slate-800"></p>
                     </div>
 
                     <div>
@@ -128,21 +117,24 @@
                         <div>
                             <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-100 shadow-sm">
                                 <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                                <span id="value-status">{{ $document->status }}</span>
+                                <span id="value-status"></span>
                             </span>
                         </div>
                     </div>
 
                     <div class="sm:col-span-2">
                         <p id="label-client" class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Nama di Dokumen (Disamarkan)</p>
-                        <p class="text-base font-mono font-bold text-slate-900 mt-1 bg-slate-50 border border-slate-200/80 p-3 rounded-xl select-none tracking-wide">
+                        <p class="text-base font-mono font-bold text-slate-900 mt-1 bg-slate-50 border border-slate-200/80 p-3 rounded-xl select-none tracking-wide text-center">
                             @php
-                                $words = explode(' ', $document->client_name);
-                                $masked = array_map(function($w) {
-                                    return strlen($w) <= 1 ? $w : $w[0] . str_repeat('*', strlen($w) - 1);
-                                }, $words);
-                                echo implode(' ', $masked);
+                                $masked = '';
+                                if ($document->client_name) {
+                                    $masked = implode(" ", array_map(function($word) {
+                                        if (strlen($word) <= 1) return $word;
+                                        return $word[0] . str_repeat("*", strlen($word) - 1);
+                                    }, explode(" ", $document->client_name)));
+                                }
                             @endphp
+                            {{ $masked }}
                         </p>
                     </div>
 
@@ -172,7 +164,7 @@
                                 </div>
                                 <div class="overflow-hidden">
                                     <p class="text-base font-bold text-slate-900 truncate">{{ $document->translator->name }}</p>
-                                    <p id="label-translator-member" class="text-xs text-slate-500 font-mono mt-0.5">No. Anggota: {{ $document->translator->sk_number }}</p>
+                                    <p id="label-translator-member" class="text-xs text-slate-500 font-mono mt-0.5"></p>
                                 </div>
                             </div>
                             @if($document->translator->language_services)
@@ -184,7 +176,7 @@
                             @if($document->translator->bio)
                                 <div class="text-xs border-t border-slate-100/85 pt-3">
                                     <span id="label-bio" class="font-bold text-slate-400 uppercase tracking-wider block mb-1">Biografi:</span>
-                                    <p class="text-slate-600 leading-relaxed italic text-justify">"{{ $document->translator->bio }}"</p>
+                                    <p class="text-slate-600 leading-relaxed italic">"{{ $document->translator->bio }}"</p>
                                 </div>
                             @endif
                         </div>
@@ -193,12 +185,9 @@
             </div>
 
             <!-- Secure Disclaimer box -->
-            <div id="div-disclaimer-box" class="bg-amber-50/40 p-6 border-t border-slate-100 border-l-4 border-l-amber-500 text-left">
+            <div class="bg-amber-50/40 p-6 border-t border-slate-100 border-l-4 border-l-amber-500 text-left">
                 <div class="flex items-start gap-3">
-                    <i data-lucide="shield-alert" class="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5"></i>
-                    <p id="label-disclaimer" class="text-xs text-slate-600 leading-relaxed text-justify">
-                        <strong class="text-slate-800 font-bold">Disclaimer Resmi:</strong> Sistem ini memverifikasi bahwa terjemahan dokumen ini telah resmi terdaftar oleh Penerjemah Tersumpah yang terasosiasi di atas. Harap pastikan fisik dokumen memiliki cap basah/segel pengaman yang sesuai untuk validitas hukum sepenuhnya.
-                    </p>
+                    <p id="label-disclaimer" class="text-xs text-slate-600 leading-relaxed text-justify"></p>
                 </div>
             </div>
         </div>
@@ -207,7 +196,7 @@
     <!-- Bottom Credit -->
     <div class="text-center text-[10px] text-slate-400 uppercase tracking-widest space-y-1 py-4">
         <p>&copy; {{ date('Y') }} DocVerify IPPTI. Seluruh Hak Cipta Dilindungi.</p>
-        <p id="label-bottom-credit" class="font-semibold text-slate-400">DIVERIFIKASI SECARA ELEKTRONIK & KRIPTOGRAFIS</p>
+        <p id="label-bottom-credit" class="font-semibold text-slate-400"></p>
     </div>
 
     <script>
@@ -218,10 +207,102 @@
         const statusId = "{{ $document ? $document->status : '' }}";
         const memberNo = "{{ $document ? $document->translator->sk_number : '' }}";
 
-        function setLanguage(lang) {
-            const btnId = document.getElementById('lang-id-btn');
-            const btnEn = document.getElementById('lang-en-btn');
+        const translations = {
+            id: {
+                credentials: "Document Credentials",
+                verified: "TERVERIFIKASI",
+                record: "Rekam Dokumen Resmi IPPTI",
+                doc_id: "ID Dokumen",
+                reg_no: "No. Registrasi",
+                trans_date: "Tanggal Terjemah",
+                status: "Status Verifikasi",
+                masked_name: "Nama di Dokumen (Disamarkan)",
+                lang_pair: "Pasangan Bahasa",
+                doc_type: "Tipe Dokumen",
+                translator: "Penerjemah Tersumpah",
+                member_id: "No. Anggota: " + memberNo,
+                services: "Layanan Bahasa:",
+                bio: "Biografi:",
+                disclaimer: `<strong class="text-slate-800 font-bold">Disclaimer Resmi:</strong> Sistem ini memverifikasi bahwa terjemahan dokumen ini telah resmi terdaftar oleh Penerjemah Tersumpah yang terasosiasi di atas. Harap pastikan fisik dokumen memiliki cap basah/segel pengaman yang sesuai untuk validitas hukum sepenuhnya.`,
+                bottom_credit: "DIVERIFIKASI SECARA ELEKTRONIK & KRIPTOGRAFIS",
+                sub_portal: "Portal Verifikasi Resmi Terjemahan Tersumpah"
+            },
+            en: {
+                credentials: "Document Credentials",
+                verified: "VERIFIED",
+                record: "IPPTI Official Document Record",
+                doc_id: "Document ID",
+                reg_no: "Registration No.",
+                trans_date: "Translation Date",
+                status: "Verification Status",
+                masked_name: "Name on Document (Masked)",
+                lang_pair: "Language Pair",
+                doc_type: "Document Type",
+                translator: "Sworn Translator",
+                member_id: "Member ID: " + memberNo,
+                services: "Language Services:",
+                bio: "Biography:",
+                disclaimer: `<strong class="text-slate-800 font-bold">Official Disclaimer:</strong> This system verifies that the translation of this document has been officially registered by the sworn translator associated above. Please ensure that the physical document bears the appropriate wet stamp or security seal for full legal validity.`,
+                bottom_credit: "ELECTRONICALLY & CRYPTOGRAPHICALLY VERIFIED",
+                sub_portal: "Official Sworn Translation Verification Portal"
+            },
+            zh: {
+                credentials: "文件凭证",
+                verified: "已验证",
+                record: "IPPTI 官方文件记录",
+                doc_id: "文件 ID",
+                reg_no: "注册号",
+                trans_date: "翻译日期",
+                status: "验证状态",
+                masked_name: "文件姓名（已遮蔽）",
+                lang_pair: "语言对",
+                doc_type: "文件类型",
+                translator: "宣誓翻译员",
+                member_id: "成员 ID: " + memberNo,
+                services: "语言服务:",
+                bio: "个人简介:",
+                disclaimer: `<strong class="text-slate-800 font-bold">官方免责声明:</strong> 此系统验证此文件的翻译已由上述关联的宣誓翻译员正式注册。请确保纸质文件上有相应的湿盖章或安全封条，以具备完全的法律效力。`,
+                bottom_credit: "经过电子与密码学验证",
+                sub_portal: "官方宣誓翻译验证门户"
+            },
+            ar: {
+                credentials: "وثائق المستند",
+                verified: "تم التحقق",
+                record: "سجل المستندات الرسمي لـ IPPTI",
+                doc_id: "معرف المستند",
+                reg_no: "رقم التسجيل",
+                trans_date: "تاريخ الترجمة",
+                status: "حالة التحقق",
+                masked_name: "الاسم على المستند (مخفي)",
+                lang_pair: "زوج اللغات",
+                doc_type: "نوع المستند",
+                translator: "مترجم محلف",
+                member_id: "رقم العضوية: " + memberNo,
+                services: "خدمات اللغة:",
+                bio: "السيرة الذاتية:",
+                disclaimer: `<strong class="text-slate-800 font-bold">إخلاء مسؤولية رسمي:</strong> يتحقق هذا النظام من أن ترجمة هذا المستند قد تم تسجيلها رسمياً بواسطة المترجم المحلف المرتبط أعلاه. يرجى التأكد من أن المستند المادي يحمل الختم المائي أو الختم الأمني المناسب للصلاحية القانونية الكاملة.`,
+                bottom_credit: "تم التحقق منه إلكترونياً وتشفيرياً",
+                sub_portal: "البوابة الرسمية للتحقق من الترجمة المحلفة"
+            }
+        };
 
+        let currentLang = localStorage.getItem('docverify_lang') || 'id';
+
+        function changeLanguage(lang) {
+            currentLang = lang;
+            localStorage.setItem('docverify_lang', lang);
+            updateUILanguage();
+        }
+
+        function updateUILanguage() {
+            const t = translations[currentLang];
+            const isRtl = currentLang === 'ar';
+
+            // Set layout direction
+            const bodyLayout = document.getElementById('body-layout');
+            bodyLayout.dir = isRtl ? 'rtl' : 'ltr';
+
+            // Update text nodes
             const labelVerifiedTitle = document.getElementById('label-verified-title');
             const labelVerifiedSub = document.getElementById('label-verified-sub');
             const labelDocId = document.getElementById('label-doc-id');
@@ -239,57 +320,44 @@
             const labelBio = document.getElementById('label-bio');
             const labelDisclaimer = document.getElementById('label-disclaimer');
             const labelBottomCredit = document.getElementById('label-bottom-credit');
+            const subPortal = document.getElementById('sub-header-portal');
+            const labelCredentials = document.getElementById('label-credentials');
 
-            if (lang === 'id') {
-                btnId.className = "px-2.5 py-0.5 rounded-md text-[9px] font-extrabold tracking-wider transition cursor-pointer bg-emerald-600 text-white shadow-sm";
-                btnEn.className = "px-2.5 py-0.5 rounded-md text-[9px] font-extrabold tracking-wider transition cursor-pointer text-slate-400 hover:text-slate-200";
+            if (subPortal) subPortal.innerText = t.sub_portal;
+            if (labelCredentials) labelCredentials.innerText = t.credentials;
+            if (labelVerifiedTitle) labelVerifiedTitle.innerText = t.verified;
+            if (labelVerifiedSub) labelVerifiedSub.innerText = t.record;
+            if (labelDocId) labelDocId.innerText = t.doc_id;
+            if (labelRegNo) labelRegNo.innerText = t.reg_no;
+            if (labelDate) labelDate.innerText = t.trans_date;
+            if (valueDate) valueDate.innerText = currentLang === 'id' ? dateId : dateEn;
+            if (labelStatus) labelStatus.innerText = t.status;
+            if (valueStatus) valueStatus.innerText = currentLang === 'id' ? statusId : 'Active / Valid';
+            if (labelClient) labelClient.innerText = t.masked_name;
+            if (labelPair) labelPair.innerText = t.lang_pair;
+            if (labelType) labelType.innerText = t.doc_type;
+            if (labelTranslator) labelTranslator.innerText = t.translator;
+            if (labelTranslatorMember) labelTranslatorMember.innerText = t.member_id;
+            if (labelServices) labelServices.innerText = t.services;
+            if (labelBio) labelBio.innerText = t.bio;
+            if (labelDisclaimer) labelDisclaimer.innerHTML = t.disclaimer;
+            if (labelBottomCredit) labelBottomCredit.innerText = t.bottom_credit;
 
-                if (labelVerifiedTitle) labelVerifiedTitle.innerText = "TERVERIFIKASI";
-                if (labelVerifiedSub) labelVerifiedSub.innerText = "Rekam Dokumen Resmi IPPTI";
-                if (labelDocId) labelDocId.innerText = "ID Dokumen";
-                if (labelRegNo) labelRegNo.innerText = "No. Registrasi";
-                if (labelDate) labelDate.innerText = "Tanggal Terjemah";
-                if (valueDate) valueDate.innerText = dateId;
-                if (labelStatus) labelStatus.innerText = "Status Verifikasi";
-                if (valueStatus) valueStatus.innerText = statusId;
-                if (labelClient) labelClient.innerText = "Nama di Dokumen (Disamarkan)";
-                if (labelPair) labelPair.innerText = "Pasangan Bahasa";
-                if (labelType) labelType.innerText = "Tipe Dokumen";
-                if (labelTranslator) labelTranslator.innerText = "Penerjemah Tersumpah";
-                if (labelTranslatorMember) labelTranslatorMember.innerText = "No. Anggota: " + memberNo;
-                if (labelServices) labelServices.innerText = "Layanan Bahasa:";
-                if (labelBio) labelBio.innerText = "Biografi:";
-                if (labelDisclaimer) {
-                    labelDisclaimer.innerHTML = `<strong class="text-slate-800 font-bold">Disclaimer Resmi:</strong> Sistem ini memverifikasi bahwa terjemahan dokumen ini telah resmi terdaftar oleh Penerjemah Tersumpah yang terasosiasi di atas. Harap pastikan fisik dokumen memiliki cap basah/segel pengaman yang sesuai untuk validitas hukum sepenuhnya.`;
+            // Highlight language button
+            ['id', 'en', 'zh', 'ar'].forEach(l => {
+                const btn = document.getElementById(`lang-${l}`);
+                if (btn) {
+                    if (l === currentLang) {
+                        btn.className = "px-2 py-0.5 rounded text-[9px] font-extrabold tracking-wider transition cursor-pointer bg-emerald-600 text-white shadow-sm";
+                    } else {
+                        btn.className = "px-2 py-0.5 rounded text-[9px] font-extrabold tracking-wider transition cursor-pointer text-slate-400 hover:text-slate-205";
+                    }
                 }
-                if (labelBottomCredit) labelBottomCredit.innerText = "DIVERIFIKASI SECARA ELEKTRONIK & KRIPTOGRAFIS";
-            } else {
-                btnEn.className = "px-2.5 py-0.5 rounded-md text-[9px] font-extrabold tracking-wider transition cursor-pointer bg-emerald-600 text-white shadow-sm";
-                btnId.className = "px-2.5 py-0.5 rounded-md text-[9px] font-extrabold tracking-wider transition cursor-pointer text-slate-400 hover:text-slate-200";
-
-                if (labelVerifiedTitle) labelVerifiedTitle.innerText = "VERIFIED";
-                if (labelVerifiedSub) labelVerifiedSub.innerText = "IPPTI Official Document Record";
-                if (labelDocId) labelDocId.innerText = "Document ID";
-                if (labelRegNo) labelRegNo.innerText = "Registration No.";
-                if (labelDate) labelDate.innerText = "Translation Date";
-                if (valueDate) valueDate.innerText = dateEn;
-                if (labelStatus) labelStatus.innerText = "Verification Status";
-                if (valueStatus) valueStatus.innerText = "Active / Valid";
-                if (labelClient) labelClient.innerText = "Name on Document (Masked)";
-                if (labelPair) labelPair.innerText = "Language Pair";
-                if (labelType) labelType.innerText = "Document Type";
-                if (labelTranslator) labelTranslator.innerText = "Sworn Translator";
-                if (labelTranslatorMember) labelTranslatorMember.innerText = "Member ID: " + memberNo;
-                if (labelServices) labelServices.innerText = "Language Services:";
-                if (labelBio) labelBio.innerText = "Biography:";
-                if (labelDisclaimer) {
-                    labelDisclaimer.innerHTML = `<strong class="text-slate-800 font-bold">Official Disclaimer:</strong> This system verifies that the translation of this document has been officially registered by the sworn translator associated above. Please ensure that the physical document bears the appropriate wet stamp or security seal for full legal validity.`;
-                }
-                if (labelBottomCredit) labelBottomCredit.innerText = "ELECTRONICALLY & CRYPTOGRAPHICALLY VERIFIED";
-            }
+            });
         }
+
+        // Initialize UI
+        updateUILanguage();
     </script>
-</body>
-</html>
 </body>
 </html>
