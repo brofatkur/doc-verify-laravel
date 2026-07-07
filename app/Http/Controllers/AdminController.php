@@ -210,12 +210,20 @@ class AdminController extends Controller
             $noAnggota = trim($t['no_anggota'] ?? '');
             $nama = trim($t['name'] ?? '');
             $email = trim($t['email'] ?? '');
-            $sk = trim($t['sk'] ?? '');
-            $arahBahasa = trim($t['arah_bahasa'] ?? '');
+            if (empty($email) && !empty($noAnggota)) {
+                $email = $noAnggota . '@ippti.or.id';
+            }
 
-            if (empty($noAnggota) || empty($nama) || empty($email)) {
+            $noSkKemenkum = trim($t['no_sk_kemenkum'] ?? '');
+            $tglSk = trim($t['tgl_sk'] ?? '');
+            $arahBahasa = trim($t['arah_bahasa'] ?? '');
+            $masaAktif = trim($t['masa_aktif'] ?? '');
+            $urlFoto = trim($t['url_foto'] ?? '');
+            $skLengkap = trim($t['sk_lengkap'] ?? '');
+
+            if (empty($noAnggota) || empty($nama)) {
                 $skippedCount++;
-                $errors[] = "Baris dilewati: Data No Anggota, Nama, atau Email kosong.";
+                $errors[] = "Baris dilewati: Data No Anggota atau Nama kosong.";
                 continue;
             }
 
@@ -238,7 +246,12 @@ class AdminController extends Controller
                     'password' => $defaultPasswordHash,
                     'role' => 'TRANSLATOR',
                     'language_services' => $arahBahasa ?: null,
-                    'bio' => "Pernyataan verifikasi Kemenkumham: SK nomor " . ($sk ?: 'AHU-' . $noAnggota),
+                    'bio' => $skLengkap ?: "Pernyataan verifikasi Kemenkumham: SK nomor " . ($noSkKemenkum ?: 'AHU-' . $noAnggota),
+                    'no_sk_kemenkum' => $noSkKemenkum ?: null,
+                    'tgl_sk' => $tglSk ?: null,
+                    'masa_aktif' => $masaAktif ?: null,
+                    'sk_lengkap' => $skLengkap ?: null,
+                    'profile_picture' => $urlFoto ?: null,
                 ]);
                 $importedCount++;
             } catch (\Exception $e) {

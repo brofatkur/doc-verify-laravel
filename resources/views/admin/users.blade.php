@@ -289,17 +289,19 @@
             <div class="space-y-2">
                 <p class="text-xs font-bold text-slate-500 uppercase tracking-wider">Tampilan 5 Baris Pertama:</p>
                 <div class="border border-slate-200/80 rounded-xl overflow-hidden bg-slate-50/50">
-                    <table class="w-full text-left text-xs">
+                    <table class="w-full text-left text-[10px]">
                         <thead class="bg-slate-100 border-b border-slate-200">
                             <tr>
-                                <th class="px-4 py-2.5 font-bold text-slate-650">No. Anggota</th>
-                                <th class="px-4 py-2.5 font-bold text-slate-650">Nama</th>
-                                <th class="px-4 py-2.5 font-bold text-slate-650">Email</th>
-                                <th class="px-4 py-2.5 font-bold text-slate-650">No SK Kemenkumham</th>
-                                <th class="px-4 py-2.5 font-bold text-slate-650">Arah Bahasa</th>
+                                <th class="px-3 py-2 font-bold text-slate-650">No. Anggota</th>
+                                <th class="px-3 py-2 font-bold text-slate-650">Nama</th>
+                                <th class="px-3 py-2 font-bold text-slate-650">No SK Kemenkum</th>
+                                <th class="px-3 py-2 font-bold text-slate-650">Tanggal SK</th>
+                                <th class="px-3 py-2 font-bold text-slate-650">Arah Bahasa</th>
+                                <th class="px-3 py-2 font-bold text-slate-650">Masa Aktif</th>
+                                <th class="px-3 py-2 font-bold text-slate-650">SK Lengkap</th>
                             </tr>
                         </thead>
-                        <tbody id="excel-preview-tbody" class="divide-y divide-slate-200 bg-white">
+                        <tbody id="excel-preview-tbody" class="divide-y divide-slate-100 bg-white">
                         </tbody>
                     </table>
                 </div>
@@ -469,15 +471,19 @@
                 const headers = rawJson[0].map(h => String(h || '').toLowerCase().replace(/[^a-z0-9]/g, ''));
                 
                 const noAnggotaIdx = headers.findIndex(h => h === 'noanggota' || h === 'no_anggota' || h === 'nomoranggota');
-                const nameIdx = headers.findIndex(h => h === 'nama' || h === 'name' || h === 'namapenerjemah');
+                const nameIdx = headers.findIndex(h => h === 'namapenerjemah' || h === 'nama' || h === 'name');
                 const emailIdx = headers.findIndex(h => h === 'email' || h === 'surel');
-                const skIdx = headers.findIndex(h => h === 'sk' || h === 'nomorsk' || h === 'nosk');
+                const noSkKemenkumIdx = headers.findIndex(h => h === 'noskkemenkum' || h === 'no_sk_kemenkum' || h === 'skkemenkumham');
+                const tglSkIdx = headers.findIndex(h => h === 'tglsk' || h === 'tgl_sk' || h === 'tanggalsk');
                 const arahBahasaIdx = headers.findIndex(h => h === 'arahbahasa' || h === 'arah_bahasa' || h === 'bahasa');
+                const masaAktifIdx = headers.findIndex(h => h === 'masaaktif' || h === 'masa_aktif');
+                const urlFotoIdx = headers.findIndex(h => h === 'urlfoto' || h === 'url_foto' || h === 'profilepicture');
+                const skLengkapIdx = headers.findIndex(h => h === 'sklengkap' || h === 'sk_lengkap' || h === 'bio');
 
                 const warningCard = document.getElementById('excel-warning-card');
                 const confirmBtn = document.getElementById('excel-confirm-btn');
 
-                if (noAnggotaIdx === -1 || nameIdx === -1 || emailIdx === -1) {
+                if (noAnggotaIdx === -1 || nameIdx === -1) {
                     warningCard.classList.remove('hidden');
                     confirmBtn.setAttribute('disabled', 'disabled');
                     confirmBtn.className = "px-5 py-2 bg-slate-350 text-slate-500 rounded-xl text-xs font-bold cursor-not-allowed flex items-center gap-2";
@@ -500,21 +506,27 @@
                     const rowData = {
                         no_anggota: String(row[noAnggotaIdx] || '').trim(),
                         name: String(row[nameIdx] || '').trim(),
-                        email: String(row[emailIdx] || '').trim(),
-                        sk: skIdx !== -1 ? String(row[skIdx] || '').trim() : '',
+                        email: emailIdx !== -1 ? String(row[emailIdx] || '').trim() : '',
+                        no_sk_kemenkum: noSkKemenkumIdx !== -1 ? String(row[noSkKemenkumIdx] || '').trim() : '',
+                        tgl_sk: tglSkIdx !== -1 ? String(row[tglSkIdx] || '').trim() : '',
                         arah_bahasa: arahBahasaIdx !== -1 ? String(row[arahBahasaIdx] || '').trim() : '',
+                        masa_aktif: masaAktifIdx !== -1 ? String(row[masaAktifIdx] || '').trim() : '',
+                        url_foto: urlFotoIdx !== -1 ? String(row[urlFotoIdx] || '').trim() : '',
+                        sk_lengkap: skLengkapIdx !== -1 ? String(row[skLengkapIdx] || '').trim() : '',
                     };
 
                     parsedTranslators.push(rowData);
 
                     if (previewRowsCount < 5) {
                         previewTbody.innerHTML += `
-                            <tr>
-                                <td class="px-4 py-2">${rowData.no_anggota}</td>
-                                <td class="px-4 py-2 font-bold">${rowData.name}</td>
-                                <td class="px-4 py-2">${rowData.email}</td>
-                                <td class="px-4 py-2">${rowData.sk || '-'}</td>
-                                <td class="px-4 py-2 font-medium text-slate-700">${rowData.arah_bahasa || '-'}</td>
+                            <tr class="hover:bg-slate-50/50">
+                                <td class="px-3 py-2 font-mono text-[9px] text-slate-700 truncate max-w-[80px]">${rowData.no_anggota}</td>
+                                <td class="px-3 py-2 text-slate-800 font-bold truncate max-w-[100px]">${rowData.name}</td>
+                                <td class="px-3 py-2 text-slate-600 truncate max-w-[100px]">${rowData.no_sk_kemenkum || '-'}</td>
+                                <td class="px-3 py-2 text-slate-650 truncate max-w-[80px]">${rowData.tgl_sk || '-'}</td>
+                                <td class="px-3 py-2 text-slate-600 truncate max-w-[90px]">${rowData.arah_bahasa || '-'}</td>
+                                <td class="px-3 py-2 text-slate-550 truncate max-w-[70px]">${rowData.masa_aktif || '-'}</td>
+                                <td class="px-3 py-2 text-slate-500 truncate max-w-[100px]">${rowData.sk_lengkap || '-'}</td>
                             </tr>
                         `;
                         previewRowsCount++;
