@@ -36,5 +36,29 @@ class DatabaseSeeder extends Seeder
                 'role' => 'SUPERADMIN'
             ]
         );
+
+        // Seed IPPTI Board Admin User
+        User::updateOrCreate(
+            ['email' => 'admin@example.com'],
+            [
+                'name' => 'IPPTI Admin Staff',
+                'sk_number' => 'IPPTI-ADMIN-01',
+                'password' => Hash::make('admin123'),
+                'role' => 'ADMIN'
+            ]
+        );
+
+        // Seed Muhammad Arifin Sworn Translator User
+        User::updateOrCreate(
+            ['email' => 'arifin@example.com'],
+            [
+                'name' => 'Muhammad Arifin',
+                'sk_number' => '25004',
+                'password' => Hash::make('penerjemah123'),
+                'role' => 'TRANSLATOR',
+                'language_services' => 'Indonesia - Inggris, Inggris - Indonesia, Indonesia - Belanda, Belanda - Indonesia',
+                'bio' => 'AHU-55 AH.03.07.2022 Tanggal 5 Oktober 2022'
+            ]
+        );
     }
 }

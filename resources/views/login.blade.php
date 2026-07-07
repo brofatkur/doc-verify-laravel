@@ -90,9 +90,14 @@
                 </div>
 
                 <div>
-                    <label for="password" class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
-                        Password
-                    </label>
+                    <div class="flex justify-between items-center mb-2">
+                        <label for="password" class="block text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                            Password
+                        </label>
+                        <a href="/forgot-password" class="text-xs font-semibold text-emerald-400 hover:text-emerald-350 hover:underline transition">
+                            Lupa Password?
+                        </a>
+                    </div>
                     <div class="mt-1 relative">
                         <input
                             id="password"

@@ -83,22 +83,30 @@
         <!-- Tab Container -->
         <div class="w-full max-w-md bg-slate-900/80 backdrop-blur-2xl border border-slate-800/80 rounded-2xl shadow-2xl p-6 sm:p-8">
             <!-- Tabs -->
-            <div class="flex border-b border-slate-800 pb-3.5 mb-6">
+            <div class="flex border-b border-slate-800 pb-3.5 mb-6 overflow-x-auto gap-2 scrollbar-none">
                 <button
                     id="btn-tab-search"
                     onclick="switchTab('search')"
-                    class="flex-1 flex items-center justify-center gap-2.5 pb-3 text-sm font-semibold border-b-2 border-emerald-400 text-emerald-400 transition-all duration-200 cursor-pointer"
+                    class="flex-1 flex items-center justify-center gap-2 pb-3 text-xs font-semibold border-b-2 border-emerald-400 text-emerald-400 transition-all duration-200 cursor-pointer flex-shrink-0 whitespace-nowrap"
                 >
-                    <i data-lucide="search" class="w-4 h-4"></i>
-                    <span>Verifikasi via Nomor</span>
+                    <i data-lucide="search" class="w-3.5 h-3.5"></i>
+                    <span>Nomor Registrasi</span>
                 </button>
                 <button
                     id="btn-tab-scan"
                     onclick="switchTab('scan')"
-                    class="flex-1 flex items-center justify-center gap-2.5 pb-3 text-sm font-semibold border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition-all duration-200 cursor-pointer"
+                    class="flex-1 flex items-center justify-center gap-2 pb-3 text-xs font-semibold border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition-all duration-200 cursor-pointer flex-shrink-0 whitespace-nowrap"
                 >
-                    <i data-lucide="qr-code" class="w-4 h-4"></i>
-                    <span>Pindai Kode QR</span>
+                    <i data-lucide="qr-code" class="w-3.5 h-3.5"></i>
+                    <span>Pindai QR</span>
+                </button>
+                <button
+                    id="btn-tab-translator"
+                    onclick="switchTab('translator')"
+                    class="flex-1 flex items-center justify-center gap-2 pb-3 text-xs font-semibold border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition-all duration-200 cursor-pointer flex-shrink-0 whitespace-nowrap"
+                >
+                    <i data-lucide="award" class="w-3.5 h-3.5"></i>
+                    <span>Cari Penerjemah</span>
                 </button>
             </div>
 
@@ -127,7 +135,7 @@
                             type="text"
                             required
                             placeholder="Contoh: REG-Belanda-001 atau VFY7A8B9"
-                            class="w-full pl-4 pr-12 py-3.5 border border-slate-800 rounded-xl bg-slate-950/60 text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500 text-sm font-semibold uppercase tracking-wide transition-all duration-200"
+                            class="w-full pl-4 pr-12 py-3.5 border border-slate-800 rounded-xl bg-slate-950/60 text-white placeholder-slate-650 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500 text-sm font-semibold uppercase tracking-wide transition-all duration-200"
                         />
                         <button
                             type="submit"
@@ -173,6 +181,38 @@
                     Ambil foto kode QR yang dibubuhkan pada dokumen terjemahan untuk mendekode dan memverifikasi secara otomatis.
                 </p>
             </div>
+
+            <!-- Tab 3: Translator Search -->
+            <div id="div-translator" class="hidden space-y-5">
+                <form onsubmit="searchTranslators(event)" class="space-y-4">
+                    <div>
+                        <label for="translator-input" class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2.5">
+                            Nama, Nomor Anggota, atau No SK Kemenkumham
+                        </label>
+                        <div class="relative">
+                            <input
+                                id="translator-input"
+                                type="text"
+                                required
+                                placeholder="Contoh: Muhammad Arifin atau 25004"
+                                class="w-full pl-4 pr-12 py-3.5 border border-slate-800 rounded-xl bg-slate-950/60 text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500 text-sm font-semibold transition-all duration-200"
+                            />
+                            <button
+                                type="submit"
+                                class="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg transition-all duration-200 cursor-pointer shadow-md"
+                            >
+                                <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+
+                <!-- Translator Results -->
+                <div id="translator-results" class="hidden space-y-3 pt-2">
+                    <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Hasil Pencarian:</p>
+                    <div id="translator-results-list" class="space-y-2.5 max-h-56 overflow-y-auto pr-1"></div>
+                </div>
+            </div>
         </div>
     </main>
 
@@ -187,19 +227,92 @@
         function switchTab(tab) {
             const btnSearch = document.getElementById('btn-tab-search');
             const btnScan = document.getElementById('btn-tab-scan');
+            const btnTranslator = document.getElementById('btn-tab-translator');
+            
             const formSearch = document.getElementById('form-search');
             const divScan = document.getElementById('div-scan');
+            const divTranslator = document.getElementById('div-translator');
+            const errorDiv = document.getElementById('scan-error');
+
+            errorDiv.classList.add('hidden');
+
+            // Reset active classes
+            btnSearch.classList.remove('border-emerald-400', 'text-emerald-400');
+            btnSearch.classList.add('border-transparent', 'text-slate-400');
+            btnScan.classList.remove('border-emerald-400', 'text-emerald-400');
+            btnScan.classList.add('border-transparent', 'text-slate-400');
+            btnTranslator.classList.remove('border-emerald-400', 'text-emerald-400');
+            btnTranslator.classList.add('border-transparent', 'text-slate-400');
+
+            formSearch.classList.add('hidden');
+            divScan.classList.add('hidden');
+            divTranslator.classList.add('hidden');
 
             if (tab === 'search') {
-                btnSearch.className = "flex-1 flex items-center justify-center gap-2.5 pb-3 text-sm font-semibold border-b-2 border-emerald-400 text-emerald-400 transition-all duration-200 cursor-pointer";
-                btnScan.className = "flex-1 flex items-center justify-center gap-2.5 pb-3 text-sm font-semibold border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition-all duration-200 cursor-pointer";
+                btnSearch.classList.add('border-emerald-400', 'text-emerald-400');
+                btnSearch.classList.remove('border-transparent', 'text-slate-400');
                 formSearch.classList.remove('hidden');
-                divScan.classList.add('hidden');
-            } else {
-                btnScan.className = "flex-1 flex items-center justify-center gap-2.5 pb-3 text-sm font-semibold border-b-2 border-emerald-400 text-emerald-400 transition-all duration-200 cursor-pointer";
-                btnSearch.className = "flex-1 flex items-center justify-center gap-2.5 pb-3 text-sm font-semibold border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition-all duration-200 cursor-pointer";
-                formSearch.classList.add('hidden');
+            } else if (tab === 'scan') {
+                btnScan.classList.add('border-emerald-400', 'text-emerald-400');
+                btnScan.classList.remove('border-transparent', 'text-slate-400');
                 divScan.classList.remove('hidden');
+            } else if (tab === 'translator') {
+                btnTranslator.classList.add('border-emerald-400', 'text-emerald-400');
+                btnTranslator.classList.remove('border-transparent', 'text-slate-400');
+                divTranslator.classList.remove('hidden');
+            }
+        }
+
+        async function searchTranslators(e) {
+            e.preventDefault();
+            const query = document.getElementById('translator-input').value.trim();
+            const errorDiv = document.getElementById('scan-error');
+            const errorMsg = document.getElementById('scan-error-msg');
+            const resultsDiv = document.getElementById('translator-results');
+            const resultsList = document.getElementById('translator-results-list');
+
+            errorDiv.classList.add('hidden');
+            resultsDiv.classList.add('hidden');
+            resultsList.innerHTML = '';
+
+            if (!query) return;
+
+            try {
+                const response = await fetch('/search-translators?query=' + encodeURIComponent(query));
+                const data = await response.json();
+
+                if (data.success && data.translators) {
+                    if (data.translators.length === 0) {
+                        errorMsg.innerText = 'Penerjemah tidak ditemukan.';
+                        errorDiv.classList.remove('hidden');
+                    } else {
+                        resultsDiv.classList.remove('hidden');
+                        data.translators.forEach(t => {
+                            const photoHtml = t.profile_picture 
+                                ? `<img src="${t.profile_picture}" alt="${t.name}" class="w-full h-full object-cover">`
+                                : `<i data-lucide="user" class="w-4 h-4 text-slate-400"></i>`;
+
+                            resultsList.innerHTML += `
+                                <a href="/verify-translator/${t.id}" class="flex items-center gap-3 p-3 bg-slate-950/60 border border-slate-800 rounded-xl hover:border-emerald-500/60 hover:bg-slate-900/60 transition group cursor-pointer text-left">
+                                    <div class="w-9 h-9 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 font-bold overflow-hidden flex-shrink-0">
+                                        ${photoHtml}
+                                    </div>
+                                    <div class="flex-1 overflow-hidden">
+                                        <p class="text-sm font-bold text-white group-hover:text-emerald-400 transition truncate">${t.name}</p>
+                                        <p class="text-[10px] text-slate-450 truncate font-mono">No. Anggota: ${t.sk_number}</p>
+                                    </div>
+                                </a>
+                            `;
+                        });
+                        lucide.createIcons();
+                    }
+                } else {
+                    errorMsg.innerText = data.error || 'Gagal mencari penerjemah.';
+                    errorDiv.classList.remove('hidden');
+                }
+            } catch (err) {
+                errorMsg.innerText = 'Terjadi kesalahan sistem saat menghubungi server.';
+                errorDiv.classList.remove('hidden');
             }
         }
 

@@ -11,6 +11,8 @@ Route::get('/', function () {
 });
 Route::get('/search', [DocumentController::class, 'search']);
 Route::get('/verify/{documentId}', [DocumentController::class, 'showPublicVerify']);
+Route::get('/search-translators', [AuthController::class, 'searchTranslators']);
+Route::get('/verify-translator/{translatorId}', [AuthController::class, 'showPublicTranslator']);
 
 // Guest Authentication Routes
 Route::middleware('guest')->group(function () {
@@ -18,6 +20,10 @@ Route::middleware('guest')->group(function () {
     Route::post('/login', [AuthController::class, 'doLogin']);
     Route::get('/register', [AuthController::class, 'register']);
     Route::post('/register', [AuthController::class, 'doRegister']);
+    Route::get('/forgot-password', [AuthController::class, 'forgotPasswordView']);
+    Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
+    Route::get('/reset-password', [AuthController::class, 'resetPasswordView']);
+    Route::post('/reset-password', [AuthController::class, 'resetPassword']);
 });
 
 // Protected Portal Routes
