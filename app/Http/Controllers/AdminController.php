@@ -55,15 +55,27 @@ class AdminController extends Controller
         return view('admin.profile', compact('user'));
     }
 
-    // User management actions for Super Admin
+    // User management actions for Admin/Super Admin
+    public function users()
+    {
+        $currentUser = Auth::user();
+        if ($currentUser->role !== 'SUPERADMIN' && $currentUser->role !== 'ADMIN') {
+            abort(403, 'Akses ditolak.');
+        }
+
+        $translators = User::withCount('documents')->orderBy('created_at', 'desc')->get();
+        return view('admin.users', compact('translators'));
+    }
+
     public function storeUser(Request $request)
     {
-        if (Auth::user()->role !== 'SUPERADMIN') {
-            return response()->json(['success' => false, 'error' => 'Akses ditolak.'], 403);
+        $currentUser = Auth::user();
+        if ($currentUser->role !== 'SUPERADMIN' && $currentUser->role !== 'ADMIN') {
+            return back()->withErrors(['error' => 'Akses ditolak.']);
         }
 
         $request->validate([
-            'role' => 'required|in:TRANSLATOR,SUPERADMIN',
+            'role' => 'required|in:TRANSLATOR,ADMIN,SUPERADMIN',
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
             'sk_number' => 'nullable|string|max:255',
@@ -71,9 +83,16 @@ class AdminController extends Controller
         ]);
 
         $role = $request->role;
+        if ($currentUser->role === 'ADMIN' && $role !== 'TRANSLATOR') {
+            return back()->withErrors(['error' => 'Admin hanya dapat mendaftarkan akun Penerjemah.']);
+        }
+
         $skNumber = trim($request->sk_number);
         if ($role === 'SUPERADMIN' && empty($skNumber)) {
             $skNumber = 'IPPTI-BOARD';
+        }
+        if ($role === 'ADMIN' && empty($skNumber)) {
+            $skNumber = 'IPPTI-BOARD-STAFF';
         }
 
         if (empty($skNumber)) {
@@ -88,29 +107,40 @@ class AdminController extends Controller
             'password' => Hash::make($request->password),
         ]);
 
-        return redirect('/admin')->with('success', 'Akun pengguna baru berhasil dibuat!');
+        return redirect('/admin/users')->with('success', 'Akun pengguna baru berhasil dibuat!');
     }
 
     public function updateUser(Request $request, $id)
     {
-        if (Auth::user()->role !== 'SUPERADMIN') {
-            return response()->json(['success' => false, 'error' => 'Akses ditolak.'], 403);
+        $currentUser = Auth::user();
+        if ($currentUser->role !== 'SUPERADMIN' && $currentUser->role !== 'ADMIN') {
+            return back()->withErrors(['error' => 'Akses ditolak.']);
+        }
+
+        $targetUser = User::findOrFail($id);
+        if ($targetUser->role !== 'TRANSLATOR' && $currentUser->role !== 'SUPERADMIN') {
+            return back()->withErrors(['error' => 'Hanya Super Admin yang dapat mengubah profil Admin/Super Admin.']);
         }
 
         $request->validate([
-            'role' => 'required|in:TRANSLATOR,SUPERADMIN',
+            'role' => 'required|in:TRANSLATOR,ADMIN,SUPERADMIN',
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email,' . $id,
             'sk_number' => 'nullable|string|max:255',
             'password' => 'nullable|string|min:6',
         ]);
 
-        $user = User::findOrFail($id);
-
         $role = $request->role;
+        if ($currentUser->role === 'ADMIN' && $role !== 'TRANSLATOR') {
+            return back()->withErrors(['error' => 'Admin hanya dapat mengubah peran ke Penerjemah.']);
+        }
+
         $skNumber = trim($request->sk_number);
         if ($role === 'SUPERADMIN' && empty($skNumber)) {
             $skNumber = 'IPPTI-BOARD';
+        }
+        if ($role === 'ADMIN' && empty($skNumber)) {
+            $skNumber = 'IPPTI-BOARD-STAFF';
         }
 
         if (empty($skNumber)) {
@@ -128,30 +158,100 @@ class AdminController extends Controller
             $updateData['password'] = Hash::make($request->password);
         }
 
-        $user->update($updateData);
+        $targetUser->update($updateData);
 
-        return redirect('/admin')->with('success', 'Data profil pengguna berhasil diperbarui!');
+        return redirect('/admin/users')->with('success', 'Data profil pengguna berhasil diperbarui!');
     }
 
     public function deleteUser($id)
     {
-        if (Auth::user()->role !== 'SUPERADMIN') {
-            return response()->json(['success' => false, 'error' => 'Akses ditolak.'], 403);
+        $currentUser = Auth::user();
+        if ($currentUser->role !== 'SUPERADMIN' && $currentUser->role !== 'ADMIN') {
+            return back()->withErrors(['error' => 'Akses ditolak.']);
         }
 
-        if (Auth::id() === $id) {
+        if ($currentUser->id === $id) {
             return back()->withErrors(['error' => 'Anda tidak dapat menghapus akun Anda sendiri.']);
         }
 
-        $user = User::findOrFail($id);
+        $targetUser = User::findOrFail($id);
+        if ($targetUser->role !== 'TRANSLATOR' && $currentUser->role !== 'SUPERADMIN') {
+            return back()->withErrors(['error' => 'Hanya Super Admin yang dapat menghapus akun Admin/Super Admin.']);
+        }
 
         // Check if user has uploaded documents
         if (Document::where('translator_id', $id)->exists()) {
             return back()->withErrors(['error' => 'Akun tidak bisa dihapus karena telah memiliki dokumen resmi terdaftar di sistem.']);
         }
 
-        $user->delete();
+        $targetUser->delete();
 
-        return redirect('/admin')->with('success', 'Akun pengguna berhasil dihapus.');
+        return redirect('/admin/users')->with('success', 'Akun pengguna berhasil dihapus.');
+    }
+
+    public function importTranslatorsJson(Request $request)
+    {
+        $currentUser = Auth::user();
+        if ($currentUser->role !== 'SUPERADMIN' && $currentUser->role !== 'ADMIN') {
+            return response()->json(['success' => false, 'error' => 'Akses ditolak.'], 403);
+        }
+
+        $request->validate([
+            'translators' => 'required|array'
+        ]);
+
+        $translatorsData = $request->translators;
+        $importedCount = 0;
+        $skippedCount = 0;
+        $errors = [];
+        $defaultPasswordHash = Hash::make('penerjemah123');
+
+        foreach ($translatorsData as $t) {
+            $noAnggota = trim($t['no_anggota'] ?? '');
+            $nama = trim($t['name'] ?? '');
+            $email = trim($t['email'] ?? '');
+            $sk = trim($t['sk'] ?? '');
+            $arahBahasa = trim($t['arah_bahasa'] ?? '');
+
+            if (empty($noAnggota) || empty($nama) || empty($email)) {
+                $skippedCount++;
+                $errors[] = "Baris dilewati: Data No Anggota, Nama, atau Email kosong.";
+                continue;
+            }
+
+            // Check duplicate
+            $existing = User::where('email', $email)
+                ->orWhere('sk_number', $noAnggota)
+                ->first();
+
+            if ($existing) {
+                $skippedCount++;
+                $errors[] = "Penerjemah '{$nama}' ({$email}/{$noAnggota}) sudah terdaftar, dilewati.";
+                continue;
+            }
+
+            try {
+                User::create([
+                    'email' => $email,
+                    'name' => $nama,
+                    'sk_number' => $noAnggota,
+                    'password' => $defaultPasswordHash,
+                    'role' => 'TRANSLATOR',
+                    'language_services' => $arahBahasa ?: null,
+                    'bio' => "Pernyataan verifikasi Kemenkumham: SK nomor " . ($sk ?: 'AHU-' . $noAnggota),
+                ]);
+                $importedCount++;
+            } catch (\Exception $e) {
+                $skippedCount++;
+                $errors[] = "Gagal mengimpor '{$nama}': " . $e->getMessage();
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'importedCount' => $importedCount,
+            'skippedCount' => $skippedCount,
+            'errors' => $errors
+        ]);
     }
 }

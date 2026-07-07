@@ -44,12 +44,20 @@
             </div>
 
             <nav class="flex-1 px-4 py-4 space-y-2">
-                <a href="/admin" class="flex items-center gap-3 px-4 py-3 rounded-lg bg-slate-800 text-white hover:bg-slate-700 transition">
-                    <i data-lucide="file-text" class="w-5 h-5 text-emerald-400"></i>
+                <a href="/admin" class="flex items-center gap-3 px-4 py-3 rounded-lg transition {{ request()->is('admin') || request()->is('admin/documents*') ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-400 hover:bg-slate-800 hover:text-white' }}">
+                    <i data-lucide="file-text" class="w-5 h-5 {{ request()->is('admin') || request()->is('admin/documents*') ? 'text-white' : 'text-slate-400' }}"></i>
                     <span class="font-medium">Data Dokumen</span>
                 </a>
-                <a href="/admin/profile" class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white transition">
-                    <i data-lucide="settings" class="w-5 h-5"></i>
+                
+                @if(Auth::check() && (Auth::user()->role === 'SUPERADMIN' || Auth::user()->role === 'ADMIN'))
+                    <a href="/admin/users" class="flex items-center gap-3 px-4 py-3 rounded-lg transition {{ request()->is('admin/users*') ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-400 hover:bg-slate-800 hover:text-white' }}">
+                        <i data-lucide="award" class="w-5 h-5 {{ request()->is('admin/users*') ? 'text-white' : 'text-slate-400' }}"></i>
+                        <span class="font-medium">Manajemen User</span>
+                    </a>
+                @endif
+
+                <a href="/admin/profile" class="flex items-center gap-3 px-4 py-3 rounded-lg transition {{ request()->is('admin/profile*') ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-400 hover:bg-slate-800 hover:text-white' }}">
+                    <i data-lucide="settings" class="w-5 h-5 {{ request()->is('admin/profile*') ? 'text-white' : 'text-slate-400' }}"></i>
                     <span class="font-medium">Profil & Layanan</span>
                 </a>
             </nav>
@@ -66,7 +74,13 @@
                     <div class="overflow-hidden">
                         <p class="text-sm font-semibold truncate text-slate-200">{{ Auth::user()->name }}</p>
                         <p class="text-xs text-slate-400 truncate">
-                            {{ Auth::user()->role === 'SUPERADMIN' ? 'Pengurus IPPTI' : 'Penerjemah' }}
+                            @if(Auth::user()->role === 'SUPERADMIN')
+                                Pengurus IPPTI (Super Admin)
+                            @elseif(Auth::user()->role === 'ADMIN')
+                                Pengurus IPPTI (Admin)
+                            @else
+                                Penerjemah
+                            @endif
                         </p>
                     </div>
                 </div>
@@ -91,7 +105,12 @@
             </a>
             
             <div class="flex items-center gap-3">
-                <a href="/admin/profile" class="text-slate-350 p-1" title="Profil">
+                @if(Auth::check() && (Auth::user()->role === 'SUPERADMIN' || Auth::user()->role === 'ADMIN'))
+                    <a href="/admin/users" class="text-slate-350 p-1 {{ request()->is('admin/users*') ? 'text-emerald-400' : '' }}" title="Manajemen User">
+                        <i data-lucide="award" class="w-5 h-5"></i>
+                    </a>
+                @endif
+                <a href="/admin/profile" class="text-slate-350 p-1 {{ request()->is('admin/profile*') ? 'text-emerald-400' : '' }}" title="Profil">
                     <i data-lucide="settings" class="w-5 h-5"></i>
                 </a>
                 <form action="/logout" method="POST" class="inline">
