@@ -23,6 +23,7 @@ class User extends Authenticatable
         'password',
         'sk_number',
         'role',
+        'whatsapp',
         'language_services',
         'bio',
         'profile_picture',

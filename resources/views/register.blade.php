@@ -142,6 +142,22 @@
                 </div>
 
                 <div>
+                    <label for="whatsapp" class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+                        Nomor WhatsApp
+                    </label>
+                    <div class="mt-1">
+                        <input
+                            id="whatsapp"
+                            name="whatsapp"
+                            type="text"
+                            value="{{ old('whatsapp') }}"
+                            class="appearance-none block w-full px-3.5 py-2.5 border border-slate-800 rounded-xl bg-slate-950/60 placeholder-slate-650 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500 text-sm font-semibold transition-all duration-200"
+                            placeholder="Contoh: 081234567890"
+                        />
+                    </div>
+                </div>
+
+                <div>
                     <label for="password" class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
                         Password Baru
                     </label>
@@ -227,6 +243,7 @@
             const successText = document.getElementById('js-success-text');
             const nameInput = document.getElementById('name');
             const emailInput = document.getElementById('email');
+            const whatsappInput = document.getElementById('whatsapp');
             const submitText = document.getElementById('submit-text');
 
             if (!memberNo) {
@@ -251,6 +268,7 @@
                     nameInput.className = "appearance-none block w-full px-3.5 py-2.5 border border-slate-800 rounded-xl bg-slate-950/60 placeholder-slate-650 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500 text-sm font-semibold transition-all duration-200 opacity-70 cursor-not-allowed bg-slate-900 border-emerald-500/30";
                     
                     emailInput.value = data.translator.email || '';
+                    whatsappInput.value = data.translator.whatsapp || '';
                     
                     successText.innerText = `Data Terintegrasi! Profil "${data.translator.name}" berhasil dimuat otomatis. Silakan lengkapi email & password Anda.`;
                     successDiv.classList.remove('hidden');

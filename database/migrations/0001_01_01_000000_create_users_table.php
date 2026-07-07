@@ -19,6 +19,7 @@ return new class extends Migration
             $table->string('password');
             $table->string('sk_number');
             $table->string('role')->default('TRANSLATOR');
+            $table->string('whatsapp')->nullable();
             $table->text('language_services')->nullable();
             $table->text('bio')->nullable();
             $table->string('profile_picture')->nullable();

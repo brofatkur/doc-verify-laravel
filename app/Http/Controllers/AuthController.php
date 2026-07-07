@@ -86,6 +86,7 @@ class AuthController extends Controller
                 'name' => $request->name,
                 'email' => $request->email,
                 'password' => Hash::make($request->password),
+                'whatsapp' => $request->whatsapp ?: null,
             ]);
             $user = $existingBySk;
         } else {
@@ -95,6 +96,7 @@ class AuthController extends Controller
                 'email' => $request->email,
                 'password' => Hash::make($request->password),
                 'role' => 'TRANSLATOR',
+                'whatsapp' => $request->whatsapp ?: null,
             ]);
         }
 
@@ -117,6 +119,7 @@ class AuthController extends Controller
                 'translator' => [
                     'name' => $user->name,
                     'email' => str_ends_with($user->email, '@ippti.or.id') ? '' : $user->email,
+                    'whatsapp' => $user->whatsapp ?: '',
                 ]
             ]);
         }
