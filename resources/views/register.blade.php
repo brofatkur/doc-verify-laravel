@@ -39,7 +39,7 @@
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
 </head>
-<body class="bg-slate-955 bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative overflow-hidden">
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative overflow-hidden">
     
     <!-- Background Decorative Blurs -->
     <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-emerald-500 rounded-full mix-blend-multiply filter blur-[100px] opacity-10 animate-blob"></div>
@@ -63,15 +63,49 @@
 
     <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-md z-10 px-4 sm:px-0">
         <div class="bg-slate-900/80 backdrop-blur-2xl py-8 px-6 shadow-2xl rounded-2xl border border-slate-800/80 sm:px-10">
-            <form id="form-register" class="space-y-5" action="/register" method="POST" onsubmit="return validatePasswords()">
+            <form id="form-register" class="space-y-5" action="/register" method="POST" onsubmit="return validateForm()">
                 @csrf
                 
                 @if($errors->any())
-                    <div class="bg-rose-500/10 border border-rose-500/20 text-rose-400 p-3.5 rounded-xl text-sm text-center font-medium leading-snug">
+                    <div class="bg-rose-500/10 border border-rose-500/20 text-rose-400 p-3.5 rounded-xl text-xs text-center font-semibold leading-relaxed">
                         {{ $errors->first() }}
                     </div>
                 @endif
-                <div id="js-error" class="hidden bg-rose-500/10 border border-rose-500/20 text-rose-400 p-3.5 rounded-xl text-sm text-center font-medium leading-snug"></div>
+                <div id="js-error" class="hidden bg-rose-500/10 border border-rose-500/20 text-rose-400 p-3.5 rounded-xl text-xs text-center font-semibold leading-relaxed"></div>
+                <div id="js-success" class="hidden bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 p-3.5 rounded-xl text-xs text-center font-semibold leading-relaxed flex items-center gap-2">
+                    <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-400 flex-shrink-0"></i>
+                    <span id="js-success-text"></span>
+                </div>
+
+                <div>
+                    <label for="sk_number" class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+                        Nomor Anggota IPPTI
+                    </label>
+                    <div class="mt-1 flex gap-2">
+                        <input
+                            id="sk_number"
+                            name="sk_number"
+                            type="text"
+                            value="{{ old('sk_number') }}"
+                            required
+                            class="appearance-none block flex-1 px-3.5 py-2.5 border border-slate-800 rounded-xl bg-slate-950/60 placeholder-slate-650 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500 text-sm font-semibold transition-all duration-200"
+                            placeholder="Contoh: 25004"
+                        />
+                        <button
+                            type="button"
+                            onclick="checkMember()"
+                            id="btn-check-member"
+                            class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-emerald-400 border border-slate-750 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
+                        >
+                            <i data-lucide="search" class="w-3.5 h-3.5"></i>
+                            <span id="btn-check-text">Cek</span>
+                        </button>
+                    </div>
+                    <p class="mt-1.5 text-[10px] text-slate-500 flex items-center gap-1">
+                        <i data-lucide="info" class="w-3 h-3 text-slate-500"></i>
+                        <span>Masukkan nomor anggota untuk memuat data profil otomatis.</span>
+                    </p>
+                </div>
 
                 <div>
                     <label for="name" class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
@@ -86,23 +120,6 @@
                             required
                             class="appearance-none block w-full px-3.5 py-2.5 border border-slate-800 rounded-xl bg-slate-950/60 placeholder-slate-650 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500 text-sm font-semibold transition-all duration-200"
                             placeholder="Nama Lengkap & Gelar Akademis"
-                        />
-                    </div>
-                </div>
-
-                <div>
-                    <label for="sk_number" class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
-                        Nomor Anggota IPPTI
-                    </label>
-                    <div class="mt-1">
-                        <input
-                            id="sk_number"
-                            name="sk_number"
-                            type="text"
-                            value="{{ old('sk_number') }}"
-                            required
-                            class="appearance-none block w-full px-3.5 py-2.5 border border-slate-800 rounded-xl bg-slate-950/60 placeholder-slate-650 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500 text-sm font-semibold transition-all duration-200"
-                            placeholder="Contoh: IPPTI-2025-XXXX"
                         />
                     </div>
                 </div>
@@ -126,7 +143,7 @@
 
                 <div>
                     <label for="password" class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
-                        Password
+                        Password Baru
                     </label>
                     <div class="mt-1 relative">
                         <input
@@ -150,7 +167,7 @@
 
                 <div>
                     <label for="password_confirmation" class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
-                        Konfirmasi Password
+                        Konfirmasi Password Baru
                     </label>
                     <div class="mt-1 relative">
                         <input
@@ -175,9 +192,10 @@
                 <div class="pt-2">
                     <button
                         type="submit"
+                        id="submit-btn"
                         class="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-lg text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-500 active:scale-[0.98] hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer"
                     >
-                        <span>Daftar Akun</span>
+                        <span id="submit-text">Daftar Akun Baru</span>
                     </button>
                 </div>
             </form>
@@ -200,10 +218,70 @@
             lucide.createIcons();
         }
 
-        function validatePasswords() {
+        async function checkMember() {
+            const memberNo = document.getElementById('sk_number').value.trim();
+            const btnText = document.getElementById('btn-check-text');
+            const btn = document.getElementById('btn-check-member');
+            const errorDiv = document.getElementById('js-error');
+            const successDiv = document.getElementById('js-success');
+            const successText = document.getElementById('js-success-text');
+            const nameInput = document.getElementById('name');
+            const emailInput = document.getElementById('email');
+            const submitText = document.getElementById('submit-text');
+
+            if (!memberNo) {
+                errorDiv.innerText = 'Silakan masukkan Nomor Anggota terlebih dahulu.';
+                errorDiv.classList.remove('hidden');
+                successDiv.classList.add('hidden');
+                return;
+            }
+
+            btn.setAttribute('disabled', 'disabled');
+            btnText.innerText = 'Memproses...';
+            errorDiv.classList.add('hidden');
+            successDiv.classList.add('hidden');
+
+            try {
+                const response = await fetch(`/api/check-member/${memberNo}`);
+                const data = await response.json();
+
+                if (data.success && data.translator) {
+                    nameInput.value = data.translator.name;
+                    nameInput.setAttribute('readonly', 'readonly');
+                    nameInput.className = "appearance-none block w-full px-3.5 py-2.5 border border-slate-800 rounded-xl bg-slate-950/60 placeholder-slate-650 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500 text-sm font-semibold transition-all duration-200 opacity-70 cursor-not-allowed bg-slate-900 border-emerald-500/30";
+                    
+                    emailInput.value = data.translator.email || '';
+                    
+                    successText.innerText = `Data Terintegrasi! Profil "${data.translator.name}" berhasil dimuat otomatis. Silakan lengkapi email & password Anda.`;
+                    successDiv.classList.remove('hidden');
+                    submitText.innerText = 'Klaim & Daftar Akun';
+                } else {
+                    errorDiv.innerText = data.error || 'Nomor Anggota tidak ditemukan dalam database pra-impor.';
+                    errorDiv.classList.remove('hidden');
+                    nameInput.removeAttribute('readonly');
+                    nameInput.className = "appearance-none block w-full px-3.5 py-2.5 border border-slate-800 rounded-xl bg-slate-950/60 placeholder-slate-650 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500 text-sm font-semibold transition-all duration-200";
+                    submitText.innerText = 'Daftar Akun Baru';
+                }
+            } catch (err) {
+                errorDiv.innerText = 'Gagal memverifikasi nomor anggota.';
+                errorDiv.classList.remove('hidden');
+            } finally {
+                btn.removeAttribute('disabled');
+                btnText.innerText = 'Cek';
+            }
+        }
+
+        function validateForm() {
             const pass = document.getElementById('password').value;
             const confirmPass = document.getElementById('password_confirmation').value;
+            const name = document.getElementById('name').value.trim();
             const errorDiv = document.getElementById('js-error');
+
+            if (!name) {
+                errorDiv.innerText = 'Nama lengkap tidak boleh kosong.';
+                errorDiv.classList.remove('hidden');
+                return false;
+            }
 
             if (pass !== confirmPass) {
                 errorDiv.innerText = 'Password dan konfirmasi password tidak sama.';

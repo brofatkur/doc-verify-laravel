@@ -16,6 +16,7 @@ Route::get('/search', [DocumentController::class, 'search']);
 Route::get('/verify/{documentId}', [DocumentController::class, 'showPublicVerify']);
 Route::get('/search-translators', [AuthController::class, 'searchTranslators']);
 Route::get('/verify-translator/{translatorId}', [AuthController::class, 'showPublicTranslator']);
+Route::get('/api/check-member/{memberNo}', [AuthController::class, 'checkMember']);
 
 // Guest Authentication Routes
 Route::middleware('guest')->group(function () {

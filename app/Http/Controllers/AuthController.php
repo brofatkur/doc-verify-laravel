@@ -49,10 +49,27 @@ class AuthController extends Controller
 
     public function doRegister(Request $request)
     {
+        $skNumber = trim($request->sk_number);
+        $email = trim($request->email);
+
+        // Find if user already exists with the skNumber
+        $existingBySk = User::where('sk_number', $skNumber)->where('role', 'TRANSLATOR')->first();
+
+        // Validate email uniqueness except for the pre-imported user
+        $emailRules = 'required|string|email|max:255';
+        if ($existingBySk) {
+            $emailDup = User::where('email', $email)->where('id', '!=', $existingBySk->id)->first();
+            if ($emailDup) {
+                return back()->withErrors(['email' => 'Email ini sudah terdaftar.'])->withInput();
+            }
+        } else {
+            $emailRules .= '|unique:users';
+        }
+
         $request->validate([
             'name' => 'required|string|max:255',
             'sk_number' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
+            'email' => $emailRules,
             'password' => 'required|string|min:6|confirmed',
         ], [
             'name.required' => 'Nama lengkap wajib diisi.',
@@ -64,17 +81,47 @@ class AuthController extends Controller
             'password.confirmed' => 'Konfirmasi password tidak cocok.',
         ]);
 
-        $user = User::create([
-            'name' => $request->name,
-            'sk_number' => $request->sk_number,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-            'role' => 'TRANSLATOR', // register is only for sworn translators
-        ]);
+        if ($existingBySk) {
+            $existingBySk->update([
+                'name' => $request->name,
+                'email' => $request->email,
+                'password' => Hash::make($request->password),
+            ]);
+            $user = $existingBySk;
+        } else {
+            $user = User::create([
+                'name' => $request->name,
+                'sk_number' => $request->sk_number,
+                'email' => $request->email,
+                'password' => Hash::make($request->password),
+                'role' => 'TRANSLATOR',
+            ]);
+        }
 
         Auth::login($user);
 
         return redirect('/admin');
+    }
+
+    public function checkMember($memberNo)
+    {
+        if (empty($memberNo)) {
+            return response()->json(['success' => false, 'error' => 'Nomor anggota wajib diisi.'], 400);
+        }
+
+        $user = User::where('sk_number', $memberNo)->where('role', 'TRANSLATOR')->first();
+
+        if ($user) {
+            return response()->json([
+                'success' => true,
+                'translator' => [
+                    'name' => $user->name,
+                    'email' => str_ends_with($user->email, '@ippti.or.id') ? '' : $user->email,
+                ]
+            ]);
+        }
+
+        return response()->json(['success' => false, 'error' => 'Nomor anggota tidak ditemukan dalam database pra-impor.'], 404);
     }
 
     public function logout(Request $request)
