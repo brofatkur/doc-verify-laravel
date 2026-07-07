@@ -95,14 +95,10 @@
 
             <!-- Details list -->
             <div class="p-6 sm:p-8 space-y-6 text-left">
-                <div id="section-meta-row" class="flex flex-col sm:flex-row gap-4 border-b border-slate-100 pb-6">
-                    <div class="flex-1">
-                        <p id="label-doc-id" class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">ID Dokumen</p>
-                        <p class="text-lg font-mono font-bold text-slate-900">{{ $document->document_id }}</p>
-                    </div>
-                    <div class="flex-1">
+                <div id="section-meta-row" class="border-b border-slate-100 pb-6">
+                    <div>
                         <p id="label-reg-no" class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">No. Registrasi</p>
-                        <p class="text-base font-bold text-slate-800 font-mono">{{ $document->registration_number }}</p>
+                        <p class="text-lg font-bold text-slate-900 font-mono">{{ $document->registration_number }}</p>
                     </div>
                 </div>
 
@@ -167,12 +163,7 @@
                                     <p id="label-translator-member" class="text-xs text-slate-500 font-mono mt-0.5"></p>
                                 </div>
                             </div>
-                            @if($document->translator->language_services)
-                                <div class="text-xs border-t border-slate-100/85 pt-3">
-                                    <span id="label-services" class="font-bold text-slate-400 uppercase tracking-wider block mb-1">Layanan Bahasa:</span>
-                                    <p class="text-slate-700 font-semibold">{{ $document->translator->language_services }}</p>
-                                </div>
-                            @endif
+
                             @if($document->translator->bio)
                                 <div class="text-xs border-t border-slate-100/85 pt-3">
                                     <span id="label-bio" class="font-bold text-slate-400 uppercase tracking-wider block mb-1">Biografi:</span>
@@ -219,7 +210,7 @@
                 masked_name: "Nama di Dokumen (Disamarkan)",
                 lang_pair: "Pasangan Bahasa",
                 doc_type: "Tipe Dokumen",
-                translator: "Penerjemah Tersumpah",
+                translator: "Nama Penerjemah Tersumpah",
                 member_id: "No. Anggota: " + memberNo,
                 services: "Layanan Bahasa:",
                 bio: "Biografi:",
@@ -238,7 +229,7 @@
                 masked_name: "Name on Document (Masked)",
                 lang_pair: "Language Pair",
                 doc_type: "Document Type",
-                translator: "Sworn Translator",
+                translator: "Name of Sworn Translator",
                 member_id: "Member ID: " + memberNo,
                 services: "Language Services:",
                 bio: "Biography:",
@@ -257,7 +248,7 @@
                 masked_name: "文件姓名（已遮蔽）",
                 lang_pair: "语言对",
                 doc_type: "文件类型",
-                translator: "宣誓翻译员",
+                translator: "宣誓翻译员姓名",
                 member_id: "成员 ID: " + memberNo,
                 services: "语言服务:",
                 bio: "个人简介:",
@@ -276,7 +267,7 @@
                 masked_name: "الاسم على المستند (مخفي)",
                 lang_pair: "زوج اللغات",
                 doc_type: "نوع المستند",
-                translator: "مترجم محلف",
+                translator: "اسم المترجم المحلف",
                 member_id: "رقم العضوية: " + memberNo,
                 services: "خدمات اللغة:",
                 bio: "السيرة الذاتية:",
