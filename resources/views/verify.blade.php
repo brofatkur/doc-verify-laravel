@@ -126,10 +126,14 @@
 
             <!-- Details list -->
             <div class="p-6 sm:p-8 space-y-6 text-left">
-                <div id="section-meta-row" class="border-b border-slate-100 pb-6">
+                <div id="section-meta-row" class="border-b border-slate-100 pb-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                         <p id="label-reg-no" class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">No. Registrasi</p>
                         <p class="text-lg font-bold text-slate-900 font-mono">{{ $document->registration_number }}</p>
+                    </div>
+                    <div>
+                        <p id="label-doc-id" class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">ID Dokumen</p>
+                        <p class="text-lg font-bold text-emerald-600 font-mono">{{ $document->document_id }}</p>
                     </div>
                 </div>
 
