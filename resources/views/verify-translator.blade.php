@@ -30,17 +30,19 @@
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
 </head>
-<body id="body-layout" class="bg-slate-955 bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between relative overflow-hidden py-8 px-4 sm:px-6 lg:px-8">
+<body id="body-layout" class="bg-slate-955 bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between relative overflow-x-hidden py-8 px-4 sm:px-6 lg:px-8">
     <!-- Background blur blobs -->
     <div class="absolute top-[-10%] left-[-10%] w-[50vw] h-[50vw] bg-emerald-500/5 rounded-full filter blur-[120px]"></div>
     <div class="absolute bottom-[-10%] right-[-10%] w-[45vw] h-[45vw] bg-blue-500/5 rounded-full filter blur-[120px]"></div>
 
     <!-- Header -->
     <header class="max-w-4xl w-full mx-auto flex items-center justify-between pb-6 border-b border-slate-900 mb-8 z-10">
-        <a href="/" class="flex items-center gap-3">
-            <img src="/ippti-logo.jpg" alt="IPPTI Logo" class="h-8 w-auto rounded bg-white p-0.5 object-contain shadow-md" />
-            <span class="text-lg font-bold tracking-tight text-white">DocVerify</span>
-        </a>
+        <div class="flex items-center gap-3">
+            <a href="https://ippti.or.id" target="_blank" title="Kunjungi Website Resmi IPPTI">
+                <img src="/ippti-logo.jpg" alt="IPPTI Logo" class="h-8 w-auto rounded bg-white p-0.5 object-contain shadow-md hover:opacity-90 transition" />
+            </a>
+            <a href="/" class="text-lg font-bold tracking-tight text-white hover:underline">DocVerify</a>
+        </div>
         <a href="/" id="back-home-text" class="text-xs font-semibold text-slate-400 hover:text-emerald-400 transition-colors">
             Kembali ke Beranda
         </a>

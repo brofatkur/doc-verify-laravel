@@ -57,33 +57,49 @@
                 <div class="flex items-start gap-2.5 text-xs text-slate-500 mb-2 leading-relaxed">
                     <i data-lucide="info" class="w-4 h-4 text-emerald-600 flex-shrink-0"></i>
                     <span>
-                        <strong class="text-slate-800 font-bold">Informasi Pendaftaran Resmi:</strong> Data di bawah ini dikelola langsung oleh Pengurus Pusat IPPTI. Hubungi administrator jika ingin melakukan perubahan.
+                        <strong class="text-slate-800 font-bold">Informasi Akun & Kontak:</strong> Perubahan email atau WhatsApp akan mengirimkan notifikasi ke kontak lama Anda demi keamanan akun. Nomor Anggota IPPTI tidak dapat diubah secara mandiri.
                     </span>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Nama Lengkap</label>
+                        <label for="name" class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Nama Lengkap</label>
                         <input
                             type="text"
-                            disabled
-                            value="{{ $user->name }}"
-                            class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl bg-slate-100 text-slate-500 text-sm font-semibold cursor-not-allowed"
+                            id="name"
+                            name="name"
+                            value="{{ old('name', $user->name) }}"
+                            required
+                            class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-slate-800 text-sm font-semibold outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition"
                         />
                     </div>
 
                     <div>
-                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Alamat Email</label>
+                        <label for="email" class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Alamat Email</label>
                         <input
-                            type="text"
-                            disabled
-                            value="{{ $user->email }}"
-                            class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl bg-slate-100 text-slate-500 text-sm font-semibold cursor-not-allowed"
+                            type="email"
+                            id="email"
+                            name="email"
+                            value="{{ old('email', $user->email) }}"
+                            required
+                            class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-slate-800 text-sm font-semibold outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition"
                         />
                     </div>
 
-                    <div class="md:col-span-2">
-                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Nomor Anggota IPPTI / SK</label>
+                    <div>
+                        <label for="whatsapp" class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Nomor WhatsApp / HP</label>
+                        <input
+                            type="text"
+                            id="whatsapp"
+                            name="whatsapp"
+                            value="{{ old('whatsapp', $user->whatsapp) }}"
+                            class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-slate-800 text-sm font-semibold outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition"
+                            placeholder="Contoh: 08123456789"
+                        />
+                    </div>
+
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Nomor Anggota IPPTI / SK (Kunci)</label>
                         <input
                             type="text"
                             disabled
@@ -97,19 +113,31 @@
             <!-- Custom Editable Fields -->
             <div class="space-y-5">
                 <div>
-                    <label for="language_services" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-1.5">
                         <i data-lucide="globe" class="w-4 h-4 text-emerald-600"></i>
                         <span>Layanan Pasangan Bahasa</span>
                     </label>
-                    <input
-                        type="text"
-                        id="language_services"
-                        name="language_services"
-                        value="{{ old('language_services', $user->language_services) }}"
-                        placeholder="Contoh: Inggris - Indonesia, Belanda - Indonesia, Indonesia - Jerman"
-                        class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition text-sm font-medium text-slate-800 placeholder-slate-400"
-                    />
-                    <p class="text-[10px] text-slate-400 mt-1">Sebutkan pasangan bahasa yang Anda layani, pisahkan dengan koma.</p>
+                    @if($user->role === 'TRANSLATOR')
+                        <input
+                            type="text"
+                            disabled
+                            value="{{ $user->language_services }}"
+                            class="w-full px-4 py-3 bg-slate-100 border border-slate-200 rounded-xl text-sm font-medium text-slate-500 cursor-not-allowed outline-none"
+                        />
+                        <p class="text-[10px] text-rose-500 mt-1 flex items-center gap-1 font-semibold">
+                            <i data-lucide="shield-alert" class="w-3.5 h-3.5"></i>
+                            <span>Arah bahasa tersertifikasi resmi hanya dapat diubah oleh administrator IPPTI.</span>
+                        </p>
+                    @else
+                        <input
+                            type="text"
+                            id="language_services"
+                            name="language_services"
+                            value="{{ old('language_services', $user->language_services) }}"
+                            placeholder="Contoh: Inggris - Indonesia, Belanda - Indonesia"
+                            class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition text-sm font-medium text-slate-800 placeholder-slate-400"
+                        />
+                    @endif
                 </div>
 
                 <div>

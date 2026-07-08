@@ -47,8 +47,10 @@
 
     <div class="sm:mx-auto sm:w-full sm:max-w-md z-10 text-center">
         <div class="flex justify-center items-center gap-3">
-            <img src="/ippti-logo.jpg" alt="IPPTI Logo" class="h-10 w-auto rounded bg-white p-0.5 object-contain shadow-md" />
-            <span class="text-2xl font-bold text-white tracking-tight">DocVerify</span>
+            <a href="https://ippti.or.id" target="_blank" title="Kunjungi Website Resmi IPPTI">
+                <img src="/ippti-logo.jpg" alt="IPPTI Logo" class="h-10 w-auto rounded bg-white p-0.5 object-contain shadow-md hover:opacity-90 transition" />
+            </a>
+            <a href="/" class="text-2xl font-bold text-white tracking-tight hover:underline">DocVerify</a>
         </div>
         <h2 class="mt-6 text-center text-3xl font-extrabold text-white">
             Masuk ke Akun Anda

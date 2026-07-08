@@ -5,18 +5,20 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\AdminController;
 
-// Public search and verification routes
-Route::get('/', function () {
-    return view('home');
+// Public search and verification routes with rate limiting (REV-19)
+Route::middleware('throttle:60,1')->group(function () {
+    Route::get('/', function () {
+        return view('home');
+    });
+    Route::get('/verify-translator', function () {
+        return view('verify-translator-search');
+    });
+    Route::get('/search', [DocumentController::class, 'search']);
+    Route::get('/verify/{documentId}', [DocumentController::class, 'showPublicVerify']);
+    Route::get('/search-translators', [AuthController::class, 'searchTranslators']);
+    Route::get('/verify-translator/{translatorId}', [AuthController::class, 'showPublicTranslator']);
+    Route::get('/api/check-member/{memberNo}', [AuthController::class, 'checkMember']);
 });
-Route::get('/verify-translator', function () {
-    return view('verify-translator-search');
-});
-Route::get('/search', [DocumentController::class, 'search']);
-Route::get('/verify/{documentId}', [DocumentController::class, 'showPublicVerify']);
-Route::get('/search-translators', [AuthController::class, 'searchTranslators']);
-Route::get('/verify-translator/{translatorId}', [AuthController::class, 'showPublicTranslator']);
-Route::get('/api/check-member/{memberNo}', [AuthController::class, 'checkMember']);
 
 // Install Super Admin Route
 Route::get('/install', [AuthController::class, 'showInstallForm']);
@@ -46,6 +48,9 @@ Route::middleware('auth')->group(function () {
     // Document Management
     Route::get('/admin/documents/new', [AdminController::class, 'createDocument']);
     Route::post('/admin/documents', [DocumentController::class, 'store']);
+    Route::get('/admin/documents/{id}/edit', [AdminController::class, 'editDocument']);
+    Route::post('/admin/documents/{id}/update', [DocumentController::class, 'update']);
+    Route::post('/admin/documents/{id}/archive', [DocumentController::class, 'archive']);
     Route::post('/admin/documents/{id}/toggle-qr', [DocumentController::class, 'toggleQr']);
     Route::post('/admin/documents/import-json', [DocumentController::class, 'importJson']);
 
@@ -55,4 +60,18 @@ Route::middleware('auth')->group(function () {
     Route::post('/admin/users/{id}/update', [AdminController::class, 'updateUser']);
     Route::post('/admin/users/{id}/delete', [AdminController::class, 'deleteUser']);
     Route::post('/admin/users/import-json', [AdminController::class, 'importTranslatorsJson']);
+
+    // Audit logs for Super Admin
+    Route::get('/admin/audit-logs', [AdminController::class, 'auditLogs']);
+
+    // Master Data CRUD
+    Route::get('/admin/document-types', [AdminController::class, 'documentTypes']);
+    Route::post('/admin/document-types', [AdminController::class, 'storeDocumentType']);
+    Route::post('/admin/document-types/{id}/update', [AdminController::class, 'updateDocumentType']);
+    Route::post('/admin/document-types/{id}/delete', [AdminController::class, 'deleteDocumentType']);
+
+    Route::get('/admin/language-directions', [AdminController::class, 'languageDirections']);
+    Route::post('/admin/language-directions', [AdminController::class, 'storeLanguageDirection']);
+    Route::post('/admin/language-directions/{id}/update', [AdminController::class, 'updateLanguageDirection']);
+    Route::post('/admin/language-directions/{id}/delete', [AdminController::class, 'deleteLanguageDirection']);
 });

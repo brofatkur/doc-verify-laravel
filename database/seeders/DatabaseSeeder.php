@@ -64,5 +64,54 @@ class DatabaseSeeder extends Seeder
                 'sk_lengkap' => 'AHU-55 AH.03.07.2022 Tanggal 5 Oktober 2022'
             ]
         );
+
+        // Seed standard Document Types
+        $types = [
+            'Akta Kelahiran',
+            'Akta Kematian',
+            'Akta Pernikahan',
+            'Akta Perceraian',
+            'Kartu Tanda Penduduk (KTP)',
+            'Paspor',
+            'Kartu Keluarga (KK)',
+            'Ijazah',
+            'Transkrip Nilai',
+            'Surat Keputusan (SK)',
+            'Kontrak Perjanjian',
+            'Dokumen Medis',
+            'Laporan Keuangan',
+        ];
+        foreach ($types as $type) {
+            \App\Models\DocumentType::updateOrCreate(['name' => $type]);
+        }
+
+        // Seed 22 official Language Directions (REV-10)
+        $directions = [
+            'Indonesia - Inggris',
+            'Inggris - Indonesia',
+            'Indonesia - Belanda',
+            'Belanda - Indonesia',
+            'Indonesia - Arab',
+            'Arab - Indonesia',
+            'Indonesia - Prancis',
+            'Prancis - Indonesia',
+            'Indonesia - Jerman',
+            'Jerman - Indonesia',
+            'Indonesia - Mandarin',
+            'Mandarin - Indonesia',
+            'Indonesia - Jepang',
+            'Jepang - Indonesia',
+            'Indonesia - Korea',
+            'Korea - Indonesia',
+            'Indonesia - Rusia',
+            'Rusia - Indonesia',
+            'Indonesia - Spanyol',
+            'Spanyol - Indonesia',
+            'Indonesia - Italia',
+            'Italia - Indonesia',
+        ];
+        foreach ($directions as $dir) {
+            \App\Models\LanguageDirection::updateOrCreate(['name' => $dir]);
+        }
     }
 }

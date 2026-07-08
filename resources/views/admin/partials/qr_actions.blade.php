@@ -17,6 +17,16 @@
         </a>
     @endif
 
+    @if(Auth::check() && $doc->translator_id === Auth::id())
+        <a
+            href="/admin/documents/{{ $doc->id }}/edit"
+            class="text-slate-600 p-2 hover:bg-slate-100 rounded-lg transition cursor-pointer"
+            title="Edit Dokumen"
+        >
+            <i data-lucide="edit-3" class="w-4 h-4"></i>
+        </a>
+    @endif
+
     <button
         onclick="toggleQrStatus('{{ $doc->id }}', {{ $doc->is_qr_generated ? 'true' : 'false' }})"
         id="btn-toggle-qr-{{ $doc->id }}"

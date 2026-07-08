@@ -41,7 +41,7 @@
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
 </head>
-<body id="body-layout" class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between relative overflow-hidden selection:bg-emerald-500 selection:text-slate-950">
+<body id="body-layout" class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between relative overflow-x-hidden selection:bg-emerald-500 selection:text-slate-950">
     
     <!-- Background blur blobs -->
     <div class="absolute top-[-10%] left-[-10%] w-[50vw] h-[50vw] bg-emerald-500/5 rounded-full filter blur-[120px] animate-blob"></div>
@@ -49,10 +49,12 @@
 
     <!-- Header -->
     <header class="py-6 px-6 md:px-12 border-b border-slate-900 bg-slate-950/60 backdrop-blur-xl flex items-center justify-between z-10 flex-wrap gap-4">
-        <a href="/" class="flex items-center gap-3">
-            <img src="/ippti-logo.jpg" alt="IPPTI Logo" class="h-9 w-auto rounded bg-white p-0.5 object-contain shadow-md" />
-            <span class="text-xl font-bold tracking-tight text-white">DocVerify</span>
-        </a>
+        <div class="flex items-center gap-3">
+            <a href="https://ippti.or.id" target="_blank" title="Kunjungi Website Resmi IPPTI">
+                <img src="/ippti-logo.jpg" alt="IPPTI Logo" class="h-9 w-auto rounded bg-white p-0.5 object-contain shadow-md hover:opacity-90 transition" />
+            </a>
+            <a href="/" class="text-xl font-bold tracking-tight text-white hover:underline">DocVerify</a>
+        </div>
         
         <div class="flex items-center gap-4">
             <a href="/" id="nav-verify-doc" class="text-sm font-semibold text-emerald-400 hover:text-emerald-350 hover:underline transition-all duration-200">

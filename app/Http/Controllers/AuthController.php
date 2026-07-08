@@ -142,32 +142,76 @@ class AuthController extends Controller
             return redirect('/login');
         }
 
-        $request->validate([
-            'language_services' => 'nullable|string',
+        $rules = [
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email,' . $user->id,
+            'whatsapp' => 'nullable|string|max:20',
             'bio' => 'nullable|string',
             'profile_picture' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
-        ], [
+        ];
+
+        if ($user->role !== 'TRANSLATOR') {
+            $rules['language_services'] = 'nullable|string';
+        }
+
+        $request->validate($rules, [
+            'name.required' => 'Nama lengkap wajib diisi.',
+            'email.required' => 'Alamat email wajib diisi.',
+            'email.unique' => 'Alamat email ini sudah terdaftar.',
             'profile_picture.image' => 'Berkas harus berupa gambar.',
             'profile_picture.mimes' => 'Format gambar harus jpeg, png, jpg, atau webp.',
             'profile_picture.max' => 'Ukuran gambar maksimal 2MB.',
         ]);
 
+        $oldEmail = $user->email;
+        $oldWhatsapp = $user->whatsapp;
+        $emailChanged = ($request->email !== $oldEmail);
+        $whatsappChanged = ($request->whatsapp !== $oldWhatsapp);
+
+        // Send email notification upon contact info change (REV-11)
+        if ($emailChanged || $whatsappChanged) {
+            $alertContent = "\n======================================================\n";
+            $alertContent .= "[ALERT EMAIL NOTIFICATION SENT TO {$oldEmail}]:\n";
+            $alertContent .= "Halo {$user->name},\n";
+            $alertContent .= "Informasi kontak Anda di portal DocVerify IPPTI telah diperbarui:\n";
+            if ($emailChanged) {
+                $alertContent .= " - Alamat Email: {$oldEmail} -> {$request->email}\n";
+            }
+            if ($whatsappChanged) {
+                $alertContent .= " - WhatsApp / HP: {$oldWhatsapp} -> {$request->whatsapp}\n";
+            }
+            $alertContent .= "Jika Anda tidak merasa melakukan perubahan ini, hubungi administrator IPPTI.\n";
+            $alertContent .= "======================================================\n";
+            error_log($alertContent);
+        }
+
         $updateData = [
-            'language_services' => $request->language_services,
+            'name' => trim($request->name),
+            'email' => trim($request->email),
+            'whatsapp' => $request->whatsapp ? trim($request->whatsapp) : null,
             'bio' => $request->bio,
         ];
+
+        // Prevent translator from editing their own language services (REV-11)
+        if ($user->role !== 'TRANSLATOR') {
+            $updateData['language_services'] = $request->language_services;
+        }
 
         if ($request->hasFile('profile_picture')) {
             $file = $request->file('profile_picture');
             $fileName = 'profile-' . $user->id . '-' . time() . '.' . $file->getClientOriginalExtension();
             
-            // Move file directly to public/uploads directory for simple deployment compatibility
             $file->move(public_path('uploads'), $fileName);
             $updateData['profile_picture'] = '/uploads/' . $fileName;
         }
 
-        // Use direct update to avoid missing dynamic models attributes validation
+        $before = $user->toArray();
         User::where('id', $user->id)->update($updateData);
+        
+        $updatedUser = User::find($user->id);
+        $after = $updatedUser->toArray();
+
+        \App\Models\AuditLog::log('UPDATE_PROFILE', User::class, $user->id, $before, $after);
 
         return back()->with('success', 'Profil Anda berhasil diperbarui!');
     }
@@ -264,19 +308,30 @@ class AuthController extends Controller
         if (empty($query)) {
             return response()->json(['success' => false, 'error' => 'Query pencarian kosong.']);
         }
-        
-        $cleanQuery = strtolower(trim($query));
-        
-        $translators = User::where('sk_number', '!=', 'IPPTI-HQ-2026')
-            ->where('sk_number', '!=', 'IPPTI-ADMIN-01')
-            ->where(function ($q) use ($cleanQuery) {
-                $q->whereRaw('LOWER(name) LIKE ?', ["%{$cleanQuery}%"])
-                  ->orWhereRaw('LOWER(sk_number) LIKE ?', ["%{$cleanQuery}%"])
-                  ->orWhereRaw('LOWER(bio) LIKE ?', ["%{$cleanQuery}%"]);
-            })
+
+        // Endpoint security: require minimal characters (REV-19)
+        if (strlen(trim($query)) < 2) {
+            return response()->json(['success' => false, 'error' => 'Kata kunci pencarian terlalu pendek.']);
+        }
+
+        // Exclude Admin/Superadmin accounts from public search (REV-13)
+        $queryBuilder = User::where('role', 'TRANSLATOR');
+
+        // Token-AND logic: keywords can match in any order (REV-07)
+        $words = array_filter(explode(' ', trim($query)));
+        foreach ($words as $word) {
+            $cleanWord = strtolower($word);
+            $queryBuilder->where(function ($q) use ($cleanWord) {
+                $q->whereRaw('LOWER(name) LIKE ?', ["%{$cleanWord}%"])
+                  ->orWhereRaw('LOWER(sk_number) LIKE ?', ["%{$cleanWord}%"])
+                  ->orWhereRaw('LOWER(bio) LIKE ?', ["%{$cleanWord}%"]);
+            });
+        }
+
+        $translators = $queryBuilder
             ->select('id', 'name', 'sk_number', 'language_services', 'profile_picture')
             ->get();
-            
+
         return response()->json(['success' => true, 'translators' => $translators]);
     }
 
@@ -286,7 +341,7 @@ class AuthController extends Controller
             ->orWhere('sk_number', $translatorId)
             ->firstOrFail();
 
-        if ($translator->sk_number === 'IPPTI-HQ-2026' || $translator->sk_number === 'IPPTI-ADMIN-01') {
+        if ($translator->role !== 'TRANSLATOR') {
             abort(404);
         }
 
@@ -313,8 +368,9 @@ class AuthController extends Controller
     {
         try {
             \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
+            \Illuminate\Support\Facades\Artisan::call('db:seed', ['--force' => true]);
         } catch (\Exception $e) {
-            return back()->withErrors(['email' => 'Gagal menjalankan migrasi database: ' . $e->getMessage()])->withInput();
+            return back()->withErrors(['email' => 'Gagal menjalankan setup awal database: ' . $e->getMessage()])->withInput();
         }
 
         try {

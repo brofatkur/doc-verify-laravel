@@ -50,32 +50,102 @@ class DocumentController extends Controller
             ? trim($request->registration_number)
             : $this->generateRegNumber();
 
-        // Check unique
-        if (Document::where("registration_number", $regNumber)->exists()) {
-            return back()
-                ->withErrors([
-                    "registration_number" => "Nomor registrasi '{$regNumber}' sudah terdaftar.",
-                ])
-                ->withInput();
-        }
+        // Auto-create missing master data
+        \App\Models\DocumentType::firstOrCreate(['name' => trim($request->document_type)]);
+        \App\Models\LanguageDirection::firstOrCreate(['name' => trim($request->language_pair)]);
 
         $documentId = $this->generateDocumentId();
 
-        Document::create([
+        $doc = Document::create([
             "document_id" => $documentId,
             "registration_number" => $regNumber,
             "document_date" => $request->document_date,
-            "document_type" => $request->document_type,
-            "language_pair" => $request->language_pair,
-            "client_name" => $request->client_name,
+            "document_type" => trim($request->document_type),
+            "language_pair" => trim($request->language_pair),
+            "client_name" => trim($request->client_name),
             "status" => "Selesai",
             "is_qr_generated" => $request->has("is_qr_generated"),
             "translator_id" => $user->id,
         ]);
 
+        \App\Models\AuditLog::log('CREATE_DOCUMENT', Document::class, $doc->id, null, $doc->toArray());
+
         return redirect("/admin")->with(
             "success",
             "Dokumen terjemahan baru berhasil disimpan!",
+        );
+    }
+
+    public function update(Request $request, $id)
+    {
+        $user = Auth::user();
+        if (!$user) {
+            abort(403, 'Akses ditolak.');
+        }
+
+        $document = Document::findOrFail($id);
+
+        if ($document->translator_id !== $user->id) {
+            abort(403, 'Akses ditolak. Anda bukan pemilik dokumen ini.');
+        }
+
+        $request->validate([
+            "registration_number" => "nullable|string|max:255",
+            "document_date" => "required|date",
+            "document_type" => "required|string|max:255",
+            "language_pair" => "required|string|max:255",
+            "client_name" => "required|string|max:255",
+        ]);
+
+        $regNumber = $request->filled("registration_number")
+            ? trim($request->registration_number)
+            : $document->registration_number;
+
+        // Auto-create missing master data
+        \App\Models\DocumentType::firstOrCreate(['name' => trim($request->document_type)]);
+        \App\Models\LanguageDirection::firstOrCreate(['name' => trim($request->language_pair)]);
+
+        $before = $document->toArray();
+
+        $document->update([
+            "registration_number" => $regNumber,
+            "document_date" => $request->document_date,
+            "document_type" => trim($request->document_type),
+            "language_pair" => trim($request->language_pair),
+            "client_name" => trim($request->client_name),
+        ]);
+
+        $after = $document->toArray();
+
+        \App\Models\AuditLog::log('UPDATE_DOCUMENT', Document::class, $document->id, $before, $after);
+
+        return redirect("/admin")->with(
+            "success",
+            "Dokumen terjemahan berhasil diperbarui!"
+        );
+    }
+
+    public function archive($id)
+    {
+        $user = Auth::user();
+        if (!$user) {
+            abort(403, 'Akses ditolak.');
+        }
+
+        $document = Document::findOrFail($id);
+
+        if ($document->translator_id !== $user->id) {
+            abort(403, 'Akses ditolak. Anda bukan pemilik dokumen ini.');
+        }
+
+        $before = $document->toArray();
+        $document->delete(); // Soft delete
+
+        \App\Models\AuditLog::log('ARCHIVE_DOCUMENT', Document::class, $document->id, $before, null);
+
+        return redirect("/admin")->with(
+            "success",
+            "Dokumen terjemahan berhasil diarsipkan!"
         );
     }
 
@@ -89,7 +159,7 @@ class DocumentController extends Controller
             );
         }
 
-        $query = Document::where("id", $id);
+        $query = Document::withTrashed()->where("id", $id);
         if ($user->role !== "SUPERADMIN") {
             $query->where("translator_id", $user->id);
         }
@@ -102,9 +172,13 @@ class DocumentController extends Controller
             );
         }
 
+        $before = $doc->toArray();
         $doc->update([
             "is_qr_generated" => !$doc->is_qr_generated,
         ]);
+        $after = $doc->toArray();
+
+        \App\Models\AuditLog::log('TOGGLE_QR', Document::class, $doc->id, $before, $after);
 
         return response()->json(["success" => true]);
     }
@@ -155,79 +229,82 @@ class DocumentController extends Controller
         }
 
         $importedCount = 0;
-        $skippedCount = 0;
-        $errors = [];
 
-        foreach ($rows as $row) {
-            // Normalize row keys
-            $normalizedRow = [];
-            foreach ($row as $k => $v) {
-                $normalizedRow[$this->normalizeKey($k)] = $v;
-            }
+        // Transactional execution (all-or-nothing, REV-22)
+        \DB::beginTransaction();
+        try {
+            foreach ($rows as $index => $row) {
+                // Normalize row keys
+                $normalizedRow = [];
+                foreach ($row as $k => $v) {
+                    $normalizedRow[$this->normalizeKey($k)] = $v;
+                }
 
-            // Find key variants in Excel file columns
-            $regNum = isset($normalizedRow['noregister']) ? trim((string)$normalizedRow['noregister']) : (
-                isset($normalizedRow['noregistrasi']) ? trim((string)$normalizedRow['noregistrasi']) : (
-                    isset($normalizedRow['nomorregistrasi']) ? trim((string)$normalizedRow['nomorregistrasi']) : (
-                        isset($normalizedRow['registrationnumber']) ? trim((string)$normalizedRow['registrationnumber']) : ''
+                $regNum = isset($normalizedRow['noregister']) ? trim((string)$normalizedRow['noregister']) : (
+                    isset($normalizedRow['noregistrasi']) ? trim((string)$normalizedRow['noregistrasi']) : (
+                        isset($normalizedRow['nomorregistrasi']) ? trim((string)$normalizedRow['nomorregistrasi']) : (
+                            isset($normalizedRow['registrationnumber']) ? trim((string)$normalizedRow['registrationnumber']) : ''
+                        )
                     )
-                )
-            );
-            if (empty($regNum)) {
-                $regNum = $this->generateRegNumber();
-            }
+                );
+                if (empty($regNum)) {
+                    $regNum = $this->generateRegNumber();
+                }
 
-            $rawDate = $normalizedRow['tanggal'] ?? (
-                $normalizedRow['tanggaldokumen'] ?? (
-                    $normalizedRow['date'] ?? (
-                        $normalizedRow['documentdate'] ?? date('Y-m-d')
+                $rawDate = $normalizedRow['tanggal'] ?? (
+                    $normalizedRow['tanggaldokumen'] ?? (
+                        $normalizedRow['date'] ?? (
+                            $normalizedRow['documentdate'] ?? date('Y-m-d')
+                        )
                     )
-                )
-            );
+                );
 
-            // Format dates
-            $docDate = date(
-                "Y-m-d",
-                is_numeric($rawDate)
-                    ? ($rawDate - 25569) * 86400
-                    : strtotime(str_replace("/", "-", (string)$rawDate)),
-            );
+                $docDate = date(
+                    "Y-m-d",
+                    is_numeric($rawDate)
+                        ? ($rawDate - 25569) * 86400
+                        : strtotime(str_replace("/", "-", (string)$rawDate)),
+                );
 
-            $docType = isset($normalizedRow['tipedokumen']) ? trim((string)$normalizedRow['tipedokumen']) : (
-                isset($normalizedRow['documenttype']) ? trim((string)$normalizedRow['documenttype']) : (
-                    isset($normalizedRow['tipe']) ? trim((string)$normalizedRow['tipe']) : 'Dokumen Terjemahan'
-                )
-            );
-            
-            $langPair = isset($normalizedRow['arahbahasa']) ? trim((string)$normalizedRow['arahbahasa']) : (
-                isset($normalizedRow['pasanganbahasa']) ? trim((string)$normalizedRow['pasanganbahasa']) : (
-                    isset($normalizedRow['languagepair']) ? trim((string)$normalizedRow['languagepair']) : (
-                        isset($normalizedRow['bahasa']) ? trim((string)$normalizedRow['bahasa']) : 'N/A'
+                $docType = isset($normalizedRow['tipedokumen']) ? trim((string)$normalizedRow['tipedokumen']) : (
+                    isset($normalizedRow['documenttype']) ? trim((string)$normalizedRow['documenttype']) : (
+                        isset($normalizedRow['tipe']) ? trim((string)$normalizedRow['tipe']) : ''
                     )
-                )
-            );
-            
-            $clientName = isset($normalizedRow['namaklien']) ? trim((string)$normalizedRow['namaklien']) : (
-                isset($normalizedRow['namadidokumen']) ? trim((string)$normalizedRow['namadidokumen']) : (
-                    isset($normalizedRow['clientname']) ? trim((string)$normalizedRow['clientname']) : (
-                        isset($normalizedRow['klien']) ? trim((string)$normalizedRow['klien']) : 'N/A'
+                );
+                
+                $langPair = isset($normalizedRow['arahbahasa']) ? trim((string)$normalizedRow['arahbahasa']) : (
+                    isset($normalizedRow['pasanganbahasa']) ? trim((string)$normalizedRow['pasanganbahasa']) : (
+                        isset($normalizedRow['languagepair']) ? trim((string)$normalizedRow['languagepair']) : (
+                            isset($normalizedRow['bahasa']) ? trim((string)$normalizedRow['bahasa']) : ''
+                        )
                     )
-                )
-            );
+                );
+                
+                $clientName = isset($normalizedRow['namaklien']) ? trim((string)$normalizedRow['namaklien']) : (
+                    isset($normalizedRow['namadidokumen']) ? trim((string)$normalizedRow['namadidokumen']) : (
+                        isset($normalizedRow['clientname']) ? trim((string)$normalizedRow['clientname']) : (
+                            isset($normalizedRow['klien']) ? trim((string)$normalizedRow['klien']) : ''
+                        )
+                    )
+                );
 
-            // Handle QR verification flag
-            $qrRaw = $normalizedRow['buatkodeqrverifikasi'] ?? (
-                $normalizedRow['isqrgenerated'] ?? 'Ya'
-            );
-            $generateQr = is_bool($qrRaw)
-                ? $qrRaw
-                : strtolower(trim((string)$qrRaw)) === "ya";
+                $qrRaw = $normalizedRow['buatkodeqrverifikasi'] ?? (
+                    $normalizedRow['isqrgenerated'] ?? 'Ya'
+                );
+                $generateQr = is_bool($qrRaw)
+                    ? $qrRaw
+                    : strtolower(trim((string)$qrRaw)) === "ya";
 
-            try {
-                if (Document::where("registration_number", $regNum)->exists()) {
-                    $skippedCount++;
-                    $errors[] = "Nomor registrasi '{$regNum}' sudah terdaftar, baris dilewati.";
-                    continue;
+                // Server-side row validation (REV-22)
+                $rowNum = $index + 1;
+                if (empty($clientName)) {
+                    throw new \Exception("Baris {$rowNum}: Nama Klien / Nama di Dokumen wajib diisi.");
+                }
+                if (empty($docType)) {
+                    throw new \Exception("Baris {$rowNum}: Tipe Dokumen wajib diisi.");
+                }
+                if (empty($langPair)) {
+                    throw new \Exception("Baris {$rowNum}: Arah / Pasangan Bahasa wajib diisi.");
                 }
 
                 $docId = $this->generateDocumentId();
@@ -244,21 +321,27 @@ class DocumentController extends Controller
                     "translator_id" => $user->id,
                 ];
 
-                Document::create($insertData);
+                $doc = Document::create($insertData);
+                
+                // Audit logging (REV-12)
+                \App\Models\AuditLog::log('IMPORT_DOCUMENT', Document::class, $doc->id, null, $insertData);
 
                 $importedCount++;
-            } catch (\Exception $e) {
-                $skippedCount++;
-                $errors[] =
-                    "Gagal mengimpor '{$clientName}': " . $e->getMessage();
             }
+            \DB::commit();
+        } catch (\Exception $e) {
+            \DB::rollBack();
+            return response()->json([
+                "success" => false,
+                "error" => $e->getMessage()
+            ], 400);
         }
 
         return response()->json([
             "success" => true,
             "importedCount" => $importedCount,
-            "skippedCount" => $skippedCount,
-            "errors" => $errors,
+            "skippedCount" => 0,
+            "errors" => []
         ]);
     }
 
@@ -268,7 +351,8 @@ class DocumentController extends Controller
             abort(404);
         }
 
-        $document = Document::where("document_id", $documentId)
+        $document = Document::withTrashed()
+            ->where("document_id", $documentId)
             ->with([
                 "translator" => function ($query) {
                     $query->select(
@@ -278,12 +362,17 @@ class DocumentController extends Controller
                         "bio",
                         "language_services",
                         "profile_picture",
+                        "role"
                     );
                 },
             ])
             ->first();
 
-        // Pass document to view (if null or not qr generated, the view displays the "not found" container)
+        // Exclude admin/superadmin accounts from public verification results (REV-13)
+        if ($document && $document->translator && $document->translator->role !== 'TRANSLATOR') {
+            $document = null;
+        }
+
         return view("verify", compact("document", "documentId"));
     }
 
@@ -297,24 +386,54 @@ class DocumentController extends Controller
             );
         }
 
-        $doc = Document::where("document_id", $query)
-            ->orWhere("registration_number", $query)
+        // Endpoint security: require minimal characters in queries (REV-19)
+        if (strlen($query) < 3) {
+            return back()->with(
+                "error",
+                "Kata kunci pencarian terlalu pendek. Masukkan minimal 3 karakter.",
+            );
+        }
+
+        // 1. First attempt to match exact Document ID (8 characters)
+        $docById = Document::withTrashed()
+            ->where("document_id", $query)
+            ->with('translator')
             ->first();
 
-        if (!$doc) {
+        if ($docById) {
+            if ($docById->translator && $docById->translator->role !== 'TRANSLATOR') {
+                return back()->with("error", "Dokumen terverifikasi tidak ditemukan.");
+            }
+            if (!$docById->is_qr_generated) {
+                return back()->with("error", "Dokumen ini belum diotorisasi untuk verifikasi publik.");
+            }
+            return redirect("/verify/" . $docById->document_id);
+        }
+
+        // 2. Otherwise match by Registration Number (may return multiple results)
+        $docs = Document::withTrashed()
+            ->where("registration_number", $query)
+            ->where("is_qr_generated", true)
+            ->whereHas('translator', function ($q) {
+                $q->where('role', 'TRANSLATOR');
+            })
+            ->with('translator')
+            ->get();
+
+        if ($docs->isEmpty()) {
             return back()->with(
                 "error",
                 "Dokumen terverifikasi tidak ditemukan.",
             );
         }
 
-        if (!$doc->is_qr_generated) {
-            return back()->with(
-                "error",
-                "Dokumen ini belum diotorisasi untuk verifikasi publik.",
-            );
+        if ($docs->count() === 1) {
+            return redirect("/verify/" . $docs->first()->document_id);
         }
 
-        return redirect("/verify/" . $doc->document_id);
+        // 3. Disambiguation selection page for multiple records found (REV-08)
+        $regNumber = $query;
+        $documents = $docs;
+        return view("verify-disambiguation", compact("documents", "regNumber"));
     }
 }
