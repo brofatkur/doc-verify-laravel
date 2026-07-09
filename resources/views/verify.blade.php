@@ -112,6 +112,12 @@
                 <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
                 <div class="absolute inset-0 bg-gradient-to-b from-white/10 to-transparent"></div>
                 
+                <!-- IPPTI Logo inside the certificate card (REV-05, Print Friendly) -->
+                <div class="absolute top-4 right-4 flex items-center gap-2 bg-white/10 backdrop-blur px-2.5 py-1 rounded-lg border border-white/20">
+                    <img src="/ippti-logo.jpg" alt="IPPTI Logo" class="h-6 w-auto rounded bg-white p-0.5 object-contain" />
+                    <span class="text-[9px] font-black text-white tracking-widest">IPPTI</span>
+                </div>
+                
                 <div class="relative z-10 space-y-3">
                     <div id="verified-icon-wrapper" class="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto shadow-md ring-4 ring-emerald-500/30 animate-pulse">
                         <i id="icon-active" data-lucide="check-circle-2" class="w-10 h-10 text-emerald-600"></i>
@@ -207,6 +213,18 @@
                             @endif
                         </div>
                     </div>
+
+                    <!-- Secure verification QR Code (Print Friendly) -->
+                    <div class="sm:col-span-2 border-t border-slate-100 pt-6">
+                        <div class="flex flex-col sm:flex-row items-center gap-5 bg-slate-50 border border-slate-100 rounded-2xl p-5">
+                            <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data={{ urlencode(url('/verify/' . $document->document_id)) }}" alt="QR Code Verifikasi" class="w-28 h-28 bg-white p-1 rounded-xl border border-slate-200 shadow-sm flex-shrink-0" />
+                            <div class="space-y-1.5 text-center sm:text-left overflow-hidden">
+                                <p id="label-qr-title" class="text-xs font-bold text-slate-700 uppercase tracking-wider">QR Code Verifikasi Resmi</p>
+                                <p id="label-qr-desc" class="text-[11px] text-slate-500 leading-relaxed"></p>
+                                <p class="text-[10px] font-mono text-emerald-600 font-bold select-all truncate">{{ url('/verify/' . $document->document_id) }}</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -266,7 +284,9 @@
                     ? `<strong class="text-rose-800 font-bold">Peringatan Penting:</strong> Dokumen terjemahan dengan nomor registrasi ini telah dicabut atau dibatalkan oleh penerjemah yang bersangkutan. Dokumen ini tidak lagi berlaku untuk keperluan resmi.`
                     : `<strong class="text-slate-800 font-bold">Disclaimer Resmi:</strong> Sistem ini memverifikasi bahwa terjemahan dokumen ini telah resmi terdaftar oleh Penerjemah Tersumpah yang terasosiasi di atas. Harap pastikan fisik dokumen memiliki cap basah/segel pengaman yang sesuai untuk validitas hukum sepenuhnya.`,
                 bottom_credit: isArchived ? "STATUS DOKUMEN: DIBATALKAN" : "DIVERIFIKASI SECARA ELEKTRONIK & KRIPTOGRAFIS",
-                sub_portal: "Portal Verifikasi Resmi Terjemahan Tersumpah"
+                sub_portal: "Portal Verifikasi Resmi Terjemahan Tersumpah",
+                qr_title: "QR Code Verifikasi Resmi",
+                qr_desc: "Pindai kode QR ini dengan kamera ponsel untuk memverifikasi dokumen secara instan dan aman pada sistem database nasional IPPTI."
             },
             en: {
                 credentials: "Document Credentials",
@@ -288,7 +308,9 @@
                     ? `<strong class="text-rose-800 font-bold">Important Warning:</strong> The registration of this document has been revoked or cancelled by the respective translator. This document is no longer valid for official purposes.`
                     : `<strong class="text-slate-800 font-bold">Official Disclaimer:</strong> This system verifies that the translation of this document has been officially registered by the sworn translator associated above. Please ensure that the physical document bears the appropriate wet stamp or security seal for full legal validity.`,
                 bottom_credit: isArchived ? "DOCUMENT STATUS: REVOKED / CANCELLED" : "ELECTRONICALLY & CRYPTOGRAPHICALLY VERIFIED",
-                sub_portal: "Official Sworn Translation Verification Portal"
+                sub_portal: "Official Sworn Translation Verification Portal",
+                qr_title: "Official Verification QR Code",
+                qr_desc: "Scan this QR code with your mobile camera to verify the document instantly and securely on the IPPTI national database system."
             },
             zh: {
                 credentials: "文件凭证",
@@ -310,7 +332,9 @@
                     ? `<strong class="text-rose-800 font-bold">重要警示:</strong> 此文件的翻译注册已被相关翻译员撤销或取消。此文件在官方用途上不再有效。`
                     : `<strong class="text-slate-800 font-bold">官方免责声明:</strong> 此系统验证此文件的翻译已由上述关联的宣誓翻译员正式注册。请确保纸质文件上有相应的湿盖章或安全封条，以具备完全的法律效力。`,
                 bottom_credit: isArchived ? "文件状态：已取消" : "经过电子与密码学验证",
-                sub_portal: "官方宣誓翻译验证门户"
+                sub_portal: "官方宣誓翻译验证门户",
+                qr_title: "官方验证二维码",
+                qr_desc: "使用手机摄像头扫描此二维码，即可在 IPPTI 国家数据库系统上立即安全地验证该文件。"
             },
             ar: {
                 credentials: "وثائق المستند",
@@ -332,7 +356,9 @@
                     ? `<strong class="text-rose-800 font-bold">تحذير مهم:</strong> تم إلغاء أو سحب تسجيل ترجمة هذا المستند بواسطة المترجم المعني. لم يعد هذا المستند صالحاً للأغراض الرسمية.`
                     : `<strong class="text-slate-800 font-bold">إخلاء مسؤولية رسمي:</strong> يتحقق هذا النظام من أن ترجمة هذا المستند قد تم تسجيلها رسمياً بواسطة المترجم المحلف المرتبط أعلاه. يرجى التأكد من أن المستند المادي يحمل الختم المائي أو الختم الأمني المناسب للصلاحية القانونية الكاملة.`,
                 bottom_credit: isArchived ? "حالة المستند: ملغى" : "تم التحقق منه إلكترونياً وتشفيرياً",
-                sub_portal: "البوابة الرسمية للتحقق من الترجمة المحلفة"
+                sub_portal: "البوابة الرسمية للتحقق من الترجمة المحلفة",
+                qr_title: "رمز الاستجابة السريعة للتحقق الرسمي",
+                qr_desc: "امسح رمز الاستجابة السريعة (QR) هذا بكاميرا الهاتف للتحقق من المستند فوراً وبأمان على نظام قاعدة البيانات الوطنية لـ IPPTI."
             }
         };
 
@@ -372,6 +398,8 @@
             const labelBottomCredit = document.getElementById('label-bottom-credit');
             const subPortal = document.getElementById('sub-header-portal');
             const labelCredentials = document.getElementById('label-credentials');
+            const labelQrTitle = document.getElementById('label-qr-title');
+            const labelQrDesc = document.getElementById('label-qr-desc');
 
             if (subPortal) subPortal.innerText = t.sub_portal;
             if (labelCredentials) labelCredentials.innerText = t.credentials;
@@ -392,6 +420,8 @@
             if (labelBio) labelBio.innerText = t.bio;
             if (labelDisclaimer) labelDisclaimer.innerHTML = t.disclaimer;
             if (labelBottomCredit) labelBottomCredit.innerText = t.bottom_credit;
+            if (labelQrTitle) labelQrTitle.innerText = t.qr_title;
+            if (labelQrDesc) labelQrDesc.innerText = t.qr_desc;
 
             // Apply status badge classes dynamically (REV-20)
             const statusBadge = document.getElementById('status-badge');

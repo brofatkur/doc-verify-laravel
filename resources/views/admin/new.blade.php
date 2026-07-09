@@ -100,18 +100,7 @@
                 </div>
             </div>
 
-            <div class="pt-4 border-t border-slate-100">
-                <label class="flex items-center gap-3.5 cursor-pointer group">
-                    <div class="relative flex items-center">
-                        <input type="checkbox" name="is_qr_generated" checked class="sr-only peer" />
-                        <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-emerald-100/50 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-350 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
-                    </div>
-                    <div>
-                        <span class="block text-sm font-bold text-slate-900 group-hover:text-emerald-700 transition-colors duration-150">Buat Kode QR Verifikasi Secara Instan</span>
-                        <span class="block text-xs text-slate-500">Aktifkan opsi ini untuk langsung membuat kode QR setelah dokumen disimpan.</span>
-                    </div>
-                </label>
-            </div>
+
 
             <div class="pt-6 flex justify-end gap-3 border-t border-slate-100">
                 <a href="/admin" class="px-6 py-2.5 border border-slate-300 rounded-xl font-semibold text-slate-700 hover:bg-slate-50 active:scale-[0.98] transition-all duration-150 text-sm">

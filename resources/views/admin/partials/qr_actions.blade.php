@@ -17,7 +17,7 @@
         </a>
     @endif
 
-    @if(Auth::check() && $doc->translator_id === Auth::id())
+    @if(Auth::check() && ($doc->translator_id === Auth::id() || Auth::user()->role === 'SUPERADMIN'))
         <a
             href="/admin/documents/{{ $doc->id }}/edit"
             class="text-slate-600 p-2 hover:bg-slate-100 rounded-lg transition cursor-pointer"
@@ -27,16 +27,18 @@
         </a>
     @endif
 
-    <button
-        onclick="toggleQrStatus('{{ $doc->id }}', {{ $doc->is_qr_generated ? 'true' : 'false' }})"
-        id="btn-toggle-qr-{{ $doc->id }}"
-        class="px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 cursor-pointer {{ $doc->is_qr_generated
-                ? 'bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200'
-                : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200'
-            }}"
-    >
-        <span>{{ $doc->is_qr_generated ? 'Cabut QR' : 'Buat QR' }}</span>
-    </button>
+    @if(Auth::check() && ($doc->translator_id === Auth::id() || Auth::user()->role === 'SUPERADMIN'))
+        <button
+            onclick="toggleQrStatus('{{ $doc->id }}', {{ $doc->is_qr_generated ? 'true' : 'false' }})"
+            id="btn-toggle-qr-{{ $doc->id }}"
+            class="px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 cursor-pointer {{ $doc->is_qr_generated
+                    ? 'bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200'
+                    : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200'
+                }}"
+        >
+            <span>{{ $doc->is_qr_generated ? 'Cabut QR' : 'Buat QR' }}</span>
+        </button>
+    @endif
 </div>
 
 <!-- Render QR modal code once globally on layout, or locally here -->

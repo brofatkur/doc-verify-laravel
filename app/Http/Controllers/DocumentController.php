@@ -64,7 +64,7 @@ class DocumentController extends Controller
             "language_pair" => trim($request->language_pair),
             "client_name" => trim($request->client_name),
             "status" => "Selesai",
-            "is_qr_generated" => $request->has("is_qr_generated"),
+            "is_qr_generated" => true,
             "translator_id" => $user->id,
         ]);
 
@@ -317,7 +317,7 @@ class DocumentController extends Controller
                     "language_pair" => $langPair,
                     "client_name" => $clientName,
                     "status" => "Selesai",
-                    "is_qr_generated" => $generateQr,
+                    "is_qr_generated" => true,
                     "translator_id" => $user->id,
                 ];
 

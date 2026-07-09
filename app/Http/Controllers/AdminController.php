@@ -18,8 +18,9 @@ class AdminController extends Controller
         }
 
         $isSuperAdmin = $user->role === 'SUPERADMIN';
+        $isAdmin = $user->role === 'ADMIN';
 
-        if ($isSuperAdmin) {
+        if ($isSuperAdmin || $isAdmin) {
             $translators = User::withCount('documents')->orderBy('name', 'asc')->get();
             $documents = Document::with('translator')->orderBy('created_at', 'desc')->get();
             
@@ -34,7 +35,7 @@ class AdminController extends Controller
                 ->get();
 
             return view('admin.dashboard', compact(
-                'isSuperAdmin', 'translators', 'documents', 
+                'isSuperAdmin', 'isAdmin', 'translators', 'documents', 
                 'totalTranslators', 'totalDocs', 'totalQrCodes', 'docTypeStats'
             ));
         }
@@ -47,7 +48,7 @@ class AdminController extends Controller
         $totalDocs = $documents->count();
         $totalQrCodes = $documents->where('is_qr_generated', true)->count();
 
-        return view('admin.dashboard', compact('isSuperAdmin', 'documents', 'totalDocs', 'totalQrCodes'));
+        return view('admin.dashboard', compact('isSuperAdmin', 'isAdmin', 'documents', 'totalDocs', 'totalQrCodes'));
     }
 
     public function createDocument()
