@@ -191,6 +191,38 @@
         &copy; {{ date('Y') }} DocVerify IPPTI. Keamanan Terjemahan Tersumpah Resmi.
     </footer>
 
+    <!-- Disambiguation Modal Popup (REV-08) -->
+    <div id="modal-disambiguation" class="hidden fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-2xl w-full shadow-2xl overflow-hidden border border-slate-100 flex flex-col max-h-[85vh]">
+            <!-- Modal Header -->
+            <div class="px-6 py-5 bg-amber-50 border-b border-amber-100 flex items-center justify-between">
+                <div class="flex items-center gap-2.5 text-amber-800">
+                    <i data-lucide="alert-triangle" class="w-5 h-5 flex-shrink-0"></i>
+                    <div class="text-left">
+                        <h3 id="modal-disambiguation-title" class="text-sm font-bold text-slate-900 leading-none">Beberapa Penerjemah Ditemukan</h3>
+                        <p id="modal-disambiguation-instruction" class="text-[10px] text-slate-500 font-medium mt-1">Pilih penerjemah sesuai yang tertera pada fisik dokumen Anda.</p>
+                    </div>
+                </div>
+                <button
+                    onclick="closeDisambiguationModal()"
+                    class="p-1 rounded-full text-slate-400 hover:bg-slate-100 transition cursor-pointer"
+                >
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <!-- Modal Content (Scrollable list) -->
+            <div id="disambiguation-list" class="p-6 overflow-y-auto space-y-4 divide-y divide-slate-100 text-left">
+                <!-- Dynamic cards will be rendered here -->
+            </div>
+
+            <!-- Modal Footer -->
+            <div id="modal-disambiguation-footer" class="px-6 py-4 bg-slate-50 border-t border-slate-100 text-center text-[10px] text-slate-400">
+                Arahan: Harap pilih profil penerjemah yang tanda tangan dan stempelnya tertera pada dokumen fisik terjemahan Anda.
+            </div>
+        </div>
+    </div>
+
     <script>
         lucide.createIcons();
 
@@ -214,7 +246,12 @@
                 scan_err_canvas: "Gagal memproses kanvas gambar.",
                 scan_err_qr: "Tidak dapat menemukan kode QR yang terbaca. Coba pindai kembali dengan gambar yang lebih jelas.",
                 scan_err_decode: "Kode QR ini tidak dikenali sebagai URL verifikasi DocVerify atau ID Dokumen yang valid.",
-                scan_err_load: "Gagal memuat berkas gambar."
+                scan_err_load: "Gagal memuat berkas gambar.",
+                disambiguation_title: "Beberapa Penerjemah Ditemukan",
+                disambiguation_instruction: "Pilih penerjemah sesuai yang tertera pada fisik dokumen Anda.",
+                disambiguation_footer: "Arahan: Harap pilih profil penerjemah yang tanda tangan dan stempelnya tertera pada dokumen fisik terjemahan Anda.",
+                disambiguation_choose: "Pilih & Verifikasi",
+                member_no: "No. Anggota"
             },
             en: {
                 title_doc: "Official Document Validation Portal",
@@ -235,7 +272,12 @@
                 scan_err_canvas: "Failed to process image canvas.",
                 scan_err_qr: "Could not find a readable QR code. Try scanning again with a clearer image.",
                 scan_err_decode: "This QR code is not recognized as a valid DocVerify verification URL or Document ID.",
-                scan_err_load: "Failed to load image file."
+                scan_err_load: "Failed to load image file.",
+                disambiguation_title: "Multiple Translators Found",
+                disambiguation_instruction: "Please select the translator listed on your physical document.",
+                disambiguation_footer: "Instruction: Please choose the translator profile whose signature and stamp appear on your physical translated document.",
+                disambiguation_choose: "Select & Verify",
+                member_no: "Member ID"
             },
             zh: {
                 title_doc: "官方文件验证门户",
@@ -256,7 +298,12 @@
                 scan_err_canvas: "处理图像画布失败。",
                 scan_err_qr: "找不到可读取的二维码。请使用更清晰的图片重新扫描。",
                 scan_err_decode: "此二维码未被识别为有效的 DocVerify 验证 URL 或文件 ID。",
-                scan_err_load: "加载图像文件失败。"
+                scan_err_load: "加载图像文件失败。",
+                disambiguation_title: "找到多位翻译员",
+                disambiguation_instruction: "请选择您纸质文件上列出的翻译员。",
+                disambiguation_footer: "指导：请选择其签名和印章出现在您的翻译文件原件上的翻译员个人资料。",
+                disambiguation_choose: "选择并验证",
+                member_no: "成员 ID"
             },
             ar: {
                 title_doc: "البوابة الرسمية للتحقق من المستندات",
@@ -277,8 +324,13 @@
                 scan_err_canvas: "فشل في معالجة كانفاس الصورة.",
                 scan_err_qr: "لم يتم العثور على رمز QR صالح للقراءة. يرجى المحاولة مرة أخرى بصورة أوضح.",
                 scan_err_decode: "لا يتم التعرف على رمز QR هذا كعنوان URL صالح للتحقق من DocVerify أو معرف مستند.",
-                scan_err_load: "فشل في تحميل ملف الصورة."
-            }
+                scan_err_load: "فشل في تحميل ملف الصورة.",
+                disambiguation_title: "تم العثور على مترجمين متعددين",
+                disambiguation_instruction: "يرجى تحديد المترجم المدرج في مستندك الورقي.",
+                disambiguation_footer: "إرشادات: يرجى اختيار ملف المترجم الذي يظهر توقيعه وختمه على مستند الترجمة الورقي الخاص بك.",
+                disambiguation_choose: "اختيار والتحقق",
+                member_no: "رقم العضوية"
+            },
         };
 
         let currentLang = localStorage.getItem('docverify_lang') || 'id';
@@ -321,6 +373,14 @@
             document.getElementById('scan-desc-sub').innerText = t.upload_qr_desc;
             document.getElementById('desc-qr').innerText = t.desc_qr;
             document.getElementById('footer-text').innerHTML = `&copy; ${new Date().getFullYear()} ${t.footer}`;
+
+            // Update modal text if elements are present
+            const mTitle = document.getElementById('modal-disambiguation-title');
+            const mInstruction = document.getElementById('modal-disambiguation-instruction');
+            const mFooter = document.getElementById('modal-disambiguation-footer');
+            if (mTitle) mTitle.innerText = t.disambiguation_title;
+            if (mInstruction) mInstruction.innerText = t.disambiguation_instruction;
+            if (mFooter) mFooter.innerText = t.disambiguation_footer;
 
             // Highlight language button
             ['id', 'en', 'zh', 'ar'].forEach(l => {
@@ -439,6 +499,97 @@
             labelText.innerText = translations[currentLang].upload_qr;
             iconContainer.innerHTML = `<i data-lucide="camera" class="w-10 h-10 text-slate-400 group-hover:text-blue-950 transition-colors duration-200 mb-4"></i>`;
             lucide.createIcons();
+        }
+
+        // Intercept Search Form Submit for AJAX popup handling (REV-08)
+        document.getElementById('form-search').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const input = document.getElementById('search-input');
+            const query = input.value.trim();
+            if (!query) return;
+
+            const sessionErr = document.getElementById('session-error');
+            if (sessionErr) sessionErr.classList.add('hidden');
+
+            const scanErr = document.getElementById('scan-error');
+            scanErr.classList.add('hidden');
+
+            const btnIcon = document.getElementById('arrow-icon');
+            btnIcon.className = "w-4 h-4 text-emerald-400 animate-spin";
+            
+            try {
+                const response = await fetch('/search?query=' + encodeURIComponent(query), {
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    showScanError(data.error || 'Dokumen terverifikasi tidak ditemukan.');
+                    return;
+                }
+
+                if (data.multiple) {
+                    showDisambiguationModal(data.documents, data.regNumber);
+                } else if (data.redirect) {
+                    window.location.href = data.redirect;
+                }
+            } catch (err) {
+                showScanError('Kesalahan jaringan: ' + err.message);
+            } finally {
+                btnIcon.className = "w-4 h-4";
+                lucide.createIcons();
+            }
+        });
+
+        function showDisambiguationModal(documents, regNumber) {
+            const listContainer = document.getElementById('disambiguation-list');
+            listContainer.innerHTML = '';
+            const t = translations[currentLang];
+
+            documents.forEach(doc => {
+                const card = document.createElement('div');
+                card.className = "flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 py-4 first:pt-0 last:pb-0";
+                
+                const profilePic = doc.translator.profile_picture 
+                    ? `<img src="${doc.translator.profile_picture}" class="w-full h-full object-cover" />`
+                    : `<i data-lucide="user" class="w-5 h-5 text-slate-400"></i>`;
+
+                card.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <div class="w-11 h-11 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center overflow-hidden flex-shrink-0">
+                            ${profilePic}
+                        </div>
+                        <div class="overflow-hidden">
+                            <h4 class="font-bold text-slate-900 text-sm truncate">${doc.translator.name}</h4>
+                            <p class="text-[10px] text-slate-500 font-mono mt-0.5">${t.member_no}: ${doc.translator.sk_number}</p>
+                            <div class="flex flex-wrap gap-x-2.5 gap-y-1 mt-1 text-[10px] text-slate-400">
+                                <span>Tipe: <strong class="text-slate-600">${doc.document_type}</strong></span>
+                                <span>Arah: <strong class="text-blue-900">${doc.language_pair}</strong></span>
+                                <span>Klien: <strong class="text-slate-600 font-mono">${doc.client_name}</strong></span>
+                            </div>
+                        </div>
+                    </div>
+                    <a
+                        href="/verify/${doc.document_id}"
+                        class="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2 bg-blue-950 hover:bg-blue-900 text-white rounded-xl text-xs font-bold transition shadow-sm cursor-pointer whitespace-nowrap"
+                    >
+                        <span>${t.disambiguation_choose}</span>
+                        <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+                    </a>
+                `;
+                listContainer.appendChild(card);
+            });
+
+            document.getElementById('modal-disambiguation').classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        function closeDisambiguationModal() {
+            document.getElementById('modal-disambiguation').classList.add('hidden');
         }
 
         // Initialize UI

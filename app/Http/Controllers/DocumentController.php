@@ -50,6 +50,15 @@ class DocumentController extends Controller
             ? trim($request->registration_number)
             : $this->generateRegNumber();
 
+        // Check if registration number already exists for this translator (REV-08 rule)
+        $existsSameTranslator = Document::where('registration_number', $regNumber)
+            ->where('translator_id', $user->id)
+            ->exists();
+
+        if ($existsSameTranslator) {
+            return back()->withErrors(['registration_number' => 'Nomor registrasi sudah terdaftar untuk akun Penerjemah Anda. Silakan ubah secara manual.'])->withInput();
+        }
+
         // Auto-create missing master data
         \App\Models\DocumentType::firstOrCreate(['name' => trim($request->document_type)]);
         \App\Models\LanguageDirection::firstOrCreate(['name' => trim($request->language_pair)]);
@@ -100,6 +109,16 @@ class DocumentController extends Controller
         $regNumber = $request->filled("registration_number")
             ? trim($request->registration_number)
             : $document->registration_number;
+
+        // Check if registration number already exists for this translator (REV-08 rule)
+        $existsSameTranslator = Document::where('registration_number', $regNumber)
+            ->where('translator_id', $user->id)
+            ->where('id', '!=', $id)
+            ->exists();
+
+        if ($existsSameTranslator) {
+            return back()->withErrors(['registration_number' => 'Nomor registrasi sudah terdaftar untuk akun Penerjemah Anda. Silakan ubah secara manual.'])->withInput();
+        }
 
         // Auto-create missing master data
         \App\Models\DocumentType::firstOrCreate(['name' => trim($request->document_type)]);
@@ -306,6 +325,14 @@ class DocumentController extends Controller
                 if (empty($langPair)) {
                     throw new \Exception("Baris {$rowNum}: Arah / Pasangan Bahasa wajib diisi.");
                 }
+                // Check if registration number already exists for this translator (REV-08 rule)
+                $existsSameTranslator = Document::where('registration_number', $regNum)
+                    ->where('translator_id', $user->id)
+                    ->exists();
+
+                if ($existsSameTranslator) {
+                    throw new \Exception("Baris {$rowNum}: Nomor registrasi '{$regNum}' sudah terdaftar untuk akun Penerjemah Anda. Silakan ubah secara manual.");
+                }
 
                 $docId = $this->generateDocumentId();
 
@@ -380,6 +407,9 @@ class DocumentController extends Controller
     {
         $query = trim($request->input("query"));
         if (empty($query)) {
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json(["error" => "Silakan masukkan nomor registrasi atau ID Dokumen."], 400);
+            }
             return back()->with(
                 "error",
                 "Silakan masukkan nomor registrasi atau ID Dokumen.",
@@ -388,6 +418,9 @@ class DocumentController extends Controller
 
         // Endpoint security: require minimal characters in queries (REV-19)
         if (strlen($query) < 3) {
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json(["error" => "Kata kunci pencarian terlalu pendek. Masukkan minimal 3 karakter."], 400);
+            }
             return back()->with(
                 "error",
                 "Kata kunci pencarian terlalu pendek. Masukkan minimal 3 karakter.",
@@ -402,10 +435,19 @@ class DocumentController extends Controller
 
         if ($docById) {
             if ($docById->translator && $docById->translator->role !== 'TRANSLATOR') {
+                if ($request->expectsJson() || $request->ajax()) {
+                    return response()->json(["error" => "Dokumen terverifikasi tidak ditemukan."], 404);
+                }
                 return back()->with("error", "Dokumen terverifikasi tidak ditemukan.");
             }
             if (!$docById->is_qr_generated) {
+                if ($request->expectsJson() || $request->ajax()) {
+                    return response()->json(["error" => "Dokumen ini belum diotorisasi untuk verifikasi publik."], 403);
+                }
                 return back()->with("error", "Dokumen ini belum diotorisasi untuk verifikasi publik.");
+            }
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json(["multiple" => false, "redirect" => "/verify/" . $docById->document_id]);
             }
             return redirect("/verify/" . $docById->document_id);
         }
@@ -421,6 +463,9 @@ class DocumentController extends Controller
             ->get();
 
         if ($docs->isEmpty()) {
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json(["error" => "Dokumen terverifikasi tidak ditemukan."], 404);
+            }
             return back()->with(
                 "error",
                 "Dokumen terverifikasi tidak ditemukan.",
@@ -428,10 +473,42 @@ class DocumentController extends Controller
         }
 
         if ($docs->count() === 1) {
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json(["multiple" => false, "redirect" => "/verify/" . $docs->first()->document_id]);
+            }
             return redirect("/verify/" . $docs->first()->document_id);
         }
 
-        // 3. Disambiguation selection page for multiple records found (REV-08)
+        // Return JSON payload for popup modal if AJAX (REV-08)
+        if ($request->expectsJson() || $request->ajax()) {
+            $formattedDocs = $docs->map(function ($doc) {
+                $words = explode(' ', $doc->client_name);
+                $maskedName = implode(' ', array_map(function($w) {
+                    return strlen($w) <= 1 ? $w : $w[0] . str_repeat('*', strlen($w) - 1);
+                }, $words));
+
+                return [
+                    'document_id' => $doc->document_id,
+                    'document_type' => $doc->document_type,
+                    'language_pair' => $doc->language_pair,
+                    'client_name' => $maskedName,
+                    'document_date' => $doc->document_date ? $doc->document_date->format('d M Y') : '-',
+                    'translator' => [
+                        'name' => $doc->translator->name,
+                        'sk_number' => $doc->translator->sk_number,
+                        'profile_picture' => $doc->translator->profile_picture,
+                    ]
+                ];
+            });
+
+            return response()->json([
+                'multiple' => true,
+                'documents' => $formattedDocs,
+                'regNumber' => $query
+            ]);
+        }
+
+        // 3. Fallback for non-JS / standard form submissions (Disambiguation page)
         $regNumber = $query;
         $documents = $docs;
         return view("verify-disambiguation", compact("documents", "regNumber"));

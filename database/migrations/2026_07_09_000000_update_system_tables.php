@@ -11,9 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // 1. Update documents table: drop unique constraint from registration_number, add softDeletes
+        // 1. Update documents table: drop unique constraint safely, add softDeletes
         Schema::table('documents', function (Blueprint $table) {
-            $table->dropUnique('documents_registration_number_unique');
+            try {
+                $table->dropUnique('documents_registration_number_unique');
+            } catch (\Exception $e) {
+                // Ignore if unique index was not created or already dropped
+            }
             $table->softDeletes();
         });
 

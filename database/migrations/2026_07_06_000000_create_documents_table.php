@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('documents', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->string('document_id', 8)->unique();
-            $table->string('registration_number')->unique();
+            $table->string('registration_number');
             $table->date('document_date');
             $table->string('document_type');
             $table->string('language_pair');
