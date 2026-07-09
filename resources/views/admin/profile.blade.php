@@ -64,14 +64,24 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label for="name" class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Nama Lengkap</label>
-                        <input
-                            type="text"
-                            id="name"
-                            name="name"
-                            value="{{ old('name', $user->name) }}"
-                            required
-                            class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-slate-800 text-sm font-semibold outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition"
-                        />
+                        @if($user->role === 'TRANSLATOR')
+                            <input
+                                type="text"
+                                disabled
+                                value="{{ $user->name }}"
+                                class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl bg-slate-100 text-slate-500 text-sm font-semibold cursor-not-allowed outline-none"
+                            />
+                            <p class="text-[9px] text-rose-500 mt-1 font-semibold">Nama lengkap resmi hanya dapat diubah oleh administrator IPPTI.</p>
+                        @else
+                            <input
+                                type="text"
+                                id="name"
+                                name="name"
+                                value="{{ old('name', $user->name) }}"
+                                required
+                                class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-slate-800 text-sm font-semibold outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition"
+                            />
+                        @endif
                     </div>
 
                     <div>

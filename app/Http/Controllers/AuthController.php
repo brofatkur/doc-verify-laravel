@@ -143,7 +143,6 @@ class AuthController extends Controller
         }
 
         $rules = [
-            'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email,' . $user->id,
             'whatsapp' => 'nullable|string|max:20',
             'bio' => 'nullable|string',
@@ -151,6 +150,7 @@ class AuthController extends Controller
         ];
 
         if ($user->role !== 'TRANSLATOR') {
+            $rules['name'] = 'required|string|max:255';
             $rules['language_services'] = 'nullable|string';
         }
 
@@ -186,14 +186,14 @@ class AuthController extends Controller
         }
 
         $updateData = [
-            'name' => trim($request->name),
             'email' => trim($request->email),
             'whatsapp' => $request->whatsapp ? trim($request->whatsapp) : null,
             'bio' => $request->bio,
         ];
 
-        // Prevent translator from editing their own language services (REV-11)
+        // Prevent translator from editing their own name or language services (REV-11)
         if ($user->role !== 'TRANSLATOR') {
+            $updateData['name'] = trim($request->name);
             $updateData['language_services'] = $request->language_services;
         }
 

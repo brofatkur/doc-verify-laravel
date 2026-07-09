@@ -195,12 +195,12 @@
     <div id="modal-disambiguation" class="hidden fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-3xl max-w-2xl w-full shadow-2xl overflow-hidden border border-slate-100 flex flex-col max-h-[85vh]">
             <!-- Modal Header -->
-            <div class="px-6 py-5 bg-amber-50 border-b border-amber-100 flex items-center justify-between">
-                <div class="flex items-center gap-2.5 text-amber-800">
-                    <i data-lucide="alert-triangle" class="w-5 h-5 flex-shrink-0"></i>
+            <div class="px-6 py-5 bg-blue-50 border-b border-blue-100 flex items-center justify-between">
+                <div class="flex items-center gap-2.5 text-blue-900">
+                    <i data-lucide="help-circle" class="w-5 h-5 flex-shrink-0 text-blue-600"></i>
                     <div class="text-left">
-                        <h3 id="modal-disambiguation-title" class="text-sm font-bold text-slate-900 leading-none">Beberapa Penerjemah Ditemukan</h3>
-                        <p id="modal-disambiguation-instruction" class="text-[10px] text-slate-500 font-medium mt-1">Pilih penerjemah sesuai yang tertera pada fisik dokumen Anda.</p>
+                        <h3 id="modal-disambiguation-title" class="text-sm font-bold text-slate-900 leading-none">Siapa nama penerjemah dokumen?</h3>
+                        <p id="modal-disambiguation-instruction" class="text-[10px] text-slate-500 font-medium mt-1">Silakan cek dokumen fisik, dan ketik nama di kolom jawaban.</p>
                     </div>
                 </div>
                 <button
@@ -211,9 +211,27 @@
                 </button>
             </div>
 
-            <!-- Modal Content (Scrollable list) -->
-            <div id="disambiguation-list" class="p-6 overflow-y-auto space-y-4 divide-y divide-slate-100 text-left">
-                <!-- Dynamic cards will be rendered here -->
+            <!-- Modal Content (Scrollable list with search) -->
+            <div class="p-6 space-y-4 flex-1 overflow-y-auto">
+                <div class="relative">
+                    <i data-lucide="user" class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2"></i>
+                    <input
+                        type="text"
+                        id="disambiguation-answer-input"
+                        oninput="checkTranslatorAnswer()"
+                        placeholder="Ketik nama penerjemah di sini..."
+                        class="w-full pl-9 pr-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition text-xs font-semibold text-slate-800"
+                    />
+                </div>
+
+                <div id="disambiguation-empty-state" class="text-center py-8 text-slate-400 text-xs font-medium space-y-2">
+                    <i data-lucide="text-cursor-input" class="w-8 h-8 text-slate-300 mx-auto block"></i>
+                    <span id="label-disambiguation-prompt">Ketik bagian nama depan/tengah/belakang penerjemah untuk menampilkan hasil verifikasi.</span>
+                </div>
+
+                <div id="disambiguation-list" class="space-y-4 divide-y divide-slate-100 text-left hidden">
+                    <!-- Dynamic cards will be rendered here -->
+                </div>
             </div>
 
             <!-- Modal Footer -->
@@ -247,11 +265,12 @@
                 scan_err_qr: "Tidak dapat menemukan kode QR yang terbaca. Coba pindai kembali dengan gambar yang lebih jelas.",
                 scan_err_decode: "Kode QR ini tidak dikenali sebagai URL verifikasi DocVerify atau ID Dokumen yang valid.",
                 scan_err_load: "Gagal memuat berkas gambar.",
-                disambiguation_title: "Beberapa Penerjemah Ditemukan",
-                disambiguation_instruction: "Pilih penerjemah sesuai yang tertera pada fisik dokumen Anda.",
+                disambiguation_title: "Siapa nama penerjemah dokumen?",
+                disambiguation_instruction: "Silakan cek dokumen fisik, dan ketik nama di kolom jawaban.",
                 disambiguation_footer: "Arahan: Harap pilih profil penerjemah yang tanda tangan dan stempelnya tertera pada dokumen fisik terjemahan Anda.",
                 disambiguation_choose: "Pilih & Verifikasi",
-                member_no: "No. Anggota"
+                member_no: "No. Anggota",
+                disambiguation_prompt: "Ketik bagian nama depan/tengah/belakang penerjemah untuk menampilkan hasil verifikasi."
             },
             en: {
                 title_doc: "Official Document Validation Portal",
@@ -273,11 +292,12 @@
                 scan_err_qr: "Could not find a readable QR code. Try scanning again with a clearer image.",
                 scan_err_decode: "This QR code is not recognized as a valid DocVerify verification URL or Document ID.",
                 scan_err_load: "Failed to load image file.",
-                disambiguation_title: "Multiple Translators Found",
-                disambiguation_instruction: "Please select the translator listed on your physical document.",
+                disambiguation_title: "Who is the translator of the document?",
+                disambiguation_instruction: "Please check the physical document, and type the name in the answer field.",
                 disambiguation_footer: "Instruction: Please choose the translator profile whose signature and stamp appear on your physical translated document.",
                 disambiguation_choose: "Select & Verify",
-                member_no: "Member ID"
+                member_no: "Member ID",
+                disambiguation_prompt: "Type first/middle/last name of the translator to reveal the verification results."
             },
             zh: {
                 title_doc: "官方文件验证门户",
@@ -299,11 +319,12 @@
                 scan_err_qr: "找不到可读取的二维码。请使用更清晰的图片重新扫描。",
                 scan_err_decode: "此二维码未被识别为有效的 DocVerify 验证 URL 或文件 ID。",
                 scan_err_load: "加载图像文件失败。",
-                disambiguation_title: "找到多位翻译员",
-                disambiguation_instruction: "请选择您纸质文件上列出的翻译员。",
+                disambiguation_title: "该文件的翻译员是谁？",
+                disambiguation_instruction: "请检查纸质文件，并在答案字段中输入姓名。",
                 disambiguation_footer: "指导：请选择其签名和印章出现在您的翻译文件原件上的翻译员个人资料。",
                 disambiguation_choose: "选择并验证",
-                member_no: "成员 ID"
+                member_no: "成员 ID",
+                disambiguation_prompt: "输入翻译员的姓/中/名以显示验证结果。"
             },
             ar: {
                 title_doc: "البوابة الرسمية للتحقق من المستندات",
@@ -325,11 +346,12 @@
                 scan_err_qr: "لم يتم العثور على رمز QR صالح للقراءة. يرجى المحاولة مرة أخرى بصورة أوضح.",
                 scan_err_decode: "لا يتم التعرف على رمز QR هذا كعنوان URL صالح للتحقق من DocVerify أو معرف مستند.",
                 scan_err_load: "فشل في تحميل ملف الصورة.",
-                disambiguation_title: "تم العثور على مترجمين متعددين",
-                disambiguation_instruction: "يرجى تحديد المترجم المدرج في مستندك الورقي.",
+                disambiguation_title: "من هو مترجم المستند؟",
+                disambiguation_instruction: "يرجى التحقق من المستند الورقي، وكتابة الاسم في حقل الإجابة.",
                 disambiguation_footer: "إرشادات: يرجى اختيار ملف المترجم الذي يظهر توقيعه وختمه على مستند الترجمة الورقي الخاص بك.",
                 disambiguation_choose: "اختيار والتحقق",
-                member_no: "رقم العضوية"
+                member_no: "رقم العضوية",
+                disambiguation_prompt: "اكتب جزءاً من الاسم الأول/الأوسط/الأخير للمترجم لعرض نتائج التحقق."
             },
         };
 
@@ -378,9 +400,11 @@
             const mTitle = document.getElementById('modal-disambiguation-title');
             const mInstruction = document.getElementById('modal-disambiguation-instruction');
             const mFooter = document.getElementById('modal-disambiguation-footer');
+            const mPrompt = document.getElementById('label-disambiguation-prompt');
             if (mTitle) mTitle.innerText = t.disambiguation_title;
             if (mInstruction) mInstruction.innerText = t.disambiguation_instruction;
             if (mFooter) mFooter.innerText = t.disambiguation_footer;
+            if (mPrompt) mPrompt.innerText = t.disambiguation_prompt;
 
             // Highlight language button
             ['id', 'en', 'zh', 'ar'].forEach(l => {
@@ -545,47 +569,96 @@
             }
         });
 
+        let disambiguationDocs = [];
+
         function showDisambiguationModal(documents, regNumber) {
+            disambiguationDocs = documents;
+            
+            // Reset input
+            const input = document.getElementById('disambiguation-answer-input');
+            input.value = '';
+            
+            // Reset list
             const listContainer = document.getElementById('disambiguation-list');
             listContainer.innerHTML = '';
-            const t = translations[currentLang];
+            listContainer.classList.add('hidden');
 
-            documents.forEach(doc => {
-                const card = document.createElement('div');
-                card.className = "flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 py-4 first:pt-0 last:pb-0";
-                
-                const profilePic = doc.translator.profile_picture 
-                    ? `<img src="${doc.translator.profile_picture}" class="w-full h-full object-cover" />`
-                    : `<i data-lucide="user" class="w-5 h-5 text-slate-400"></i>`;
-
-                card.innerHTML = `
-                    <div class="flex items-center gap-3">
-                        <div class="w-11 h-11 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center overflow-hidden flex-shrink-0">
-                            ${profilePic}
-                        </div>
-                        <div class="overflow-hidden">
-                            <h4 class="font-bold text-slate-900 text-sm truncate">${doc.translator.name}</h4>
-                            <p class="text-[10px] text-slate-500 font-mono mt-0.5">${t.member_no}: ${doc.translator.sk_number}</p>
-                            <div class="flex flex-wrap gap-x-2.5 gap-y-1 mt-1 text-[10px] text-slate-400">
-                                <span>Tipe: <strong class="text-slate-600">${doc.document_type}</strong></span>
-                                <span>Arah: <strong class="text-blue-900">${doc.language_pair}</strong></span>
-                                <span>Klien: <strong class="text-slate-600 font-mono">${doc.client_name}</strong></span>
-                            </div>
-                        </div>
-                    </div>
-                    <a
-                        href="/verify/${doc.document_id}"
-                        class="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2 bg-blue-950 hover:bg-blue-900 text-white rounded-xl text-xs font-bold transition shadow-sm cursor-pointer whitespace-nowrap"
-                    >
-                        <span>${t.disambiguation_choose}</span>
-                        <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
-                    </a>
-                `;
-                listContainer.appendChild(card);
-            });
+            // Show empty state prompt
+            document.getElementById('disambiguation-empty-state').classList.remove('hidden');
 
             document.getElementById('modal-disambiguation').classList.remove('hidden');
+            input.focus();
             lucide.createIcons();
+        }
+
+        function checkTranslatorAnswer() {
+            const typedVal = document.getElementById('disambiguation-answer-input').value.trim().toLowerCase();
+            const listContainer = document.getElementById('disambiguation-list');
+            const emptyState = document.getElementById('disambiguation-empty-state');
+            
+            if (typedVal.length === 0) {
+                listContainer.classList.add('hidden');
+                emptyState.classList.remove('hidden');
+                return;
+            }
+
+            const searchWords = typedVal.split(/\s+/).filter(w => w.length > 0);
+            
+            const matchedDocs = disambiguationDocs.filter(doc => {
+                // Sanitize translator's name: remove common sworn translator titles/suffixes
+                const cleanName = doc.translator.name.toLowerCase()
+                    .replace(/,?\s+(s\.hum|m\.hum|s\.pd|s\.s|ph\.d|dr|dra|drs|prof)\.?/gi, '')
+                    .replace(/[.,]/g, ''); // remove punctuation
+                
+                // Check if any word typed matches any part of the clean name
+                return searchWords.some(word => cleanName.includes(word));
+            });
+
+            if (matchedDocs.length > 0) {
+                listContainer.innerHTML = '';
+                const t = translations[currentLang];
+
+                matchedDocs.forEach(doc => {
+                    const card = document.createElement('div');
+                    card.className = "flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 py-4 first:pt-0 last:pb-0";
+                    
+                    const profilePic = doc.translator.profile_picture 
+                        ? `<img src="${doc.translator.profile_picture}" class="w-full h-full object-cover" />`
+                        : `<i data-lucide="user" class="w-5 h-5 text-slate-400"></i>`;
+
+                    card.innerHTML = `
+                        <div class="flex items-center gap-3">
+                            <div class="w-11 h-11 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center overflow-hidden flex-shrink-0">
+                                ${profilePic}
+                            </div>
+                            <div class="overflow-hidden">
+                                <h4 class="font-bold text-slate-900 text-sm truncate">${doc.translator.name}</h4>
+                                <p class="text-[10px] text-slate-500 font-mono mt-0.5">${t.member_no}: ${doc.translator.sk_number}</p>
+                                <div class="flex flex-wrap gap-x-2.5 gap-y-1 mt-1 text-[10px] text-slate-400">
+                                    <span>Tipe: <strong class="text-slate-600">${doc.document_type}</strong></span>
+                                    <span>Arah: <strong class="text-blue-900">${doc.language_pair}</strong></span>
+                                    <span>Klien: <strong class="text-slate-600 font-mono">${doc.client_name}</strong></span>
+                                </div>
+                            </div>
+                        </div>
+                        <a
+                            href="/verify/${doc.document_id}"
+                            class="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2 bg-blue-950 hover:bg-blue-900 text-white rounded-xl text-xs font-bold transition shadow-sm cursor-pointer whitespace-nowrap"
+                        >
+                            <span>${t.disambiguation_choose}</span>
+                            <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+                        </a>
+                    `;
+                    listContainer.appendChild(card);
+                });
+                
+                listContainer.classList.remove('hidden');
+                emptyState.classList.add('hidden');
+                lucide.createIcons();
+            } else {
+                listContainer.classList.add('hidden');
+                emptyState.classList.remove('hidden');
+            }
         }
 
         function closeDisambiguationModal() {
