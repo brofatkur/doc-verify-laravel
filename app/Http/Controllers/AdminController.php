@@ -320,12 +320,37 @@ class AdminController extends Controller
         if ($currentUser->role !== 'SUPERADMIN' && $currentUser->role !== 'ADMIN') {
             return back()->withErrors(['error' => 'Akses ditolak.']);
         }
-        $request->validate(['name' => 'required|string|max:255|unique:document_types,name']);
+        $request->validate(['name' => 'required|string|max:1000']);
         
-        $type = \App\Models\DocumentType::create(['name' => trim($request->name)]);
-        \App\Models\AuditLog::log('CREATE_DOCUMENT_TYPE', \App\Models\DocumentType::class, $type->id, null, $type->toArray());
+        $input = $request->name;
+        $names = explode(',', $input);
         
-        return redirect('/admin/document-types')->with('success', 'Tipe dokumen baru berhasil ditambahkan!');
+        $addedCount = 0;
+        $skippedCount = 0;
+        
+        foreach ($names as $name) {
+            $trimmed = trim($name);
+            if (empty($trimmed)) continue;
+            
+            if (\App\Models\DocumentType::where('name', $trimmed)->exists()) {
+                $skippedCount++;
+                continue;
+            }
+            
+            $type = \App\Models\DocumentType::create(['name' => $trimmed]);
+            \App\Models\AuditLog::log('CREATE_DOCUMENT_TYPE', \App\Models\DocumentType::class, $type->id, null, $type->toArray());
+            $addedCount++;
+        }
+        
+        if ($addedCount > 0) {
+            $msg = $addedCount . ' tipe dokumen baru berhasil ditambahkan!';
+            if ($skippedCount > 0) {
+                $msg .= ' (' . $skippedCount . ' tipe dilewati karena sudah terdaftar)';
+            }
+            return redirect('/admin/document-types')->with('success', $msg);
+        } else {
+            return back()->withErrors(['error' => 'Gagal menambahkan tipe dokumen (mungkin tipe sudah terdaftar).']);
+        }
     }
 
     public function updateDocumentType(Request $request, $id)
@@ -398,12 +423,37 @@ class AdminController extends Controller
         if ($currentUser->role !== 'SUPERADMIN' && $currentUser->role !== 'ADMIN') {
             return back()->withErrors(['error' => 'Akses ditolak.']);
         }
-        $request->validate(['name' => 'required|string|max:255|unique:language_directions,name']);
+        $request->validate(['name' => 'required|string|max:1000']);
         
-        $direction = \App\Models\LanguageDirection::create(['name' => trim($request->name)]);
-        \App\Models\AuditLog::log('CREATE_LANGUAGE_DIRECTION', \App\Models\LanguageDirection::class, $direction->id, null, $direction->toArray());
+        $input = $request->name;
+        $names = explode(',', $input);
         
-        return redirect('/admin/language-directions')->with('success', 'Arah bahasa baru berhasil ditambahkan!');
+        $addedCount = 0;
+        $skippedCount = 0;
+        
+        foreach ($names as $name) {
+            $trimmed = trim($name);
+            if (empty($trimmed)) continue;
+            
+            if (\App\Models\LanguageDirection::where('name', $trimmed)->exists()) {
+                $skippedCount++;
+                continue;
+            }
+            
+            $direction = \App\Models\LanguageDirection::create(['name' => $trimmed]);
+            \App\Models\AuditLog::log('CREATE_LANGUAGE_DIRECTION', \App\Models\LanguageDirection::class, $direction->id, null, $direction->toArray());
+            $addedCount++;
+        }
+        
+        if ($addedCount > 0) {
+            $msg = $addedCount . ' arah bahasa baru berhasil ditambahkan!';
+            if ($skippedCount > 0) {
+                $msg .= ' (' . $skippedCount . ' arah dilewati karena sudah terdaftar)';
+            }
+            return redirect('/admin/language-directions')->with('success', $msg);
+        } else {
+            return back()->withErrors(['error' => 'Gagal menambahkan arah bahasa (mungkin arah bahasa sudah terdaftar).']);
+        }
     }
 
     public function updateLanguageDirection(Request $request, $id)

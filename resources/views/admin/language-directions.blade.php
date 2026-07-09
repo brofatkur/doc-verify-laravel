@@ -38,8 +38,9 @@
                         name="name"
                         required
                         class="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all duration-200 text-sm font-medium text-slate-800"
-                        placeholder="Contoh: Inggris - Indonesia"
+                        placeholder="Contoh: Inggris - Indonesia, Arab - Indonesia, Belanda - Indonesia"
                     />
+                    <p class="text-[10px] text-slate-400">Gunakan tanda koma (`,`) untuk menambahkan beberapa arah bahasa sekaligus.</p>
                 </div>
                 <button type="submit" class="w-full py-2 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition shadow-sm cursor-pointer">
                     Tambah Arah
