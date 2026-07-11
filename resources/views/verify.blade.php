@@ -28,9 +28,17 @@
         .dir-ltr { direction: ltr !important; }
 
         @media print {
+            @page {
+                size: auto;
+                margin: 8mm 12mm !important;
+            }
             body {
                 background: white !important;
-                color: black !important;
+                color: #0f172a !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                width: 100% !important;
+                height: auto !important;
             }
             .no-print {
                 display: none !important;
@@ -38,20 +46,69 @@
             #body-layout {
                 padding: 0 !important;
                 background: white !important;
-                overflow: visible !important;
+                display: block !important;
             }
-            .shadow-xl, .shadow-md, .shadow-sm {
-                box-shadow: none !important;
+            
+            /* Compact card container */
+            .max-w-lg {
                 border: 1px solid #cbd5e1 !important;
-            }
-            .rounded-3xl, .rounded-2xl {
-                border-radius: 12px !important;
-            }
-            main, .max-w-lg {
-                max-width: 100% !important;
-                width: 100% !important;
-                margin: 0 !important;
+                box-shadow: none !important;
+                max-width: 145mm !important; /* Scale to A4/Letter print width */
+                margin: 4mm auto !important; /* Small margin */
                 padding: 0 !important;
+                border-radius: 16px !important;
+                overflow: hidden !important;
+                page-break-inside: avoid !important;
+            }
+
+            /* Shrink card padding */
+            .p-6, .p-8 {
+                padding: 1rem !important;
+            }
+            .p-5 {
+                padding: 0.75rem !important;
+            }
+            .pb-6 {
+                padding-bottom: 0.75rem !important;
+            }
+            .space-y-6 > :not([hidden]) ~ :not([hidden]) {
+                margin-top: 0.75rem !important;
+            }
+            .gap-y-6 {
+                gap-y: 0.75rem !important;
+            }
+
+            /* Shrink gradient banner */
+            #verified-banner {
+                background: linear-gradient(135deg, #059669, #0f766e) !important;
+                color: white !important;
+                padding: 1.25rem 1rem !important;
+            }
+
+            #verified-icon-wrapper {
+                width: 3rem !important;
+                height: 3rem !important;
+                margin-bottom: 0.5rem !important;
+            }
+
+            #verified-icon-wrapper svg, #verified-icon-wrapper i {
+                width: 1.75rem !important;
+                height: 1.75rem !important;
+            }
+
+            .text-2xl {
+                font-size: 1.25rem !important;
+            }
+
+            /* Shrink translator section box */
+            .w-12.h-12 {
+                width: 2.25rem !important;
+                height: 2.25rem !important;
+            }
+
+            /* Adjust bottom margin */
+            .mt-8 {
+                margin-top: 0.5rem !important;
             }
         }
     </style>
@@ -135,24 +192,24 @@
                 <div id="section-meta-row" class="border-b border-slate-100 pb-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                         <p id="label-reg-no" class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">No. Registrasi</p>
-                        <p class="text-lg font-bold text-slate-900 font-mono">{{ $document->registration_number }}</p>
+                        <p class="text-lg font-bold text-slate-900 font-mono notranslate" translate="no">{{ $document->registration_number }}</p>
                     </div>
                     <div>
                         <p id="label-doc-id" class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">ID Dokumen</p>
-                        <p class="text-lg font-bold text-emerald-600 font-mono">{{ $document->document_id }}</p>
+                        <p class="text-lg font-bold text-emerald-600 font-mono notranslate" translate="no">{{ $document->document_id }}</p>
                     </div>
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-y-6 gap-x-4">
                     <div>
                         <p id="label-date" class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Tanggal Terjemah</p>
-                        <p id="value-date" class="text-base font-semibold text-slate-800"></p>
+                        <p id="value-date" class="text-base font-semibold text-slate-800 notranslate" translate="no"></p>
                     </div>
 
                     <div>
                         <p id="label-status" class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Status Verifikasi</p>
                         <div>
-                            <span id="status-badge" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-100 shadow-sm">
+                            <span id="status-badge" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-100 shadow-sm notranslate" translate="no">
                                 <span id="status-dot" class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
                                 <span id="value-status"></span>
                             </span>
@@ -161,7 +218,7 @@
 
                     <div class="sm:col-span-2">
                         <p id="label-client" class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Nama di Dokumen (Disamarkan)</p>
-                        <p class="text-base font-mono font-bold text-slate-900 mt-1 bg-slate-50 border border-slate-200/80 p-3 rounded-xl select-none tracking-wide text-center">
+                        <p class="text-base font-mono font-bold text-slate-900 mt-1 bg-slate-50 border border-slate-200/80 p-3 rounded-xl select-none tracking-wide text-center notranslate" translate="no">
                             @php
                                 $masked = '';
                                 if ($document->client_name) {
@@ -178,7 +235,7 @@
                     <div class="sm:col-span-2 bg-slate-50 rounded-2xl p-4.5 border border-slate-200/60">
                         <p id="label-pair" class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2.5">Pasangan Bahasa</p>
                         <div class="flex items-center gap-3">
-                            <span class="text-sm font-semibold text-slate-800 bg-white px-3.5 py-1.5 rounded-lg border border-slate-200/80 shadow-sm">{{ $document->language_pair }}</span>
+                            <span class="text-sm font-semibold text-slate-800 bg-white px-3.5 py-1.5 rounded-lg border border-slate-200/80 shadow-sm notranslate" translate="no">{{ $document->language_pair }}</span>
                         </div>
                     </div>
 
@@ -200,8 +257,8 @@
                                     @endif
                                 </div>
                                 <div class="overflow-hidden">
-                                    <p class="text-base font-bold text-slate-900 truncate">{{ $document->translator->name }}</p>
-                                    <p id="label-translator-member" class="text-xs text-slate-500 font-mono mt-0.5"></p>
+                                    <p class="text-base font-bold text-slate-900 truncate notranslate" translate="no">{{ $document->translator->name }}</p>
+                                    <p id="label-translator-member" class="text-xs text-slate-500 font-mono mt-0.5 notranslate" translate="no"></p>
                                 </div>
                             </div>
 
@@ -221,7 +278,7 @@
                             <div class="space-y-1.5 text-center sm:text-left overflow-hidden">
                                 <p id="label-qr-title" class="text-xs font-bold text-slate-700 uppercase tracking-wider">QR Code Verifikasi Resmi</p>
                                 <p id="label-qr-desc" class="text-[11px] text-slate-500 leading-relaxed"></p>
-                                <p class="text-[10px] font-mono text-emerald-600 font-bold select-all truncate">{{ url('/verify/' . $document->document_id) }}</p>
+                                <p class="text-[10px] font-mono text-emerald-600 font-bold select-all truncate notranslate" translate="no">{{ url('/verify/' . $document->document_id) }}</p>
                             </div>
                         </div>
                     </div>
@@ -250,7 +307,7 @@
     @endif
 
     <!-- Bottom Credit -->
-    <div class="text-center text-[10px] text-slate-400 uppercase tracking-widest space-y-1 py-4">
+    <div class="text-center text-[10px] text-slate-400 uppercase tracking-widest space-y-1 py-4 no-print">
         <p>&copy; {{ date('Y') }} DocVerify IPPTI. Seluruh Hak Cipta Dilindungi.</p>
         <p id="label-bottom-credit" class="font-semibold text-slate-400"></p>
     </div>
@@ -259,7 +316,7 @@
         lucide.createIcons();
 
         const dateId = "{{ $document ? $document->document_date->translatedFormat('d F Y') : '' }}";
-        const dateEn = "{{ $document ? $document->document_date->format('MMMM d, Y') : '' }}";
+        const dateEn = "{{ $document ? $document->document_date->format('F d, Y') : '' }}";
         const memberNo = "{{ $document ? $document->translator->sk_number : '' }}";
         const isArchived = {{ ($document && $document->trashed()) ? 'true' : 'false' }};
 

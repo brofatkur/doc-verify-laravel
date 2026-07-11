@@ -133,13 +133,13 @@
                         Cari penerjemah tersumpah terdaftar berdasarkan Nama, Nomor SK Kemenkumham, Nomor Anggota, atau Arah Bahasa.
                     </p>
                 </form>
-
-                <!-- Results -->
-                <div id="translator-results" class="hidden space-y-3 pt-2 text-left">
-                    <p id="results-header" class="text-xs font-bold text-slate-400 uppercase tracking-wider">Hasil Pencarian:</p>
-                    <div id="translator-results-list" class="space-y-2.5 max-h-56 overflow-y-auto pr-1"></div>
-                </div>
             </div>
+        </div>
+
+        <!-- Full-width Search Results Section -->
+        <div id="translator-results" class="hidden w-full mt-10 space-y-4 text-left">
+            <p id="results-header" class="text-xs font-bold text-slate-400 uppercase tracking-wider">Hasil Pencarian:</p>
+            <div id="translator-results-list" class="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full"></div>
         </div>
     </main>
 
@@ -299,14 +299,25 @@
                                 
                             const item = document.createElement('a');
                             item.href = `/verify-translator/${t.id}`;
-                            item.className = "flex items-center gap-3 p-3 bg-slate-950/60 border border-slate-800 rounded-xl hover:border-emerald-500/60 hover:bg-slate-900/60 transition group cursor-pointer";
+                            item.className = "flex items-center gap-4 p-4 bg-slate-900/60 border border-slate-800/80 rounded-2xl hover:border-emerald-500/60 hover:bg-slate-900 transition group cursor-pointer shadow-lg";
+                            
+                            const langPairBadge = t.language_services ? `
+                                <span class="inline-flex items-center gap-1.5 text-[9px] text-emerald-400 bg-emerald-500/5 px-2 py-0.5 rounded border border-emerald-500/15 w-max max-w-full mt-1.5">
+                                    <i data-lucide="globe" class="w-3 h-3 flex-shrink-0"></i>
+                                    <span class="truncate">${t.language_services}</span>
+                                </span>
+                            ` : '';
+
                             item.innerHTML = `
-                                <div class="w-9 h-9 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 font-bold overflow-hidden flex-shrink-0">
+                                <div class="w-12 h-12 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 font-bold overflow-hidden flex-shrink-0">
                                     ${avatar}
                                 </div>
-                                <div class="flex-1 overflow-hidden">
+                                <div class="flex-1 min-w-0">
                                     <p class="text-sm font-bold text-white group-hover:text-emerald-400 transition truncate">${t.name}</p>
-                                    <p class="text-[10px] text-slate-450 truncate font-mono member-tag" data-sk="${t.sk_number}">${translations[currentLang].member_prefix}${t.sk_number}</p>
+                                    <div class="flex flex-col gap-1 mt-0.5">
+                                        <span class="text-[10px] text-slate-450 font-mono member-tag" data-sk="${t.sk_number}">${translations[currentLang].member_prefix}${t.sk_number}</span>
+                                        ${langPairBadge}
+                                    </div>
                                 </div>
                             `;
                             resultsList.appendChild(item);

@@ -324,7 +324,8 @@ class AuthController extends Controller
             $queryBuilder->where(function ($q) use ($cleanWord) {
                 $q->whereRaw('LOWER(name) LIKE ?', ["%{$cleanWord}%"])
                   ->orWhereRaw('LOWER(sk_number) LIKE ?', ["%{$cleanWord}%"])
-                  ->orWhereRaw('LOWER(bio) LIKE ?', ["%{$cleanWord}%"]);
+                  ->orWhereRaw('LOWER(bio) LIKE ?', ["%{$cleanWord}%"])
+                  ->orWhereRaw('LOWER(language_services) LIKE ?', ["%{$cleanWord}%"]);
             });
         }
 
