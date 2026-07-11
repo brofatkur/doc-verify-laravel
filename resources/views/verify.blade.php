@@ -164,138 +164,133 @@
                 </div>
             </div>
 
-            <!-- Header Banner -->
-            <div id="verified-banner" class="bg-gradient-to-br from-emerald-600 via-teal-700 to-emerald-800 p-8 text-center relative overflow-hidden">
-                <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
-                <div class="absolute inset-0 bg-gradient-to-b from-white/10 to-transparent"></div>
-                
-                <!-- IPPTI Logo inside the certificate card (REV-05, Print Friendly) -->
-                <div class="absolute top-4 right-4 flex items-center gap-2 bg-white/10 backdrop-blur px-2.5 py-1 rounded-lg border border-white/20">
-                    <img src="/ippti-logo.jpg" alt="IPPTI Logo" class="h-6 w-auto rounded bg-white p-0.5 object-contain" />
-                    <span class="text-[9px] font-black text-white tracking-widest">IPPTI</span>
-                </div>
-                
-                <div class="relative z-10 space-y-3">
-                    <div id="verified-icon-wrapper" class="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto shadow-md ring-4 ring-emerald-500/30 animate-pulse">
-                        <i id="icon-active" data-lucide="check-circle-2" class="w-10 h-10 text-emerald-600"></i>
-                        <i id="icon-archived" data-lucide="alert-triangle" class="w-10 h-10 text-rose-600 hidden"></i>
+            <div id="pdf-card" class="bg-white">
+                <!-- Header Banner -->
+                <div id="verified-banner" class="bg-gradient-to-br from-emerald-600 via-teal-700 to-emerald-800 p-8 text-center relative overflow-hidden">
+                    <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
+                    <div class="absolute inset-0 bg-gradient-to-b from-white/10 to-transparent"></div>
+                    
+                    <!-- IPPTI Logo inside the certificate card (REV-05, Print Friendly) -->
+                    <div class="absolute top-4 right-4 flex items-center gap-2 bg-white/10 backdrop-blur px-2.5 py-1 rounded-lg border border-white/20">
+                        <img src="/ippti-logo.jpg" alt="IPPTI Logo" class="h-6 w-auto rounded bg-white p-0.5 object-contain" />
+                        <span class="text-[9px] font-black text-white tracking-widest">IPPTI</span>
                     </div>
-                    <div>
-                        <h1 id="label-verified-title" class="text-2xl font-black text-white tracking-widest">TERVERIFIKASI</h1>
-                        <p id="label-verified-sub" class="text-xs text-emerald-100 font-semibold tracking-wider uppercase mt-0.5">Rekam Dokumen Resmi IPPTI</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Details list -->
-            <div class="p-6 sm:p-8 space-y-6 text-left">
-                <div id="section-meta-row" class="border-b border-slate-100 pb-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                        <p id="label-reg-no" class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">No. Registrasi</p>
-                        <p class="text-lg font-bold text-slate-900 font-mono notranslate" translate="no">{{ $document->registration_number }}</p>
-                    </div>
-                    <div>
-                        <p id="label-doc-id" class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">ID Dokumen</p>
-                        <p class="text-lg font-bold text-emerald-600 font-mono notranslate" translate="no">{{ $document->document_id }}</p>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-y-6 gap-x-4">
-                    <div>
-                        <p id="label-date" class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Tanggal Terjemah</p>
-                        <p id="value-date" class="text-base font-semibold text-slate-800 notranslate" translate="no"></p>
-                    </div>
-
-                    <div>
-                        <p id="label-status" class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Status Verifikasi</p>
+                    
+                    <div class="relative z-10 space-y-3">
+                        <div id="verified-icon-wrapper" class="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto shadow-md ring-4 ring-emerald-500/30 animate-pulse">
+                            <i id="icon-active" data-lucide="check-circle-2" class="w-10 h-10 text-emerald-600"></i>
+                            <i id="icon-archived" data-lucide="alert-triangle" class="w-10 h-10 text-rose-600 hidden"></i>
+                        </div>
                         <div>
-                            <span id="status-badge" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-100 shadow-sm notranslate" translate="no">
-                                <span id="status-dot" class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                                <span id="value-status"></span>
-                            </span>
+                            <h1 id="label-verified-title" class="text-2xl font-black text-white tracking-widest">TERVERIFIKASI</h1>
+                            <p id="label-verified-sub" class="text-xs text-emerald-100 font-semibold tracking-wider uppercase mt-0.5">Rekam Dokumen Resmi IPPTI</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Details list -->
+                <div class="p-6 sm:p-8 space-y-6 text-left">
+                    <div id="section-meta-row" class="border-b border-slate-100 pb-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <p id="label-reg-no" class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">No. Registrasi</p>
+                            <p class="text-lg font-bold text-slate-900 font-mono notranslate" translate="no">{{ $document->registration_number }}</p>
+                        </div>
+                        <div>
+                            <p id="label-doc-id" class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">ID Dokumen</p>
+                            <p class="text-lg font-bold text-emerald-600 font-mono notranslate" translate="no">{{ $document->document_id }}</p>
                         </div>
                     </div>
 
-                    <div class="sm:col-span-2">
-                        <p id="label-client" class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Nama di Dokumen (Disamarkan)</p>
-                        <p class="text-base font-mono font-bold text-slate-900 mt-1 bg-slate-50 border border-slate-200/80 p-3 rounded-xl select-none tracking-wide text-center notranslate" translate="no">
-                            @php
-                                $masked = '';
-                                if ($document->client_name) {
-                                    $masked = implode(" ", array_map(function($word) {
-                                        if (strlen($word) <= 1) return $word;
-                                        return $word[0] . str_repeat("*", strlen($word) - 1);
-                                    }, explode(" ", $document->client_name)));
-                                }
-                            @endphp
-                            {{ $masked }}
-                        </p>
-                    </div>
-
-                    <div class="sm:col-span-2 bg-slate-50 rounded-2xl p-4.5 border border-slate-200/60">
-                        <p id="label-pair" class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2.5">Pasangan Bahasa</p>
-                        <div class="flex items-center gap-3">
-                            <span class="text-sm font-semibold text-slate-800 bg-white px-3.5 py-1.5 rounded-lg border border-slate-200/80 shadow-sm notranslate" translate="no">{{ $document->language_pair }}</span>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-y-6 gap-x-4">
+                        <div>
+                            <p id="label-date" class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Tanggal Terjemah</p>
+                            <p id="value-date" class="text-base font-semibold text-slate-800 notranslate" translate="no"></p>
                         </div>
-                    </div>
 
-                    <div class="sm:col-span-2">
-                        <p id="label-type" class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Tipe Dokumen</p>
-                        <p class="text-base font-semibold text-slate-800 mt-1">{{ $document->document_type }}</p>
-                    </div>
+                        <div>
+                            <p id="label-status" class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Status Verifikasi</p>
+                            <div>
+                                <span id="status-badge" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-100 shadow-sm notranslate" translate="no">
+                                    <span id="status-dot" class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                                    <span id="value-status"></span>
+                                </span>
+                            </div>
+                        </div>
 
-                    <!-- Sworn Translator Badge Box -->
-                    <div class="sm:col-span-2 border-t border-slate-100 pt-6">
-                        <p id="label-translator" class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Penerjemah Tersumpah</p>
-                        <div class="bg-slate-50/60 border border-slate-100 rounded-2xl p-5 space-y-4">
-                            <div class="flex items-center gap-3.5">
-                                <div class="w-12 h-12 rounded-full bg-emerald-50 flex items-center justify-center flex-shrink-0 border border-emerald-100 shadow-sm overflow-hidden">
-                                    @if($document->translator->profile_picture)
-                                        <img src="{{ $document->translator->profile_picture }}" alt="{{ $document->translator->name }}" class="w-full h-full object-cover" />
-                                    @else
-                                        <i data-lucide="file-text" class="w-5 h-5 text-emerald-600"></i>
-                                    @endif
+                        <div class="sm:col-span-2">
+                            <p id="label-client" class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Nama di Dokumen (Disamarkan)</p>
+                            <p class="text-base font-mono font-bold text-slate-900 mt-1 bg-slate-50 border border-slate-200/80 p-3 rounded-xl select-none tracking-wide text-center notranslate" translate="no">
+                                @php
+                                    $masked = '';
+                                    if ($document->client_name) {
+                                        $masked = implode(" ", array_map(function($word) {
+                                            if (strlen($word) <= 1) return $word;
+                                            return $word[0] . str_repeat("*", strlen($word) - 1);
+                                        }, explode(" ", $document->client_name)));
+                                    }
+                                @endphp
+                                {{ $masked }}
+                            </p>
+                        </div>
+
+                        <div class="sm:col-span-1 bg-slate-50 rounded-2xl p-4 border border-slate-200/60 flex flex-col justify-between">
+                            <p id="label-pair" class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Pasangan Bahasa</p>
+                            <div class="flex items-center">
+                                <span class="text-xs font-semibold text-slate-800 bg-white px-3 py-1.5 rounded-lg border border-slate-200/80 shadow-sm notranslate" translate="no">{{ $document->language_pair }}</span>
+                            </div>
+                        </div>
+
+                        <div class="sm:col-span-1 bg-slate-50 rounded-2xl p-4 border border-slate-200/60 flex flex-col justify-between">
+                            <p id="label-type" class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Tipe Dokumen</p>
+                            <p class="text-sm font-semibold text-slate-800 mt-1">{{ $document->document_type }}</p>
+                        </div>
+
+                        <!-- Combined Sworn Translator & QR Code Row -->
+                        <div class="sm:col-span-2 grid grid-cols-1 sm:grid-cols-3 gap-4 border-t border-slate-100 pt-6">
+                            <!-- Translator Badge Box -->
+                            <div class="sm:col-span-2 bg-slate-50/60 border border-slate-100 rounded-2xl p-4 flex flex-col justify-between gap-3">
+                                <p id="label-translator" class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Penerjemah Tersumpah</p>
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-full bg-emerald-50 flex items-center justify-center flex-shrink-0 border border-emerald-100 shadow-sm overflow-hidden">
+                                        @if($document->translator->profile_picture)
+                                            <img src="{{ $document->translator->profile_picture }}" alt="{{ $document->translator->name }}" class="w-full h-full object-cover" />
+                                        @else
+                                            <i data-lucide="file-text" class="w-5 h-5 text-emerald-600"></i>
+                                        @endif
+                                    </div>
+                                    <div class="overflow-hidden">
+                                        <p class="text-sm font-bold text-slate-900 truncate notranslate" translate="no">{{ $document->translator->name }}</p>
+                                        <p id="label-translator-member" class="text-[10px] text-slate-500 font-mono mt-0.5 notranslate" translate="no"></p>
+                                    </div>
                                 </div>
-                                <div class="overflow-hidden">
-                                    <p class="text-base font-bold text-slate-900 truncate notranslate" translate="no">{{ $document->translator->name }}</p>
-                                    <p id="label-translator-member" class="text-xs text-slate-500 font-mono mt-0.5 notranslate" translate="no"></p>
-                                </div>
+                                @if($document->translator->bio)
+                                    <div class="text-[10px] border-t border-slate-100/85 pt-2">
+                                        <p class="text-slate-600 leading-relaxed italic">"{{ $document->translator->bio }}"</p>
+                                    </div>
+                                @endif
                             </div>
 
-                            @if($document->translator->bio)
-                                <div class="text-xs border-t border-slate-100/85 pt-3">
-                                    <span id="label-bio" class="font-bold text-slate-400 uppercase tracking-wider block mb-1">Biografi:</span>
-                                    <p class="text-slate-600 leading-relaxed italic">"{{ $document->translator->bio }}"</p>
-                                </div>
-                            @endif
-                        </div>
-                    </div>
-
-                    <!-- Secure verification QR Code (Print Friendly) -->
-                    <div class="sm:col-span-2 border-t border-slate-100 pt-6">
-                        <div class="flex flex-col sm:flex-row items-center gap-5 bg-slate-50 border border-slate-100 rounded-2xl p-5">
-                            <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data={{ urlencode(url('/verify/' . $document->document_id)) }}" alt="QR Code Verifikasi" class="w-28 h-28 bg-white p-1 rounded-xl border border-slate-200 shadow-sm flex-shrink-0" />
-                            <div class="space-y-1.5 text-center sm:text-left overflow-hidden">
-                                <p id="label-qr-title" class="text-xs font-bold text-slate-700 uppercase tracking-wider">QR Code Verifikasi Resmi</p>
-                                <p id="label-qr-desc" class="text-[11px] text-slate-500 leading-relaxed"></p>
-                                <p class="text-[10px] font-mono text-emerald-600 font-bold select-all truncate notranslate" translate="no">{{ url('/verify/' . $document->document_id) }}</p>
+                            <!-- QR Code (spans 1 column) -->
+                            <div class="bg-slate-50/60 border border-slate-100 rounded-2xl p-3 flex flex-col items-center justify-center gap-2">
+                                <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data={{ urlencode(url('/verify/' . $document->document_id)) }}" alt="QR" class="w-20 h-20 bg-white p-1 rounded-lg border border-slate-200 shadow-sm flex-shrink-0" />
+                                <span class="text-[9px] font-bold text-emerald-600 font-mono tracking-wider notranslate" translate="no">{{ $document->document_id }}</span>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- Secure Disclaimer box -->
-            <div class="bg-amber-50/40 p-6 border-t border-slate-100 border-l-4 border-l-amber-500 text-left">
-                <div class="flex items-start gap-3">
-                    <p id="label-disclaimer" class="text-xs text-slate-600 leading-relaxed text-justify"></p>
+                <!-- Secure Disclaimer box -->
+                <div class="bg-amber-50/40 p-6 border-t border-slate-100 border-l-4 border-l-amber-500 text-left">
+                    <div class="flex items-start gap-3">
+                        <p id="label-disclaimer" class="text-xs text-slate-600 leading-relaxed text-justify"></p>
+                    </div>
                 </div>
             </div>
         </div>
 
         <!-- Action Buttons (no-print) (REV-15, REV-21) -->
         <div class="flex flex-col sm:flex-row gap-4 w-full max-w-lg no-print mb-8">
-            <button onclick="window.print()" class="flex-1 flex items-center justify-center gap-2 py-3 px-5 border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 rounded-xl text-sm font-bold transition shadow-sm cursor-pointer active:scale-[0.98]">
+            <button onclick="downloadPDF()" class="flex-1 flex items-center justify-center gap-2 py-3 px-5 border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 rounded-xl text-sm font-bold transition shadow-sm cursor-pointer active:scale-[0.98]">
                 <i data-lucide="printer" class="w-4.5 h-4.5 text-slate-500"></i>
                 <span>Cetak Sertifikat / PDF</span>
             </button>
@@ -528,6 +523,33 @@
 
         // Initialize UI
         updateUILanguage();
+
+        function downloadPDF() {
+            const element = document.getElementById('pdf-card');
+            if (!element) return;
+
+            const download = () => {
+                const opt = {
+                    margin:       10,
+                    filename:     'Verifikasi_Dokumen_' + '{{ $document ? $document->document_id : "doc" }}' + '.pdf',
+                    image:        { type: 'jpeg', quality: 0.98 },
+                    html2canvas:  { scale: 3, useCORS: true, logging: false },
+                    jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                };
+                html2pdf().set(opt).from(element).save();
+            };
+
+            if (window.html2pdf) {
+                download();
+            } else {
+                const script = document.createElement('script');
+                script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
+                script.integrity = 'sha512-GsLlZN/3F2ErC5IfS5Q/Go6XXnEQgp1Ckb9spipdI68x5rKxQcALzSZKCfyUlXOUMGq8MuvOdxTeRLgpRQGiKw==';
+                script.crossOrigin = 'anonymous';
+                script.onload = download;
+                document.body.appendChild(script);
+            }
+        }
     </script>
 </body>
 </html>
