@@ -192,25 +192,25 @@
                 <div class="p-6 sm:p-8 space-y-6 text-left">
                     <div id="section-meta-row" class="border-b border-slate-100 pb-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
-                            <p id="label-reg-no" class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">No. Registrasi</p>
-                            <p class="text-lg font-bold text-slate-900 font-mono notranslate" translate="no">{{ $document->registration_number }}</p>
+                            <p id="label-reg-no" class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">No. Registrasi</p>
+                            <p class="text-lg font-black text-slate-950 font-mono notranslate" translate="no">{{ $document->registration_number }}</p>
                         </div>
                         <div>
-                            <p id="label-doc-id" class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">ID Dokumen</p>
-                            <p class="text-lg font-bold text-emerald-600 font-mono notranslate" translate="no">{{ $document->document_id }}</p>
+                            <p id="label-doc-id" class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">ID Dokumen</p>
+                            <p class="text-lg font-black text-emerald-700 font-mono notranslate" translate="no">{{ $document->document_id }}</p>
                         </div>
                     </div>
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-y-6 gap-x-4">
                         <div>
-                            <p id="label-date" class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Tanggal Terjemah</p>
-                            <p id="value-date" class="text-base font-semibold text-slate-800 notranslate" translate="no"></p>
+                            <p id="label-date" class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Tanggal Terjemah</p>
+                            <p id="value-date" class="text-base font-extrabold text-slate-950 notranslate" translate="no"></p>
                         </div>
 
                         <div>
-                            <p id="label-status" class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Status Verifikasi</p>
+                            <p id="label-status" class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Status Verifikasi</p>
                             <div>
-                                <span id="status-badge" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-100 shadow-sm notranslate" translate="no">
+                                <span id="status-badge" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-800 border border-emerald-200 shadow-sm notranslate" translate="no">
                                     <span id="status-dot" class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
                                     <span id="value-status"></span>
                                 </span>
@@ -218,8 +218,8 @@
                         </div>
 
                         <div class="sm:col-span-2">
-                            <p id="label-client" class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Nama di Dokumen (Disamarkan)</p>
-                            <p class="text-base font-mono font-bold text-slate-900 mt-1 bg-slate-50 border border-slate-200/80 p-3 rounded-xl select-none tracking-wide text-center notranslate" translate="no">
+                            <p id="label-client" class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Nama di Dokumen (Disamarkan)</p>
+                            <p class="text-base font-mono font-black text-slate-950 mt-1 bg-slate-50 border border-slate-200/80 p-3 rounded-xl select-none tracking-wide text-center notranslate" translate="no">
                                 @php
                                     $masked = '';
                                     if ($document->client_name) {
@@ -234,23 +234,23 @@
                         </div>
 
                         <div class="sm:col-span-1 bg-slate-50 rounded-2xl p-4 border border-slate-200/60 flex flex-col justify-between">
-                            <p id="label-pair" class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Pasangan Bahasa</p>
+                            <p id="label-pair" class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Pasangan Bahasa</p>
                             <div class="flex items-center">
-                                <span class="text-xs font-semibold text-slate-800 bg-white px-3 py-1.5 rounded-lg border border-slate-200/80 shadow-sm notranslate" translate="no">{{ $document->language_pair }}</span>
+                                <span class="text-xs font-bold text-slate-950 bg-white px-3 py-1.5 rounded-lg border border-slate-200/80 shadow-sm notranslate" translate="no">{{ $document->language_pair }}</span>
                             </div>
                         </div>
 
                         <div class="sm:col-span-1 bg-slate-50 rounded-2xl p-4 border border-slate-200/60 flex flex-col justify-between">
-                            <p id="label-type" class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Tipe Dokumen</p>
-                            <p class="text-sm font-semibold text-slate-800 mt-1">{{ $document->document_type }}</p>
+                            <p id="label-type" class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Tipe Dokumen</p>
+                            <p class="text-sm font-extrabold text-slate-950 mt-1">{{ $document->document_type }}</p>
                         </div>
 
                         <!-- Combined Sworn Translator & QR Code Row -->
                         <div class="sm:col-span-2 grid grid-cols-1 sm:grid-cols-3 gap-4 border-t border-slate-100 pt-6">
                             <!-- Translator Badge Box -->
                             <div class="sm:col-span-2 bg-slate-50/60 border border-slate-100 rounded-2xl p-4 flex flex-col justify-between gap-3">
-                                <p id="label-translator" class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Penerjemah Tersumpah</p>
-                                <div class="flex items-center gap-3">
+                                <p id="label-translator" class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Penerjemah Tersumpah</p>
+                                <div class="flex items-center gap-3.5">
                                     <div class="w-10 h-10 rounded-full bg-emerald-50 flex items-center justify-center flex-shrink-0 border border-emerald-100 shadow-sm overflow-hidden">
                                         @if($document->translator->profile_picture)
                                             <img src="{{ $document->translator->profile_picture }}" alt="{{ $document->translator->name }}" class="w-full h-full object-cover" />
@@ -259,8 +259,8 @@
                                         @endif
                                     </div>
                                     <div class="overflow-hidden">
-                                        <p class="text-sm font-bold text-slate-900 truncate notranslate" translate="no">{{ $document->translator->name }}</p>
-                                        <p id="label-translator-member" class="text-[10px] text-slate-500 font-mono mt-0.5 notranslate" translate="no"></p>
+                                        <p class="text-sm font-bold text-slate-950 truncate notranslate" translate="no">{{ $document->translator->name }}</p>
+                                        <p id="label-translator-member" class="text-[10px] text-slate-650 font-mono mt-0.5 notranslate" translate="no"></p>
                                     </div>
                                 </div>
                                 @if($document->translator->bio)
@@ -273,7 +273,7 @@
                             <!-- QR Code (spans 1 column) -->
                             <div class="bg-slate-50/60 border border-slate-100 rounded-2xl p-3 flex flex-col items-center justify-center gap-2">
                                 <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data={{ urlencode(url('/verify/' . $document->document_id)) }}" alt="QR" class="w-20 h-20 bg-white p-1 rounded-lg border border-slate-200 shadow-sm flex-shrink-0" />
-                                <span class="text-[9px] font-bold text-emerald-600 font-mono tracking-wider notranslate" translate="no">{{ $document->document_id }}</span>
+                                <span class="text-[9px] font-bold text-emerald-700 font-mono tracking-wider notranslate" translate="no">{{ $document->document_id }}</span>
                             </div>
                         </div>
                     </div>
@@ -282,17 +282,34 @@
                 <!-- Secure Disclaimer box -->
                 <div class="bg-amber-50/40 p-6 border-t border-slate-100 border-l-4 border-l-amber-500 text-left">
                     <div class="flex items-start gap-3">
-                        <p id="label-disclaimer" class="text-xs text-slate-600 leading-relaxed text-justify"></p>
+                        <p id="label-disclaimer" class="text-xs text-slate-700 leading-relaxed text-justify font-medium"></p>
                     </div>
                 </div>
+
+                <!-- Official IPPTI Footer (Address & Contact Info) -->
+                <div class="border-t border-slate-150 bg-slate-50/70 px-6 py-4 text-center space-y-2">
+                    <div class="flex items-center justify-center gap-2">
+                        <img src="/ippti-logo.jpg" alt="IPPTI Logo" class="h-5 w-auto rounded bg-white p-0.5 object-contain" />
+                        <span class="text-[9px] font-extrabold text-slate-800 tracking-wider">IKATAN PENERJEMAH & PENGALIH BAHASA TERSUMPAH DI INDONESIA (IPPTI)</span>
+                    </div>
+                    <p class="text-[8px] text-slate-600 font-medium leading-relaxed max-w-sm mx-auto notranslate" translate="no">
+                        Menara Caraka, Lt. 6 / 625, Jl. Mega Kuningan Barat Blok E.4.7 No. 1, Setiabudi, Jakarta Selatan 12950
+                    </p>
+                    <div class="flex items-center justify-center gap-4 text-[8px] text-slate-600 font-bold notranslate" translate="no">
+                        <span class="flex items-center gap-1"><i data-lucide="mail" class="w-2.5 h-2.5 text-slate-500"></i> info@ippti.or.id</span>
+                        <span class="flex items-center gap-1"><i data-lucide="phone" class="w-2.5 h-2.5 text-slate-500"></i> +62 811-8117-0118</span>
+                        <span class="flex items-center gap-1"><i data-lucide="globe" class="w-2.5 h-2.5 text-slate-500"></i> ippti.or.id</span>
+                    </div>
+                </div>
+            </div>
             </div>
         </div>
 
         <!-- Action Buttons (no-print) (REV-15, REV-21) -->
         <div class="flex flex-col sm:flex-row gap-4 w-full max-w-lg no-print mb-8">
-            <button onclick="downloadPDF()" class="flex-1 flex items-center justify-center gap-2 py-3 px-5 border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 rounded-xl text-sm font-bold transition shadow-sm cursor-pointer active:scale-[0.98]">
-                <i data-lucide="printer" class="w-4.5 h-4.5 text-slate-500"></i>
-                <span>Cetak Sertifikat / PDF</span>
+            <button onclick="downloadPDF()" class="flex-1 flex items-center justify-center gap-2 py-3 px-5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-sm font-bold transition shadow-sm cursor-pointer active:scale-[0.98]">
+                <i data-lucide="download" class="w-4.5 h-4.5 text-white"></i>
+                <span>Download PDF</span>
             </button>
             <a href="/" class="flex-1 flex items-center justify-center gap-2 py-3 px-5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-sm font-bold transition shadow-sm cursor-pointer active:scale-[0.98]">
                 <i data-lucide="search" class="w-4.5 h-4.5 text-slate-400"></i>
