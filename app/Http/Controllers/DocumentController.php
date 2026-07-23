@@ -452,12 +452,17 @@ class DocumentController extends Controller
             return redirect("/verify/" . $docById->document_id);
         }
 
-        // 2. Otherwise match by Registration Number (may return multiple results)
+        // 2. Otherwise match by Registration Number, Document Owner Name (client_name), or Document ID
         $docs = Document::withTrashed()
-            ->where("registration_number", $query)
             ->where("is_qr_generated", true)
             ->whereHas('translator', function ($q) {
                 $q->where('role', 'TRANSLATOR');
+            })
+            ->where(function ($q) use ($query) {
+                $q->where("registration_number", $query)
+                  ->orWhere("registration_number", "LIKE", "%{$query}%")
+                  ->orWhere("client_name", "LIKE", "%{$query}%")
+                  ->orWhere("document_id", "LIKE", "%{$query}%");
             })
             ->with('translator')
             ->get();

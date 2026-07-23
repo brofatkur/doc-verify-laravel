@@ -127,7 +127,7 @@
             <form id="form-search" action="/search" method="GET" class="space-y-4">
                 <div>
                     <label id="label-reg" for="search-input" class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2.5">
-                        Nomor Registrasi atau 8-Karakter ID Dokumen
+                        Nomor Registrasi, Nama Pemilik, atau 8-Karakter ID Dokumen
                     </label>
                     <div class="relative">
                         <input
@@ -135,7 +135,7 @@
                             name="query"
                             type="text"
                             required
-                            placeholder="Contoh: REG-Belanda-001 atau VFY7A8B9"
+                            placeholder="Contoh: REG-Belanda-001, Budi Santoso, atau VFY7A8B9"
                             class="w-full pl-4 pr-12 py-3.5 border border-slate-200 rounded-xl bg-slate-50 text-blue-950 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-950/20 focus:border-blue-950 text-sm font-semibold uppercase tracking-wide transition-all duration-200"
                         />
                         <button
@@ -148,7 +148,7 @@
                     </div>
                 </div>
                 <p id="desc-reg" class="text-xs text-slate-500 leading-relaxed">
-                    Verifikasi dokumen dengan mencari nomor registrasi yang dibubuhkan oleh penerjemah tersumpah, atau 8-karakter ID verifikasi unik.
+                    Verifikasi dokumen dengan mencari nomor registrasi, nama pemilik dokumen, atau 8-karakter ID verifikasi unik.
                 </p>
             </form>
 
@@ -252,9 +252,9 @@
                 hero_desc: "",
                 tab_reg: "Nomor Registrasi",
                 tab_qr: "Pindai QR",
-                label_reg: "Nomor Registrasi atau 8-Karakter ID Dokumen",
-                placeholder_reg: "Contoh: REG-Belanda-001 atau VFY7A8B9",
-                desc_reg: "Verifikasi dokumen dengan mencari nomor registrasi yang dibubuhkan oleh penerjemah tersumpah, atau 8-karakter ID verifikasi unik.",
+                label_reg: "Nomor Registrasi, Nama Pemilik, atau 8-Karakter ID Dokumen",
+                placeholder_reg: "Contoh: REG-Belanda-001, Budi Santoso, atau VFY7A8B9",
+                desc_reg: "Verifikasi dokumen dengan mencari nomor registrasi, nama pemilik dokumen, atau 8-karakter ID verifikasi unik.",
                 upload_qr: "Ambil Foto atau Pindai QR",
                 upload_qr_desc: "Mendukung jepretan kamera langsung & unggahan gambar",
                 desc_qr: "Gunakan kamera perangkat Anda untuk memindai kode QR verifikasi pada dokumen fisik, atau unggah foto/tangkapan layar kode QR.",
@@ -279,9 +279,9 @@
                 hero_desc: "",
                 tab_reg: "Registration Number",
                 tab_qr: "Scan QR",
-                label_reg: "Registration Number or 8-Character Document ID",
-                placeholder_reg: "Example: REG-Dutch-001 or VFY7A8B9",
-                desc_reg: "Verify document by searching registration number issued by sworn translator, or unique 8-character verification ID.",
+                label_reg: "Registration Number, Owner Name, or 8-Character Document ID",
+                placeholder_reg: "Example: REG-Dutch-001, Budi Santoso, or VFY7A8B9",
+                desc_reg: "Verify document by searching registration number, document owner's name, or unique 8-character verification ID.",
                 upload_qr: "Capture Photo or Scan QR",
                 upload_qr_desc: "Supports direct camera shots & image uploads",
                 desc_qr: "Use your device camera to scan the verification QR code on the physical document, or upload a photo/screenshot of the QR code.",
@@ -306,9 +306,9 @@
                 hero_desc: "",
                 tab_reg: "注册编号",
                 tab_qr: "扫描二维码",
-                label_reg: "注册编号或8位文件 ID",
-                placeholder_reg: "例如: REG-Dutch-001 或 VFY7A8B9",
-                desc_reg: "通过搜索宣誓翻译员发放 of 注册号或唯一的8位验证 ID 来验证文件。",
+                label_reg: "注册编号、文件持有人姓名或8位文件 ID",
+                placeholder_reg: "例如: REG-Dutch-001, Budi Santoso 或 VFY7A8B9",
+                desc_reg: "通过搜索宣誓翻译员发放 of 注册号、文件持有人姓名或唯一的8位验证 ID 来验证文件。",
                 upload_qr: "拍摄照片或扫描二维码",
                 upload_qr_desc: "支持直接相机拍摄和图片上传",
                 desc_qr: "使用您的设备摄像头扫描纸质文件上的验证二维码，或上传二维码的照片/屏幕截图。",
@@ -333,9 +333,9 @@
                 hero_desc: "",
                 tab_reg: "رقم التسجيل",
                 tab_qr: "مسح رمز QR",
-                label_reg: "رقم التسجيل أو معرف مستند من 8 أحرف",
-                placeholder_reg: "مثال: REG-Dutch-001 أو VFY7A8B9",
-                desc_reg: "تحقق من المستند بالبحث عن رقم التسجيل الصادر عن المترجم المحلف، أو معرف التحقق الفريد المكون من 8 أحرف.",
+                label_reg: "رقم التسجيل، اسم صاحب المستند، أو معرف مستند من 8 أحرف",
+                placeholder_reg: "مثال: REG-Dutch-001، Budi Santoso، أو VFY7A8B9",
+                desc_reg: "تحقق من المستند بالبحث عن رقم التسجيل، اسم صاحب المستند، أو معرف التحقق الفريد المكون من 8 أحرف.",
                 upload_qr: "التقاط صورة أو مسح رمز QR",
                 upload_qr_desc: "يدعم لقطات الكاميرا المباشرة وتحميل الصور",
                 desc_qr: "استخدم كاميرا جهازك لمسح رمز QR للتحقق على المستند الفعلي، أو قم بتحميل صورة/لقطة شاشة لرمز QR.",
