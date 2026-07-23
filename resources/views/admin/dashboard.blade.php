@@ -104,7 +104,7 @@
                             type="text"
                             id="superadmin-document-search"
                             oninput="filterSuperadminDocuments()"
-                            placeholder="Cari dokumen nasional (nama, registrasi, ID, tipe)..."
+                            placeholder="Cari dokumen nasional (nama pemilik/klien, registrasi, ID, tipe)..."
                             class="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition text-sm text-slate-800"
                         />
                     </div>
@@ -131,12 +131,12 @@
                                 </tr>
                             @else
                                 @foreach($documents as $doc)
-                                    <tr class="hover:bg-slate-50/40 transition-colors duration-150">
+                                    <tr class="hover:bg-slate-50/40 transition-colors duration-150" data-search-text="{{ strtolower($doc->document_id . ' ' . $doc->registration_number . ' ' . $doc->client_name . ' ' . $doc->document_type . ' ' . $doc->language_pair . ' ' . ($doc->translator->name ?? '')) }}">
                                         <td class="px-6 py-4 font-mono font-bold text-emerald-600">
                                             {{ $doc->document_id }}
                                         </td>
                                         <td class="px-6 py-4 text-slate-700 font-semibold font-mono text-xs">{{ $doc->registration_number }}</td>
-                                        <td class="px-6 py-4 text-slate-600 font-mono text-xs">
+                                        <td class="px-6 py-4 text-slate-600 font-mono text-xs" title="Nama Asli: {{ $doc->client_name }}">
                                             @php
                                                 $words = explode(' ', $doc->client_name);
                                                 $masked = array_map(function($w) {
@@ -256,7 +256,7 @@
                         type="text"
                         id="document-search-input"
                         oninput="filterTranslatorDocuments()"
-                        placeholder="Cari berdasarkan nama, no registrasi, ID, tipe dokumen..."
+                        placeholder="Cari berdasarkan nama pemilik/klien, no registrasi, ID, tipe dokumen..."
                         class="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition text-sm text-slate-800"
                     />
                 </div>
@@ -283,12 +283,12 @@
                             </tr>
                         @else
                             @foreach($documents as $doc)
-                                <tr class="hover:bg-slate-50/40 transition-colors duration-150">
+                                <tr class="hover:bg-slate-50/40 transition-colors duration-150" data-search-text="{{ strtolower($doc->document_id . ' ' . $doc->registration_number . ' ' . $doc->client_name . ' ' . $doc->document_type . ' ' . $doc->language_pair) }}">
                                     <td class="px-6 py-4 font-mono font-bold text-emerald-600">
                                         {{ $doc->document_id }}
                                     </td>
                                     <td class="px-6 py-4 text-slate-700 font-semibold font-mono text-xs">{{ $doc->registration_number }}</td>
-                                    <td class="px-6 py-4 text-slate-600 font-mono text-xs">
+                                    <td class="px-6 py-4 text-slate-600 font-mono text-xs" title="Nama Asli: {{ $doc->client_name }}">
                                         @php
                                             $words = explode(' ', $doc->client_name);
                                             $masked = array_map(function($w) {
@@ -596,12 +596,13 @@
 
         // Table search filters (REV-04, REV-18)
         function filterSuperadminDocuments() {
-            const query = document.getElementById('superadmin-document-search').value.toLowerCase();
+            const query = document.getElementById('superadmin-document-search').value.toLowerCase().trim();
             const rows = document.querySelectorAll('#superadmin-table tbody tr');
             rows.forEach(row => {
                 if (row.cells.length < 2) return;
-                const text = row.textContent.toLowerCase();
-                if (text.includes(query)) {
+                const dataSearch = row.getAttribute('data-search-text') || '';
+                const text = (dataSearch + ' ' + row.textContent).toLowerCase();
+                if (!query || text.includes(query)) {
                     row.classList.remove('hidden');
                 } else {
                     row.classList.add('hidden');
@@ -610,12 +611,13 @@
         }
 
         function filterTranslatorDocuments() {
-            const query = document.getElementById('document-search-input').value.toLowerCase();
+            const query = document.getElementById('document-search-input').value.toLowerCase().trim();
             const rows = document.querySelectorAll('#translator-table tbody tr');
             rows.forEach(row => {
                 if (row.cells.length < 2) return;
-                const text = row.textContent.toLowerCase();
-                if (text.includes(query)) {
+                const dataSearch = row.getAttribute('data-search-text') || '';
+                const text = (dataSearch + ' ' + row.textContent).toLowerCase();
+                if (!query || text.includes(query)) {
                     row.classList.remove('hidden');
                 } else {
                     row.classList.add('hidden');
