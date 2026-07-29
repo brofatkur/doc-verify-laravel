@@ -35,4 +35,10 @@ return [
         ],
     ],
 
+    'ipaymu' => [
+        'va' => env('IPAYMU_VA', ''),
+        'api_key' => env('IPAYMU_API_KEY', ''),
+        'env' => env('IPAYMU_ENV', 'sandbox'),
+    ],
+
 ];

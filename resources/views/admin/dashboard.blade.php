@@ -239,14 +239,24 @@
 
         <!-- Translator Metrics -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4">
-                <div class="p-3.5 bg-amber-50 text-amber-600 rounded-xl">
-                    <i data-lucide="coins" class="w-6 h-6"></i>
+            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <div class="p-3.5 bg-amber-50 text-amber-600 rounded-xl">
+                        <i data-lucide="coins" class="w-6 h-6"></i>
+                    </div>
+                    <div>
+                        <p class="text-3xl font-black text-slate-900">{{ number_format(Auth::user()->points ?? 0, 0, ',', '.') }}</p>
+                        <p class="text-xs font-semibold text-slate-500 uppercase tracking-wide mt-0.5">Saldo Poin Penggunaan</p>
+                    </div>
                 </div>
-                <div>
-                    <p class="text-3xl font-black text-slate-900">{{ number_format(Auth::user()->points ?? 0, 0, ',', '.') }}</p>
-                    <p class="text-xs font-semibold text-slate-500 uppercase tracking-wide mt-0.5">Saldo Poin Penggunaan</p>
-                </div>
+                <button
+                    onclick="openIpaymuModal()"
+                    class="flex items-center gap-1.5 bg-amber-500 hover:bg-amber-600 text-white px-3.5 py-2 rounded-xl text-xs font-bold transition shadow-xs cursor-pointer"
+                    title="Top-Up Saldo Poin Mandiri via iPaymu"
+                >
+                    <i data-lucide="credit-card" class="w-3.5 h-3.5"></i>
+                    <span>Top-Up</span>
+                </button>
             </div>
             <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4">
                 <div class="p-3.5 bg-emerald-50 text-emerald-600 rounded-xl">
@@ -646,6 +656,136 @@
                 }
             });
         }
+
+        function openIpaymuModal() {
+            document.getElementById('modal-ipaymu-topup').classList.remove('hidden');
+            document.getElementById('ipaymu-error-msg').classList.add('hidden');
+            lucide.createIcons();
+        }
+
+        function closeIpaymuModal() {
+            document.getElementById('modal-ipaymu-topup').classList.add('hidden');
+        }
+
+        function selectIpaymuPackage(amount) {
+            document.getElementById('custom-ipaymu-amount').value = amount;
+        }
+
+        async function processIpaymuPayment() {
+            const amount = document.getElementById('custom-ipaymu-amount').value;
+            const btn = document.getElementById('btn-process-ipaymu');
+            const errDiv = document.getElementById('ipaymu-error-msg');
+
+            errDiv.classList.add('hidden');
+            btn.disabled = true;
+            btn.innerHTML = '<div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div> <span>Menghubungi iPaymu...</span>';
+
+            try {
+                const response = await fetch('/payment/ipaymu/create', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({ amount: amount })
+                });
+
+                const data = await response.json();
+
+                if (data.success && data.payment_url) {
+                    window.location.href = data.payment_url;
+                } else {
+                    errDiv.innerText = data.error || 'Gagal memproses pembayaran iPaymu.';
+                    errDiv.classList.remove('hidden');
+                    btn.disabled = false;
+                    btn.innerHTML = '<i data-lucide="external-link" class="w-4 h-4"></i> <span>Bayar via iPaymu</span>';
+                    lucide.createIcons();
+                }
+            } catch (err) {
+                errDiv.innerText = 'Terjadi kesalahan jaringan ke server: ' + err.message;
+                errDiv.classList.remove('hidden');
+                btn.disabled = false;
+                btn.innerHTML = '<i data-lucide="external-link" class="w-4 h-4"></i> <span>Bayar via iPaymu</span>';
+                lucide.createIcons();
+            }
+        }
     </script>
+
+    <!-- ========================================== -->
+    <!--       IPAYMU TOP-UP MANDIRI MODAL          -->
+    <!-- ========================================== -->
+    <div id="modal-ipaymu-topup" class="hidden fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full shadow-2xl p-6 border border-slate-100 space-y-4">
+            <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                <div class="flex items-center gap-2 text-amber-700 font-bold text-sm">
+                    <i data-lucide="credit-card" class="w-5 h-5 text-amber-500"></i>
+                    <span>Top-Up Saldo Poin via iPaymu</span>
+                </div>
+                <button onclick="closeIpaymuModal()" class="p-1 text-slate-400 hover:text-slate-600 rounded-lg cursor-pointer">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <div class="bg-amber-50/70 border border-amber-100 p-3.5 rounded-xl space-y-1 text-xs">
+                <p class="text-slate-500">Metode Pembayaran Mandiri:</p>
+                <p class="font-bold text-slate-900 text-sm">QRIS, VA (BCA, Mandiri, BNI, BRI), E-Wallet & CC</p>
+                <p class="text-slate-500 mt-1">Saldo Poin Saat Ini: <strong class="font-mono font-bold text-emerald-700">{{ number_format(Auth::user()->points ?? 0, 0, ',', '.') }} Poin</strong></p>
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Pilih Paket Top-Up</label>
+                <div class="grid grid-cols-2 gap-2.5 mb-3">
+                    <button type="button" onclick="selectIpaymuPackage(50000)" class="pkg-btn border border-slate-200 p-3 rounded-xl hover:border-amber-500 hover:bg-amber-50/40 text-left transition cursor-pointer">
+                        <p class="text-xs text-slate-500 font-medium">Rp 50.000</p>
+                        <p class="text-sm font-black text-slate-800">50.000 Poin</p>
+                    </button>
+                    <button type="button" onclick="selectIpaymuPackage(100000)" class="pkg-btn border-2 border-amber-500 bg-amber-50/50 p-3 rounded-xl text-left transition cursor-pointer">
+                        <p class="text-xs text-amber-700 font-bold">Rp 100.000 (Populer)</p>
+                        <p class="text-sm font-black text-slate-900">100.000 Poin</p>
+                    </button>
+                    <button type="button" onclick="selectIpaymuPackage(250000)" class="pkg-btn border border-slate-200 p-3 rounded-xl hover:border-amber-500 hover:bg-amber-50/40 text-left transition cursor-pointer">
+                        <p class="text-xs text-slate-500 font-medium">Rp 250.000</p>
+                        <p class="text-sm font-black text-slate-800">250.000 Poin</p>
+                    </button>
+                    <button type="button" onclick="selectIpaymuPackage(500000)" class="pkg-btn border border-slate-200 p-3 rounded-xl hover:border-amber-500 hover:bg-amber-50/40 text-left transition cursor-pointer">
+                        <p class="text-xs text-slate-500 font-medium">Rp 500.000</p>
+                        <p class="text-sm font-black text-slate-800">500.000 Poin</p>
+                    </button>
+                </div>
+
+                <label for="custom-ipaymu-amount" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Nominal Pembayaran (Rp)</label>
+                <input
+                    type="number"
+                    id="custom-ipaymu-amount"
+                    min="10000"
+                    step="1000"
+                    value="100000"
+                    class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-slate-800 text-sm font-semibold outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition font-mono"
+                />
+                <p class="text-[10px] text-slate-400 mt-1">1 Rupiah = 1 Poin (Biaya registrasi: 1.000 Poin / dokumen).</p>
+            </div>
+
+            <div id="ipaymu-error-msg" class="hidden bg-rose-50 border border-rose-200 text-rose-700 p-3 rounded-xl text-xs font-bold"></div>
+
+            <div class="flex justify-end gap-3 pt-2 border-t border-slate-100">
+                <button
+                    type="button"
+                    onclick="closeIpaymuModal()"
+                    class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition cursor-pointer"
+                >
+                    Batal
+                </button>
+                <button
+                    type="button"
+                    id="btn-process-ipaymu"
+                    onclick="processIpaymuPayment()"
+                    class="flex items-center gap-2 px-5 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-bold transition shadow-sm cursor-pointer"
+                >
+                    <i data-lucide="external-link" class="w-4 h-4"></i>
+                    <span>Bayar via iPaymu</span>
+                </button>
+            </div>
+        </div>
+    </div>
 @endif
 @endsection

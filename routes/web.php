@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\PaymentController;
 
 // Public search and verification routes with rate limiting (REV-19)
 Route::middleware('throttle:60,1')->group(function () {
@@ -75,4 +76,12 @@ Route::middleware('auth')->group(function () {
     Route::post('/admin/language-directions', [AdminController::class, 'storeLanguageDirection']);
     Route::post('/admin/language-directions/{id}/update', [AdminController::class, 'updateLanguageDirection']);
     Route::post('/admin/language-directions/{id}/delete', [AdminController::class, 'deleteLanguageDirection']);
+
+    // iPaymu Settings & Self-Service Payment
+    Route::post('/admin/settings/ipaymu', [AdminController::class, 'updateIpaymuSettings']);
+    Route::post('/payment/ipaymu/create', [PaymentController::class, 'createPayment']);
 });
+
+// iPaymu Webhook Callback & Return
+Route::post('/ipaymu/callback', [PaymentController::class, 'handleCallback']);
+Route::get('/ipaymu/return', [PaymentController::class, 'handleReturn']);

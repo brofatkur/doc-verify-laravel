@@ -545,4 +545,47 @@ class AdminController extends Controller
         
         return redirect('/admin/language-directions')->with('success', 'Arah bahasa berhasil dihapus.');
     }
+
+    public function updateIpaymuSettings(Request $request)
+    {
+        $currentUser = Auth::user();
+        if ($currentUser->role !== 'SUPERADMIN' && $currentUser->role !== 'ADMIN') {
+            return back()->withErrors(['error' => 'Akses ditolak.']);
+        }
+
+        $request->validate([
+            'ipaymu_va' => 'nullable|string|max:255',
+            'ipaymu_api_key' => 'nullable|string|max:255',
+            'ipaymu_env' => 'required|in:sandbox,production',
+        ]);
+
+        $va = trim((string)$request->ipaymu_va);
+        $apiKey = trim((string)$request->ipaymu_api_key);
+        $env = trim((string)$request->ipaymu_env);
+
+        $envPath = base_path('.env');
+        if (file_exists($envPath)) {
+            $envContent = file_get_contents($envPath);
+            
+            $keys = [
+                'IPAYMU_VA' => $va,
+                'IPAYMU_API_KEY' => $apiKey,
+                'IPAYMU_ENV' => $env,
+            ];
+
+            foreach ($keys as $key => $value) {
+                if (preg_match("/^{$key}=.*/m", $envContent)) {
+                    $envContent = preg_replace("/^{$key}=.*/m", "{$key}=\"{$value}\"", $envContent);
+                } else {
+                    $envContent .= "\n{$key}=\"{$value}\"";
+                }
+            }
+
+            file_put_contents($envPath, $envContent);
+        }
+
+        \App\Models\AuditLog::log('UPDATE_IPAYMU_SETTINGS', User::class, $currentUser->id, [], ['env' => $env, 'va_length' => strlen($va)]);
+
+        return redirect('/admin/profile')->with('success', 'Pengaturan Payment Gateway iPaymu berhasil disimpan!');
+    }
 }
