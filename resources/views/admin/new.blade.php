@@ -12,6 +12,25 @@
         </div>
     </div>
 
+    <!-- Points Info Banner -->
+    <div class="bg-slate-50 border border-slate-200/80 rounded-2xl p-4 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+            <div class="p-2.5 bg-amber-50 text-amber-600 rounded-xl border border-amber-200/60">
+                <i data-lucide="coins" class="w-5 h-5"></i>
+            </div>
+            <div>
+                <p class="text-xs text-slate-500 font-medium">Biaya Poin Registrasi Dokumen</p>
+                <p class="text-sm font-bold text-slate-800">1.000 Poin / dokumen</p>
+            </div>
+        </div>
+        <div class="text-right">
+            <p class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Saldo Poin Anda</p>
+            <p class="text-sm font-black font-mono {{ (Auth::user()->points ?? 0) <= 10000 ? 'text-amber-600' : 'text-emerald-600' }}">
+                {{ number_format(Auth::user()->points ?? 0, 0, ',', '.') }} Poin
+            </p>
+        </div>
+    </div>
+
     <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
         <form action="/admin/documents" method="POST" class="p-6 space-y-6">
             @csrf

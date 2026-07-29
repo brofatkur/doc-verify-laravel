@@ -99,6 +99,12 @@
                                 Penerjemah
                             @endif
                         </p>
+                        @if(Auth::user()->role === 'TRANSLATOR')
+                            <div class="mt-1.5 inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-300 border border-amber-500/20" title="Saldo Poin Penggunaan Layanan">
+                                <i data-lucide="coins" class="w-3 h-3 text-amber-400"></i>
+                                <span>{{ number_format(Auth::user()->points ?? 0, 0, ',', '.') }} Poin</span>
+                            </div>
+                        @endif
                     </div>
                 </div>
             @endauth

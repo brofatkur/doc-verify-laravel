@@ -27,6 +27,7 @@ return new class extends Migration
             $table->string('tgl_sk')->nullable();
             $table->string('masa_aktif')->nullable();
             $table->text('sk_lengkap')->nullable();
+            $table->integer('points')->default(100000);
             $table->rememberToken();
             $table->timestamps();
         });

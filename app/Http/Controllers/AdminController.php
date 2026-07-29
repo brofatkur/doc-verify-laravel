@@ -134,6 +134,43 @@ class AdminController extends Controller
         return redirect('/admin/users')->with('success', 'Akun pengguna baru berhasil dibuat!');
     }
 
+    public function topupUserPoints(Request $request, $id)
+    {
+        $currentUser = Auth::user();
+        if ($currentUser->role !== 'SUPERADMIN' && $currentUser->role !== 'ADMIN') {
+            return back()->withErrors(['error' => 'Akses ditolak.']);
+        }
+
+        $targetUser = User::findOrFail($id);
+
+        $request->validate([
+            'points' => 'required|integer|min:1',
+        ], [
+            'points.required' => 'Jumlah poin top-up wajib diisi.',
+            'points.integer' => 'Jumlah poin harus berupa angka bulat positif.',
+            'points.min' => 'Jumlah poin minimal 1.',
+        ]);
+
+        $addPoints = (int)$request->points;
+        $beforePoints = $targetUser->points;
+        
+        $targetUser->increment('points', $addPoints);
+        $targetUser->refresh();
+
+        \App\Models\AuditLog::log(
+            'TOPUP_POINTS',
+            User::class,
+            $targetUser->id,
+            ['points' => $beforePoints],
+            ['points' => $targetUser->points, 'added' => $addPoints, 'by' => $currentUser->id]
+        );
+
+        return redirect('/admin/users')->with(
+            'success',
+            'Berhasil menambahkan top-up ' . number_format($addPoints, 0, ',', '.') . ' Poin untuk ' . $targetUser->name . '. Total poin saat ini: ' . number_format($targetUser->points, 0, ',', '.') . ' Poin.'
+        );
+    }
+
     public function updateUser(Request $request, $id)
     {
         $currentUser = Auth::user();

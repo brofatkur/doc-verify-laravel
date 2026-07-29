@@ -59,6 +59,14 @@ class DocumentController extends Controller
             return back()->withErrors(['registration_number' => 'Nomor registrasi sudah terdaftar untuk akun Penerjemah Anda. Silakan ubah secara manual.'])->withInput();
         }
 
+        // Check points balance (1,000 points per document)
+        $pointsCost = 1000;
+        if (($user->points ?? 0) < $pointsCost) {
+            return back()->withErrors([
+                'points' => 'Saldo Poin Anda tidak mencukupi untuk melakukan registrasi dokumen (Dibutuhkan ' . number_format($pointsCost, 0, ',', '.') . ' Poin, Saldo Poin Anda saat ini: ' . number_format($user->points ?? 0, 0, ',', '.') . ' Poin). Silakan hubungi Administrator IPPTI untuk melakukan pengisian ulang (top-up) poin.'
+            ])->withInput();
+        }
+
         // Auto-create missing master data
         \App\Models\DocumentType::firstOrCreate(['name' => trim($request->document_type)]);
         \App\Models\LanguageDirection::firstOrCreate(['name' => trim($request->language_pair)]);
@@ -77,11 +85,25 @@ class DocumentController extends Controller
             "translator_id" => $user->id,
         ]);
 
+        // Deduct 1,000 points per document registration
+        $user->decrement('points', $pointsCost);
+        $user->refresh();
+
+        // Trigger polite low-balance reminder email alert if points <= 10,000
+        if ($user->points <= 10000) {
+            $alertMsg = "\n======================================================\n";
+            $alertMsg .= "[ALERT EMAIL TOP-UP REMINDER SENT TO {$user->email}]:\n";
+            $alertMsg .= "Halo {$user->name},\n";
+            $alertMsg .= "Demi kelancaran penggunaan layanan verifikasi dokumen IPPTI, mohon untuk melakukan pengisian ulang (top-up) poin saldo Anda. Saldo poin Anda saat ini tersisa " . number_format($user->points, 0, ',', '.') . " Poin.\n";
+            $alertMsg .= "======================================================\n";
+            error_log($alertMsg);
+        }
+
         \App\Models\AuditLog::log('CREATE_DOCUMENT', Document::class, $doc->id, null, $doc->toArray());
 
         return redirect("/admin")->with(
             "success",
-            "Dokumen terjemahan baru berhasil disimpan!",
+            "Dokumen terjemahan baru berhasil disimpan! (Saldo Poin berkurang 1.000 Poin, sisa: " . number_format($user->points, 0, ',', '.') . " Poin)",
         );
     }
 
@@ -249,6 +271,15 @@ class DocumentController extends Controller
 
         $importedCount = 0;
 
+        // Check points balance for batch import (1,000 points per document)
+        $totalRequiredPoints = count($rows) * 1000;
+        if (($user->points ?? 0) < $totalRequiredPoints) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Saldo Poin Anda tidak mencukupi untuk mengimpor ' . count($rows) . ' dokumen. Dibutuhkan ' . number_format($totalRequiredPoints, 0, ',', '.') . ' Poin, sedangkan saldo poin Anda saat ini: ' . number_format($user->points ?? 0, 0, ',', '.') . ' Poin. Silakan melakukan top-up poin terlebih dahulu.'
+            ], 400);
+        }
+
         // Transactional execution (all-or-nothing, REV-22)
         \DB::beginTransaction();
         try {
@@ -356,6 +387,21 @@ class DocumentController extends Controller
                 $importedCount++;
             }
             \DB::commit();
+
+            // Deduct points after successful import
+            if ($importedCount > 0) {
+                $user->decrement('points', $importedCount * 1000);
+                $user->refresh();
+
+                if ($user->points <= 10000) {
+                    $alertMsg = "\n======================================================\n";
+                    $alertMsg .= "[ALERT EMAIL TOP-UP REMINDER SENT TO {$user->email}]:\n";
+                    $alertMsg .= "Halo {$user->name},\n";
+                    $alertMsg .= "Demi kelancaran penggunaan layanan verifikasi dokumen IPPTI, mohon untuk melakukan pengisian ulang (top-up) poin saldo Anda. Saldo poin Anda saat ini tersisa " . number_format($user->points, 0, ',', '.') . " Poin.\n";
+                    $alertMsg .= "======================================================\n";
+                    error_log($alertMsg);
+                }
+            }
         } catch (\Exception $e) {
             \DB::rollBack();
             return response()->json([
@@ -368,7 +414,8 @@ class DocumentController extends Controller
             "success" => true,
             "importedCount" => $importedCount,
             "skippedCount" => 0,
-            "errors" => []
+            "errors" => [],
+            "remainingPoints" => $user->points
         ]);
     }
 

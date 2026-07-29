@@ -59,6 +59,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/admin/users', [AdminController::class, 'storeUser']);
     Route::post('/admin/users/{id}/update', [AdminController::class, 'updateUser']);
     Route::post('/admin/users/{id}/delete', [AdminController::class, 'deleteUser']);
+    Route::post('/admin/users/{id}/topup', [AdminController::class, 'topupUserPoints']);
     Route::post('/admin/users/import-json', [AdminController::class, 'importTranslatorsJson']);
 
     // Audit logs for Super Admin

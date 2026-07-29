@@ -31,6 +31,7 @@ class User extends Authenticatable
         'tgl_sk',
         'masa_aktif',
         'sk_lengkap',
+        'points',
     ];
 
     /**

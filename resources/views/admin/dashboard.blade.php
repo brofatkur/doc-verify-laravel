@@ -224,8 +224,30 @@
             </div>
         @endif
 
+        <!-- Low Balance Polite Reminder Alert (points <= 10000) -->
+        @if(Auth::check() && Auth::user()->points <= 10000)
+            <div class="bg-amber-50 border border-amber-200 text-amber-900 p-4 rounded-2xl text-xs font-semibold flex items-start gap-3 shadow-xs">
+                <i data-lucide="alert-triangle" class="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5"></i>
+                <div class="space-y-1">
+                    <p class="font-bold text-amber-950 text-sm">Pengingat Saldo Poin Layanan IPPTI</p>
+                    <p class="leading-relaxed">
+                        Demi kelancaran penggunaan layanan verifikasi dokumen IPPTI, mohon untuk melakukan pengisian ulang (top-up) poin saldo Anda. Saldo poin Anda saat ini tersisa <strong class="font-black text-amber-700 font-mono text-xs">{{ number_format(Auth::user()->points, 0, ',', '.') }} Poin</strong> (Biaya registrasi: 1.000 Poin / dokumen).
+                    </p>
+                </div>
+            </div>
+        @endif
+
         <!-- Translator Metrics -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4">
+                <div class="p-3.5 bg-amber-50 text-amber-600 rounded-xl">
+                    <i data-lucide="coins" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <p class="text-3xl font-black text-slate-900">{{ number_format(Auth::user()->points ?? 0, 0, ',', '.') }}</p>
+                    <p class="text-xs font-semibold text-slate-500 uppercase tracking-wide mt-0.5">Saldo Poin Penggunaan</p>
+                </div>
+            </div>
             <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4">
                 <div class="p-3.5 bg-emerald-50 text-emerald-600 rounded-xl">
                     <i data-lucide="file-text" class="w-6 h-6"></i>

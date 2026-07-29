@@ -88,6 +88,7 @@
                         <th class="px-6 py-3.5 text-xs font-bold text-slate-500 uppercase tracking-wider">Alamat Email</th>
                         <th class="px-6 py-3.5 text-xs font-bold text-slate-500 uppercase tracking-wider">Peran</th>
                         <th class="px-6 py-3.5 text-xs font-bold text-slate-500 uppercase tracking-wider">Nomor Anggota</th>
+                        <th class="px-6 py-3.5 text-xs font-bold text-slate-500 uppercase tracking-wider text-center">Saldo Poin</th>
                         <th class="px-6 py-3.5 text-xs font-bold text-slate-500 uppercase tracking-wider text-center">Dokumen</th>
                         <th class="px-6 py-3.5 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Aksi</th>
                     </tr>
@@ -115,11 +116,28 @@
                                 @endif
                             </td>
                             <td class="px-6 py-4 text-slate-500 font-mono text-xs target-sk">{{ $t->sk_number ?: '-' }}</td>
+                            <td class="px-6 py-4 text-center">
+                                @if($t->role === 'TRANSLATOR')
+                                    <span class="inline-flex items-center gap-1 font-mono font-bold text-xs {{ ($t->points ?? 0) <= 10000 ? 'text-amber-600' : 'text-emerald-700' }} bg-slate-50 border border-slate-200/80 px-2.5 py-1 rounded-full">
+                                        <i data-lucide="coins" class="w-3 h-3 text-amber-500"></i>
+                                        {{ number_format($t->points ?? 0, 0, ',', '.') }}
+                                    </span>
+                                @else
+                                    <span class="text-slate-400 font-mono text-xs">-</span>
+                                @endif
+                            </td>
                             <td class="px-6 py-4 text-center font-bold text-slate-650">
                                 {{ $t->role !== 'TRANSLATOR' ? '-' : $t->documents_count }}
                             </td>
                             <td class="px-6 py-4 text-right">
                                 <div class="flex items-center justify-end gap-1.5">
+                                    <button
+                                        onclick="openTopupModal({ id: '{{ $t->id }}', name: '{{ $t->name }}', points: {{ $t->points ?? 0 }} })"
+                                        class="p-2 text-amber-600 hover:bg-amber-50 rounded-lg transition-colors cursor-pointer"
+                                        title="Top-Up Saldo Poin"
+                                    >
+                                        <i data-lucide="coins" class="w-4 h-4"></i>
+                                    </button>
                                     <button
                                         onclick="openUserModal('edit', { id: '{{ $t->id }}', name: '{{ $t->name }}', email: '{{ $t->email }}', role: '{{ $t->role }}', sk_number: '{{ $t->sk_number }}' })"
                                         class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer"
@@ -607,5 +625,88 @@
             document.getElementById('import-details-logs').innerHTML = `<p class="text-rose-500">Terjadi error koneksi ke server.</p>`;
         }
     }
+
+    function openTopupModal(user) {
+        document.getElementById('form-topup').action = '/admin/users/' + user.id + '/topup';
+        document.getElementById('topup-user-name').innerText = user.name;
+        document.getElementById('topup-user-points').innerText = new Intl.NumberFormat('id-ID').format(user.points) + ' Poin';
+        document.getElementById('topup-points-input').value = 100000;
+        document.getElementById('modal-topup').classList.remove('hidden');
+        lucide.createIcons();
+    }
+
+    function closeTopupModal() {
+        document.getElementById('modal-topup').classList.add('hidden');
+    }
+
+    function setTopupPreset(val) {
+        document.getElementById('topup-points-input').value = val;
+    }
 </script>
+
+<!-- ========================================== -->
+<!--              TOP-UP POINTS MODAL           -->
+<!-- ========================================== -->
+<div id="modal-topup" class="hidden fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full shadow-2xl p-6 border border-slate-100">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
+            <div class="flex items-center gap-2 text-amber-700 font-bold text-sm">
+                <i data-lucide="coins" class="w-5 h-5 text-amber-500"></i>
+                <span>Top-Up Saldo Poin Penerjemah</span>
+            </div>
+            <button onclick="closeTopupModal()" class="p-1 text-slate-400 hover:text-slate-600 rounded-lg cursor-pointer">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+        </div>
+
+        <form id="form-topup" method="POST" class="space-y-4 text-left">
+            @csrf
+            <div class="bg-amber-50/60 border border-amber-100 p-3.5 rounded-xl space-y-1 text-xs">
+                <p class="text-slate-500">Target Penerjemah:</p>
+                <p id="topup-user-name" class="font-bold text-slate-900 text-sm"></p>
+                <p class="text-slate-500 mt-1">Saldo Poin Saat Ini: <strong id="topup-user-points" class="font-mono font-bold text-emerald-700"></strong></p>
+            </div>
+
+            <div>
+                <label for="topup-points-input" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Jumlah Poin Tambahan</label>
+                <input
+                    type="number"
+                    id="topup-points-input"
+                    name="points"
+                    required
+                    min="1"
+                    step="1000"
+                    value="100000"
+                    class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-slate-800 text-sm font-semibold outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition"
+                    placeholder="Contoh: 100000"
+                />
+                <p class="text-[10px] text-slate-400 mt-1">1 Dokumen = 1.000 Poin. Contoh: Top-up 100.000 Poin = 100 Dokumen.</p>
+            </div>
+
+            <!-- Quick topup presets -->
+            <div class="flex flex-wrap items-center gap-2 pt-1">
+                <button type="button" onclick="setTopupPreset(50000)" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 rounded-lg text-xs font-bold text-slate-700 transition cursor-pointer">+50.000</button>
+                <button type="button" onclick="setTopupPreset(100000)" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 rounded-lg text-xs font-bold text-slate-700 transition cursor-pointer">+100.000</button>
+                <button type="button" onclick="setTopupPreset(250000)" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 rounded-lg text-xs font-bold text-slate-700 transition cursor-pointer">+250.000</button>
+                <button type="button" onclick="setTopupPreset(500000)" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 rounded-lg text-xs font-bold text-slate-700 transition cursor-pointer">+500.000</button>
+            </div>
+
+            <div class="flex justify-end gap-3 pt-3">
+                <button
+                    type="button"
+                    onclick="closeTopupModal()"
+                    class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition cursor-pointer"
+                >
+                    Batal
+                </button>
+                <button
+                    type="submit"
+                    class="px-5 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-bold transition shadow-sm cursor-pointer"
+                >
+                    Proses Top-Up Poin
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
 @endsection
