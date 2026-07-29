@@ -85,9 +85,15 @@ class DocumentController extends Controller
             "translator_id" => $user->id,
         ]);
 
-        // Deduct 1,000 points per document registration
-        $user->decrement('points', $pointsCost);
-        $user->refresh();
+        // Record debit mutation in point_transactions ledger
+        $user->debitPoints(
+            $pointsCost,
+            'Potongan Verifikasi Dokumen #' . $doc->document_id . ' (' . $doc->client_name . ')',
+            'document_verification',
+            $doc->id,
+            'doc_verify_' . $doc->id,
+            ['document_id' => $doc->document_id, 'client_name' => $doc->client_name]
+        );
 
         // Trigger polite low-balance reminder email alert if points <= 10,000
         if ($user->points <= 10000) {
@@ -380,6 +386,16 @@ class DocumentController extends Controller
                 ];
 
                 $doc = Document::create($insertData);
+
+                // Record debit mutation in point_transactions ledger per document
+                $user->debitPoints(
+                    1000,
+                    'Potongan Verifikasi Impor Dokumen #' . $doc->document_id . ' (' . $doc->client_name . ')',
+                    'document_verification',
+                    $doc->id,
+                    'doc_verify_' . $doc->id,
+                    ['document_id' => $doc->document_id, 'client_name' => $doc->client_name]
+                );
                 
                 // Audit logging (REV-12)
                 \App\Models\AuditLog::log('IMPORT_DOCUMENT', Document::class, $doc->id, null, $insertData);
@@ -388,19 +404,13 @@ class DocumentController extends Controller
             }
             \DB::commit();
 
-            // Deduct points after successful import
-            if ($importedCount > 0) {
-                $user->decrement('points', $importedCount * 1000);
-                $user->refresh();
-
-                if ($user->points <= 10000) {
-                    $alertMsg = "\n======================================================\n";
-                    $alertMsg .= "[ALERT EMAIL TOP-UP REMINDER SENT TO {$user->email}]:\n";
-                    $alertMsg .= "Halo {$user->name},\n";
-                    $alertMsg .= "Demi kelancaran penggunaan layanan verifikasi dokumen IPPTI, mohon untuk melakukan pengisian ulang (top-up) poin saldo Anda. Saldo poin Anda saat ini tersisa " . number_format($user->points, 0, ',', '.') . " Poin.\n";
-                    $alertMsg .= "======================================================\n";
-                    error_log($alertMsg);
-                }
+            if ($importedCount > 0 && $user->points <= 10000) {
+                $alertMsg = "\n======================================================\n";
+                $alertMsg .= "[ALERT EMAIL TOP-UP REMINDER SENT TO {$user->email}]:\n";
+                $alertMsg .= "Halo {$user->name},\n";
+                $alertMsg .= "Demi kelancaran penggunaan layanan verifikasi dokumen IPPTI, mohon untuk melakukan pengisian ulang (top-up) poin saldo Anda. Saldo poin Anda saat ini tersisa " . number_format($user->points, 0, ',', '.') . " Poin.\n";
+                $alertMsg .= "======================================================\n";
+                error_log($alertMsg);
             }
         } catch (\Exception $e) {
             \DB::rollBack();

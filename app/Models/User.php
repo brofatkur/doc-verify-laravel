@@ -64,4 +64,65 @@ class User extends Authenticatable
     {
         return $this->hasMany(Document::class, 'translator_id');
     }
+
+    /**
+     * Relasi ke Ledger Mutasi Poin (point_transactions)
+     */
+    public function pointTransactions()
+    {
+        return $this->hasMany(PointTransaction::class, 'user_id');
+    }
+
+    /**
+     * Single Source of Truth for Point Balance calculation.
+     * Dynamic calculation: SUM(credit) - SUM(debit)
+     */
+    public function getPointsAttribute()
+    {
+        $credit = $this->pointTransactions()->where('type', 'credit')->sum('amount');
+        $debit = $this->pointTransactions()->where('type', 'debit')->sum('amount');
+        return (int)($credit - $debit);
+    }
+
+    /**
+     * Helper to credit points to user ledger with idempotency
+     */
+    public function creditPoints($amount, $description, $refType = null, $refId = null, $idempotencyKey = null, $metadata = null)
+    {
+        if ($idempotencyKey && PointTransaction::where('idempotency_key', $idempotencyKey)->exists()) {
+            return PointTransaction::where('idempotency_key', $idempotencyKey)->first();
+        }
+
+        return PointTransaction::create([
+            'user_id' => $this->id,
+            'type' => 'credit',
+            'amount' => $amount,
+            'description' => $description,
+            'reference_type' => $refType,
+            'reference_id' => $refId,
+            'idempotency_key' => $idempotencyKey,
+            'metadata' => is_array($metadata) ? json_encode($metadata) : $metadata,
+        ]);
+    }
+
+    /**
+     * Helper to debit points from user ledger with idempotency
+     */
+    public function debitPoints($amount, $description, $refType = null, $refId = null, $idempotencyKey = null, $metadata = null)
+    {
+        if ($idempotencyKey && PointTransaction::where('idempotency_key', $idempotencyKey)->exists()) {
+            return PointTransaction::where('idempotency_key', $idempotencyKey)->first();
+        }
+
+        return PointTransaction::create([
+            'user_id' => $this->id,
+            'type' => 'debit',
+            'amount' => $amount,
+            'description' => $description,
+            'reference_type' => $refType,
+            'reference_id' => $refId,
+            'idempotency_key' => $idempotencyKey,
+            'metadata' => is_array($metadata) ? json_encode($metadata) : $metadata,
+        ]);
+    }
 }

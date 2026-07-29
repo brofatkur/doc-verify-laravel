@@ -1,11 +1,12 @@
 <?php
 
-namespace App\Http/Controllers;
+namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
 use App\Models\PaymentTransaction;
+use App\Models\TopupOrder;
 use App\Models\User;
 use App\Models\AuditLog;
 
@@ -30,11 +31,22 @@ class PaymentController extends Controller
         ]);
 
         $amount = (float)$request->amount;
-        // 1 Rp = 1 Point (or 1,000 Points per Rp 1,000)
         $points = (int)$amount;
 
         $trxNo = 'TRX-IPAYMU-' . date('YmdHis') . '-' . strtoupper(substr(uniqid(), -4));
 
+        // Create topup order (New Ledger Architecture)
+        $topupOrder = TopupOrder::create([
+            'order_id' => $trxNo,
+            'user_id' => $user->id,
+            'amount_idr' => $amount,
+            'points_issued' => $points,
+            'conversion_rate' => 1.00,
+            'status' => 'pending',
+            'payment_gateway' => 'ipaymu',
+        ]);
+
+        // Create legacy payment transaction for compatibility
         $transaction = PaymentTransaction::create([
             'transaction_no' => $trxNo,
             'user_id' => $user->id,
@@ -52,6 +64,7 @@ class PaymentController extends Controller
         if (empty($va) || empty($apiKey)) {
             // Fallback for simulation / testing when credentials are not yet set in .env
             $simulatedUrl = url('/ipaymu/return?trx_no=' . $trxNo . '&simulated=true');
+            
             $transaction->update([
                 'payment_url' => $simulatedUrl,
                 'session_id' => 'SIMULATED-' . $trxNo,
@@ -114,6 +127,10 @@ class PaymentController extends Controller
                     'ipaymu_trx_id' => $resData['Data']['TransactionId'] ?? null,
                 ]);
 
+                $topupOrder->update([
+                    'metadata' => json_encode($resData['Data'] ?? []),
+                ]);
+
                 return response()->json([
                     'success' => true,
                     'payment_url' => $paymentUrl,
@@ -135,6 +152,7 @@ class PaymentController extends Controller
 
     /**
      * Webhook Callback from iPaymu (/ipaymu/callback)
+     * Handles idempotency via point_transactions idempotency_key
      */
     public function handleCallback(Request $request)
     {
@@ -146,41 +164,68 @@ class PaymentController extends Controller
             return response()->json(['status' => false, 'message' => 'Reference ID missing'], 400);
         }
 
+        $topupOrder = TopupOrder::where('order_id', $trxNo)->first();
         $transaction = PaymentTransaction::where('transaction_no', $trxNo)->first();
-        if (!$transaction) {
-            return response()->json(['status' => false, 'message' => 'Transaction not found'], 404);
+
+        if (!$topupOrder && !$transaction) {
+            return response()->json(['status' => false, 'message' => 'Transaction order not found'], 404);
         }
 
-        // Check if already paid
-        if ($transaction->status === 'paid') {
-            return response()->json(['status' => true, 'message' => 'Transaction already processed']);
-        }
+        $userId = $topupOrder ? $topupOrder->user_id : $transaction->user_id;
+        $amount = $topupOrder ? $topupOrder->amount_idr : $transaction->amount;
+        $points = $topupOrder ? $topupOrder->points_issued : $transaction->points;
 
         $isSuccess = in_array($status, ['berhasil', 'paid', 'success', 'settlement']) || $statusNo == 200 || $statusNo == 1;
 
-        if ($isSuccess) {
-            $transaction->update([
-                'status' => 'paid',
-                'ipaymu_trx_id' => $request->input('trx_id') ?? $transaction->ipaymu_trx_id,
-                'payment_method' => $request->input('via') ?? $request->input('channel') ?? $transaction->payment_method,
-            ]);
+        $channel = $request->input('via') ?? $request->input('channel') ?? 'iPaymu';
+        $rawPayload = json_encode($request->all());
 
-            // Credit points to user
-            $user = User::find($transaction->user_id);
+        if ($isSuccess) {
+            if ($topupOrder) {
+                $topupOrder->update([
+                    'status' => 'success',
+                    'payment_channel' => $channel,
+                    'payment_response_text' => $rawPayload,
+                ]);
+            }
+            if ($transaction) {
+                $transaction->update([
+                    'status' => 'paid',
+                    'ipaymu_trx_id' => $request->input('trx_id') ?? $transaction->ipaymu_trx_id,
+                    'payment_method' => $channel,
+                ]);
+            }
+
+            // Credit points via point_transactions ledger with Idempotency Key
+            $user = User::find($userId);
             if ($user) {
-                $user->increment('points', $transaction->points);
+                $idempotencyKey = 'topup_order_' . $trxNo;
+                $user->creditPoints(
+                    $points,
+                    'Topup Poin via iPaymu (' . $trxNo . ')',
+                    'topup',
+                    $trxNo,
+                    $idempotencyKey,
+                    ['channel' => $channel, 'raw_response' => $request->all()]
+                );
+
                 AuditLog::log(
                     'IPAYMU_TOPUP_PAID',
-                    PaymentTransaction::class,
-                    $transaction->id,
-                    ['points_before' => $user->points - $transaction->points],
-                    ['points_after' => $user->points, 'added_points' => $transaction->points, 'trx_no' => $trxNo]
+                    TopupOrder::class,
+                    $topupOrder ? $topupOrder->id : $transaction->id,
+                    [],
+                    ['points' => $user->points, 'added' => $points, 'trx_no' => $trxNo]
                 );
             }
 
             return response()->json(['status' => true, 'message' => 'Payment successfully credited']);
         } else {
-            $transaction->update(['status' => 'failed']);
+            if ($topupOrder) {
+                $topupOrder->update(['status' => 'failed', 'payment_response_text' => $rawPayload]);
+            }
+            if ($transaction) {
+                $transaction->update(['status' => 'failed']);
+            }
             return response()->json(['status' => true, 'message' => 'Transaction marked as failed']);
         }
     }
@@ -196,18 +241,45 @@ class PaymentController extends Controller
         $transaction = null;
         if ($trxNo) {
             $transaction = PaymentTransaction::where('transaction_no', $trxNo)->first();
+            if (!$transaction) {
+                $topupOrder = TopupOrder::where('order_id', $trxNo)->first();
+                if ($topupOrder) {
+                    $transaction = (object)[
+                        'transaction_no' => $topupOrder->order_id,
+                        'user_id' => $topupOrder->user_id,
+                        'amount' => $topupOrder->amount_idr,
+                        'points' => $topupOrder->points_issued,
+                        'status' => $topupOrder->status === 'success' ? 'paid' : $topupOrder->status,
+                        'updated_at' => $topupOrder->updated_at,
+                    ];
+                }
+            }
         }
 
         // If simulation mode and pending, confirm simulated top-up for testing
-        if ($isSimulated && $transaction && $transaction->status === 'pending') {
-            $transaction->update(['status' => 'paid', 'payment_method' => 'SIMULATED']);
+        if ($isSimulated && $transaction && strtolower($transaction->status) === 'pending') {
             $user = User::find($transaction->user_id);
             if ($user) {
-                $user->increment('points', $transaction->points);
+                $idempotencyKey = 'topup_order_' . $trxNo;
+                $user->creditPoints(
+                    $transaction->points,
+                    'Simulasi Topup Poin via iPaymu (' . $trxNo . ')',
+                    'topup',
+                    $trxNo,
+                    $idempotencyKey,
+                    ['simulated' => true]
+                );
+
+                if (method_exists($transaction, 'update')) {
+                    $transaction->update(['status' => 'paid', 'payment_method' => 'SIMULATED']);
+                }
+                
+                TopupOrder::where('order_id', $trxNo)->update(['status' => 'success', 'payment_channel' => 'SIMULATED']);
+
                 AuditLog::log(
                     'SIMULATED_TOPUP_PAID',
                     PaymentTransaction::class,
-                    $transaction->id,
+                    $transaction->id ?? 0,
                     [],
                     ['added_points' => $transaction->points, 'trx_no' => $trxNo]
                 );

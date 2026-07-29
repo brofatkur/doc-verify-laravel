@@ -154,8 +154,15 @@ class AdminController extends Controller
         $addPoints = (int)$request->points;
         $beforePoints = $targetUser->points;
         
-        $targetUser->increment('points', $addPoints);
-        $targetUser->refresh();
+        $idempotencyKey = 'admin_topup_' . date('YmdHis') . '_' . $targetUser->id . '_' . uniqid();
+        $targetUser->creditPoints(
+            $addPoints,
+            'Topup Poin Manual oleh Admin/Superadmin (' . $currentUser->name . ')',
+            'adjustment',
+            'ADMIN-' . $currentUser->id,
+            $idempotencyKey,
+            ['admin_id' => $currentUser->id, 'admin_name' => $currentUser->name]
+        );
 
         \App\Models\AuditLog::log(
             'TOPUP_POINTS',
