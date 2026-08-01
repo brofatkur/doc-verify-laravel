@@ -32,6 +32,7 @@ class User extends Authenticatable
         'masa_aktif',
         'sk_lengkap',
         'points',
+        'user_level',
     ];
 
     /**
@@ -124,5 +125,21 @@ class User extends Authenticatable
             'idempotency_key' => $idempotencyKey,
             'metadata' => is_array($metadata) ? json_encode($metadata) : $metadata,
         ]);
+    }
+
+    /**
+     * Cek apakah akun berstatus PRO
+     */
+    public function isPro(): bool
+    {
+        return strtolower($this->user_level ?? 'reguler') === 'pro';
+    }
+
+    /**
+     * Cek apakah akun berstatus REGULER
+     */
+    public function isReguler(): bool
+    {
+        return strtolower($this->user_level ?? 'reguler') === 'reguler';
     }
 }

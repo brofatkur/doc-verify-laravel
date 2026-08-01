@@ -96,8 +96,22 @@ class AuthController extends Controller
                 'email' => $request->email,
                 'password' => Hash::make($request->password),
                 'role' => 'TRANSLATOR',
+                'user_level' => 'reguler',
                 'whatsapp' => $request->whatsapp ?: null,
             ]);
+        }
+
+        // Credit Trial Bonus Points upon registration
+        $trialBonus = (int)\App\Models\Setting::get('trial_bonus_points', 10000);
+        if ($trialBonus > 0 && $user->role === 'TRANSLATOR') {
+            $user->creditPoints(
+                $trialBonus,
+                'Bonus Trial Poin Awal Registrasi Akun',
+                'trial_bonus',
+                'REG-' . $user->id,
+                'trial_bonus_' . $user->id,
+                ['welcome_bonus' => true]
+            );
         }
 
         Auth::login($user);

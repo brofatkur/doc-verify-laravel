@@ -123,13 +123,28 @@ class AdminController extends Controller
             return back()->withErrors(['error' => 'Nomor Anggota wajib diisi untuk Penerjemah.']);
         }
 
-        User::create([
+        $newUser = User::create([
             'role' => $role,
+            'user_level' => 'reguler',
             'name' => $request->name,
             'email' => $request->email,
             'sk_number' => $skNumber,
             'password' => Hash::make($request->password),
         ]);
+
+        if ($role === 'TRANSLATOR') {
+            $trialBonus = (int)\App\Models\Setting::get('trial_bonus_points', 10000);
+            if ($trialBonus > 0) {
+                $newUser->creditPoints(
+                    $trialBonus,
+                    'Bonus Trial Poin Awal Registrasi Akun',
+                    'trial_bonus',
+                    'REG-' . $newUser->id,
+                    'trial_bonus_' . $newUser->id,
+                    ['created_by_admin' => $currentUser->id]
+                );
+            }
+        }
 
         return redirect('/admin/users')->with('success', 'Akun pengguna baru berhasil dibuat!');
     }
@@ -594,5 +609,62 @@ class AdminController extends Controller
         \App\Models\AuditLog::log('UPDATE_IPAYMU_SETTINGS', User::class, $currentUser->id, [], ['env' => $env, 'va_length' => strlen($va)]);
 
         return redirect('/admin/profile')->with('success', 'Pengaturan Payment Gateway iPaymu berhasil disimpan!');
+    }
+
+    public function settings()
+    {
+        $currentUser = Auth::user();
+        if ($currentUser->role !== 'SUPERADMIN' && $currentUser->role !== 'ADMIN') {
+            abort(403, 'Akses ditolak.');
+        }
+
+        $settings = \App\Models\Setting::getAll();
+
+        return view('admin.settings', compact('settings'));
+    }
+
+    public function updateSettings(Request $request)
+    {
+        $currentUser = Auth::user();
+        if ($currentUser->role !== 'SUPERADMIN' && $currentUser->role !== 'ADMIN') {
+            return back()->withErrors(['error' => 'Akses ditolak.']);
+        }
+
+        $request->validate([
+            'trial_bonus_points' => 'required|numeric|min:0',
+            'pro_activation_price' => 'required|numeric|min:0',
+            'pro_activation_points' => 'required|numeric|min:0',
+            'low_point_threshold' => 'required|numeric|min:0',
+        ]);
+
+        $keys = [
+            'trial_bonus_points',
+            'pro_activation_price',
+            'pro_activation_points',
+            'low_point_threshold',
+        ];
+
+        foreach ($keys as $key) {
+            if ($request->has($key)) {
+                \App\Models\Setting::set($key, $request->input($key));
+            }
+        }
+
+        \App\Models\AuditLog::log('UPDATE_SYSTEM_SETTINGS', User::class, $currentUser->id, [], $request->only($keys));
+
+        return redirect('/admin/settings')->with('success', 'Pengaturan dinamis sistem berhasil diperbarui!');
+    }
+
+    public function upgrade()
+    {
+        $currentUser = Auth::user();
+        if ($currentUser->role !== 'TRANSLATOR') {
+            return redirect('/admin');
+        }
+
+        $proPrice = (float)\App\Models\Setting::get('pro_activation_price', 300000);
+        $proPoints = (int)\App\Models\Setting::get('pro_activation_points', 100000);
+
+        return view('admin.upgrade', compact('proPrice', 'proPoints'));
     }
 }

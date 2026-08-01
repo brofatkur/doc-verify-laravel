@@ -64,6 +64,17 @@
                         <i data-lucide="languages" class="w-5 h-5 {{ request()->is('admin/language-directions*') ? 'text-white' : 'text-slate-400' }}"></i>
                         <span class="font-medium">Master Arah Bahasa</span>
                     </a>
+                    <a href="/admin/settings" class="flex items-center gap-3 px-4 py-3 rounded-lg transition {{ request()->is('admin/settings*') ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-400 hover:bg-slate-800 hover:text-white' }}">
+                        <i data-lucide="sliders" class="w-5 h-5 {{ request()->is('admin/settings*') ? 'text-white' : 'text-slate-400' }}"></i>
+                        <span class="font-medium">Pengaturan Aplikasi</span>
+                    </a>
+                @endif
+
+                @if(Auth::check() && Auth::user()->role === 'TRANSLATOR')
+                    <a href="/admin/upgrade" class="flex items-center gap-3 px-4 py-3 rounded-lg transition {{ request()->is('admin/upgrade*') ? 'bg-amber-600 text-white shadow-sm' : 'text-amber-400 hover:bg-slate-800 hover:text-amber-300' }}">
+                        <i data-lucide="zap" class="w-5 h-5 fill-amber-400"></i>
+                        <span class="font-bold">Upgrade Mode PRO</span>
+                    </a>
                 @endif
 
                 @if(Auth::check() && Auth::user()->role === 'SUPERADMIN')
@@ -90,17 +101,24 @@
                     </div>
                     <div class="overflow-hidden">
                         <p class="text-sm font-semibold truncate text-slate-200">{{ Auth::user()->name }}</p>
-                        <p class="text-xs text-slate-400 truncate">
-                            @if(Auth::user()->role === 'SUPERADMIN')
-                                Pengurus IPPTI (Super Admin)
-                            @elseif(Auth::user()->role === 'ADMIN')
-                                Pengurus IPPTI (Admin)
-                            @else
-                                Penerjemah
+                        <div class="flex items-center gap-1 mt-0.5">
+                            <span class="text-xs text-slate-400 truncate">
+                                @if(Auth::user()->role === 'SUPERADMIN')
+                                    Pengurus IPPTI (Super Admin)
+                                @elseif(Auth::user()->role === 'ADMIN')
+                                    Pengurus IPPTI (Admin)
+                                @else
+                                    Penerjemah
+                                @endif
+                            </span>
+                            @if(Auth::user()->role === 'TRANSLATOR')
+                                <span class="px-1.5 py-0.2 rounded text-[9px] font-black {{ Auth::user()->isPro() ? 'bg-amber-400/20 text-amber-300 border border-amber-400/30' : 'bg-slate-700 text-slate-300' }}">
+                                    {{ strtoupper(Auth::user()->user_level ?? 'REGULER') }}
+                                </span>
                             @endif
-                        </p>
+                        </div>
                         @if(Auth::user()->role === 'TRANSLATOR')
-                            <div class="mt-1.5 inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-300 border border-amber-500/20" title="Saldo Poin Penggunaan Layanan">
+                            <div class="mt-1 inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-300 border border-amber-500/20" title="Saldo Poin Penggunaan Layanan">
                                 <i data-lucide="coins" class="w-3 h-3 text-amber-400"></i>
                                 <span>{{ number_format(Auth::user()->points ?? 0, 0, ',', '.') }} Poin</span>
                             </div>

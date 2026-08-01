@@ -173,6 +173,20 @@
         <!-- ========================================== -->
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-200 pb-5">
             <div>
+                <div class="flex items-center gap-2 mb-1.5">
+                    @if(Auth::user()->isPro())
+                        <span class="inline-flex items-center gap-1 px-3 py-0.5 rounded-full text-xs font-black bg-amber-100 text-amber-800 border border-amber-300 shadow-xs">
+                            <i data-lucide="award" class="w-3.5 h-3.5 text-amber-600"></i> AKUN PRO
+                        </span>
+                    @else
+                        <span class="inline-flex items-center gap-1 px-3 py-0.5 rounded-full text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200">
+                            AKUN REGULER (TRIAL)
+                        </span>
+                        <a href="/admin/upgrade" class="text-xs font-black text-amber-600 hover:text-amber-700 hover:underline flex items-center gap-1">
+                            <i data-lucide="zap" class="w-3.5 h-3.5 fill-amber-500 text-amber-500"></i> Upgrade Pro
+                        </a>
+                    @endif
+                </div>
                 <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight">Manajemen Dokumen</h1>
                 <p class="text-slate-500 text-sm mt-1">Daftarkan dokumen terjemahan tersumpah Anda dan kelola kode QR verifikasi publik.</p>
             </div>
@@ -224,16 +238,24 @@
             </div>
         @endif
 
-        <!-- Low Balance Polite Reminder Alert (points <= 10000) -->
-        @if(Auth::check() && Auth::user()->points <= 10000)
-            <div class="bg-amber-50 border border-amber-200 text-amber-900 p-4 rounded-2xl text-xs font-semibold flex items-start gap-3 shadow-xs">
-                <i data-lucide="alert-triangle" class="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5"></i>
-                <div class="space-y-1">
-                    <p class="font-bold text-amber-950 text-sm">Pengingat Saldo Poin Layanan IPPTI</p>
-                    <p class="leading-relaxed">
-                        Demi kelancaran penggunaan layanan verifikasi dokumen IPPTI, mohon untuk melakukan pengisian ulang (top-up) poin saldo Anda. Saldo poin Anda saat ini tersisa <strong class="font-black text-amber-700 font-mono text-xs">{{ number_format(Auth::user()->points, 0, ',', '.') }} Poin</strong> (Biaya registrasi: 1.000 Poin / dokumen).
-                    </p>
+        <!-- Low Balance Polite Reminder Alert (points <= low_point_threshold) -->
+        @if(Auth::check() && Auth::user()->points <= (int)setting('low_point_threshold', 20000))
+            <div class="bg-amber-50 border border-amber-200 text-amber-900 p-4.5 rounded-2xl text-xs font-semibold flex items-start justify-between gap-4 shadow-xs">
+                <div class="flex items-start gap-3">
+                    <i data-lucide="alert-triangle" class="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5"></i>
+                    <div class="space-y-1">
+                        <p class="font-bold text-amber-950 text-sm">Pengingat Saldo Poin Layanan IPPTI</p>
+                        <p class="leading-relaxed">
+                            Demi kelancaran penggunaan layanan verifikasi dokumen IPPTI, mohon untuk melakukan pengisian ulang (top-up) poin saldo Anda. Saldo poin Anda saat ini tersisa <strong class="font-black text-amber-700 font-mono text-xs">{{ number_format(Auth::user()->points, 0, ',', '.') }} Poin</strong> (Biaya registrasi: 1.000 Poin / dokumen).
+                        </p>
+                    </div>
                 </div>
+                @if(Auth::user()->isReguler())
+                    <a href="/admin/upgrade" class="flex-shrink-0 flex items-center gap-1.5 bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-xl text-xs font-extrabold shadow-sm transition">
+                        <i data-lucide="zap" class="w-3.5 h-3.5 fill-white"></i>
+                        <span>Upgrade Pro</span>
+                    </a>
+                @endif
             </div>
         @endif
 

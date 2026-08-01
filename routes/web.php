@@ -77,6 +77,14 @@ Route::middleware('auth')->group(function () {
     Route::post('/admin/language-directions/{id}/update', [AdminController::class, 'updateLanguageDirection']);
     Route::post('/admin/language-directions/{id}/delete', [AdminController::class, 'deleteLanguageDirection']);
 
+    // Dynamic System Settings (WordPress-style)
+    Route::get('/admin/settings', [AdminController::class, 'settings']);
+    Route::post('/admin/settings', [AdminController::class, 'updateSettings']);
+
+    // Pro Mode Upgrade Checkout
+    Route::get('/admin/upgrade', [AdminController::class, 'upgrade']);
+    Route::post('/payment/pro-upgrade/create', [PaymentController::class, 'createProUpgradePayment']);
+
     // iPaymu Settings & Self-Service Payment
     Route::post('/admin/settings/ipaymu', [AdminController::class, 'updateIpaymuSettings']);
     Route::post('/payment/ipaymu/create', [PaymentController::class, 'createPayment']);

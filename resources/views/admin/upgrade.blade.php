@@ -1,0 +1,157 @@
+@extends('layouts.app')
+
+@section('title', 'DocVerify IPPTI - Upgrade Akun Mode PRO')
+
+@section('content')
+<div class="max-w-2xl mx-auto space-y-6 py-4">
+    <div class="flex items-center gap-3">
+        <a href="/admin" class="p-2 hover:bg-slate-200 rounded-xl transition text-slate-500">
+            <i data-lucide="arrow-left" class="w-5 h-5"></i>
+        </a>
+        <div>
+            <div class="flex items-center gap-2">
+                <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-blue-50 text-blue-700 border border-blue-200">
+                    STATUS SEKARANG: {{ strtoupper(Auth::user()->user_level ?? 'REGULER') }}
+                </span>
+            </div>
+            <h1 class="text-2xl font-black text-slate-900 tracking-tight mt-1">Upgrade ke Mode PRO</h1>
+            <p class="text-slate-500 text-sm">Aktifkan paket Pro sekali bayar untuk menikmati fitur penuh verifikasi dokumen IPPTI.</p>
+        </div>
+    </div>
+
+    @if(Auth::user()->isPro())
+        <div class="bg-emerald-50 border border-emerald-200 text-emerald-900 p-6 rounded-2xl space-y-2 shadow-xs">
+            <div class="flex items-center gap-3">
+                <div class="p-2 bg-emerald-500 text-white rounded-xl">
+                    <i data-lucide="shield-check" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <h3 class="font-extrabold text-lg text-emerald-950">Akun Anda Sudah Aktif Sebagai Mode PRO!</h3>
+                    <p class="text-xs text-emerald-800">Selamat! Akun Penerjemah Anda telah memiliki akses penuh dan saldo poin siap digunakan.</p>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    <div class="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="p-6 md:p-8 space-y-6">
+            <!-- Header Package Pricing Card -->
+            <div class="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white p-6 rounded-2xl relative overflow-hidden shadow-lg">
+                <div class="absolute right-0 top-0 translate-x-4 -translate-y-4 w-32 h-32 bg-amber-500/10 rounded-full blur-2xl"></div>
+                <div class="relative z-10 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div>
+                        <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30 mb-2">
+                            <i data-lucide="award" class="w-3.5 h-3.5 text-amber-400"></i>
+                            PAKET PRO UNLIMITED
+                        </span>
+                        <h2 class="text-2xl font-black tracking-tight text-white">Aktivasi Mode PRO</h2>
+                        <p class="text-xs text-slate-300 mt-1">Sekali bayar untuk aktivasi permanen akun penerjemah tersumpah.</p>
+                    </div>
+                    <div class="text-left sm:text-right">
+                        <p class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Harga Sekali Bayar</p>
+                        <p class="text-3xl font-black text-amber-400 font-mono">
+                            Rp {{ number_format($proPrice, 0, ',', '.') }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Features List -->
+            <div class="space-y-3">
+                <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider">Keuntungan & Fitur Mode PRO:</h3>
+                
+                <div class="space-y-2.5">
+                    <div class="flex items-start gap-3 p-3 rounded-xl bg-slate-50 border border-slate-200/60">
+                        <div class="p-1.5 bg-amber-100 text-amber-700 rounded-lg flex-shrink-0 mt-0.5">
+                            <i data-lucide="coins" class="w-4 h-4"></i>
+                        </div>
+                        <div>
+                            <p class="text-xs font-bold text-slate-900">Bonus Poin Aktivasi Penuh</p>
+                            <p class="text-xs text-slate-600">Langsung mendapatkan saldo bonus <strong class="font-mono text-emerald-700">+{{ number_format($proPoints, 0, ',', '.') }} Poin</strong> setelah aktivasi sukses.</p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-start gap-3 p-3 rounded-xl bg-slate-50 border border-slate-200/60">
+                        <div class="p-1.5 bg-emerald-100 text-emerald-700 rounded-lg flex-shrink-0 mt-0.5">
+                            <i data-lucide="qr-code" class="w-4 h-4"></i>
+                        </div>
+                        <div>
+                            <p class="text-xs font-bold text-slate-900">Verifikasi Dokumen & Kode QR Publik</p>
+                            <p class="text-xs text-slate-600">Akses penuh pendaftaran dokumen manual & impor massal Excel tanpa batasan trial.</p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-start gap-3 p-3 rounded-xl bg-slate-50 border border-slate-200/60">
+                        <div class="p-1.5 bg-blue-100 text-blue-700 rounded-lg flex-shrink-0 mt-0.5">
+                            <i data-lucide="shield-check" class="w-4 h-4"></i>
+                        </div>
+                        <div>
+                            <p class="text-xs font-bold text-slate-900">Lencana Akun PRO Resmi IPPTI</p>
+                            <p class="text-xs text-slate-600">Status PRO ditampilkan pada profil penerjemah dan pencarian verifikasi publik.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Error Message Div -->
+            <div id="upgrade-error-msg" class="hidden bg-rose-50 border border-rose-200 text-rose-700 p-4 rounded-xl text-xs font-bold"></div>
+
+            <!-- Action Button -->
+            <div class="pt-2 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div class="text-xs text-slate-500">
+                    <p class="font-semibold text-slate-700">Metode Pembayaran Online:</p>
+                    <p>QRIS, VA BCA/Mandiri/BNI/BRI, E-Wallet & CC (via iPaymu)</p>
+                </div>
+                <button
+                    type="button"
+                    id="btn-checkout-pro"
+                    onclick="processProCheckout()"
+                    class="w-full sm:w-auto flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-600 text-white px-8 py-3.5 rounded-2xl font-black text-sm transition shadow-md hover:shadow-lg active:scale-[0.98] cursor-pointer"
+                >
+                    <i data-lucide="zap" class="w-4 h-4 fill-white"></i>
+                    <span>Bayar & Aktivasi Mode PRO</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    async function processProCheckout() {
+        const btn = document.getElementById('btn-checkout-pro');
+        const errDiv = document.getElementById('upgrade-error-msg');
+
+        errDiv.classList.add('hidden');
+        btn.disabled = true;
+        btn.innerHTML = '<div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div> <span>Menyiapkan Checkout PRO...</span>';
+
+        try {
+            const response = await fetch('/payment/pro-upgrade/create', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                }
+            });
+
+            const data = await response.json();
+
+            if (data.success && data.payment_url) {
+                window.location.href = data.payment_url;
+            } else {
+                errDiv.innerText = data.error || 'Gagal menyiapkan tagihan checkout PRO.';
+                errDiv.classList.remove('hidden');
+                btn.disabled = false;
+                btn.innerHTML = '<i data-lucide="zap" class="w-4 h-4 fill-white"></i> <span>Bayar & Aktivasi Mode PRO</span>';
+                lucide.createIcons();
+            }
+        } catch (err) {
+            errDiv.innerText = 'Terjadi kesalahan koneksi jaringan: ' + err.message;
+            errDiv.classList.remove('hidden');
+            btn.disabled = false;
+            btn.innerHTML = '<i data-lucide="zap" class="w-4 h-4 fill-white"></i> <span>Bayar & Aktivasi Mode PRO</span>';
+            lucide.createIcons();
+        }
+    }
+</script>
+@endsection

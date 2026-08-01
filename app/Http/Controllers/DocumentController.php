@@ -95,8 +95,9 @@ class DocumentController extends Controller
             ['document_id' => $doc->document_id, 'client_name' => $doc->client_name]
         );
 
-        // Trigger polite low-balance reminder email alert if points <= 10,000
-        if ($user->points <= 10000) {
+        // Trigger polite low-balance reminder email alert if points <= low_point_threshold
+        $lowThreshold = (int)\App\Models\Setting::get('low_point_threshold', 20000);
+        if ($user->points <= $lowThreshold) {
             $alertMsg = "\n======================================================\n";
             $alertMsg .= "[ALERT EMAIL TOP-UP REMINDER SENT TO {$user->email}]:\n";
             $alertMsg .= "Halo {$user->name},\n";
@@ -404,7 +405,8 @@ class DocumentController extends Controller
             }
             \DB::commit();
 
-            if ($importedCount > 0 && $user->points <= 10000) {
+            $lowThreshold = (int)\App\Models\Setting::get('low_point_threshold', 20000);
+            if ($importedCount > 0 && $user->points <= $lowThreshold) {
                 $alertMsg = "\n======================================================\n";
                 $alertMsg .= "[ALERT EMAIL TOP-UP REMINDER SENT TO {$user->email}]:\n";
                 $alertMsg .= "Halo {$user->name},\n";

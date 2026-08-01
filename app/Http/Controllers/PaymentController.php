@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Http;
 use App\Models\PaymentTransaction;
 use App\Models\TopupOrder;
 use App\Models\User;
+use App\Models\Setting;
 use App\Models\AuditLog;
 
 class PaymentController extends Controller
@@ -35,7 +36,33 @@ class PaymentController extends Controller
 
         $trxNo = 'TRX-IPAYMU-' . date('YmdHis') . '-' . strtoupper(substr(uniqid(), -4));
 
-        // Create topup order (New Ledger Architecture)
+        return $this->processGatewayCheckout($user, $trxNo, $amount, $points, 'Top-Up Poin Verifikasi Dokumen IPPTI');
+    }
+
+    /**
+     * Create Payment Session for Pro Mode Upgrade Checkout
+     */
+    public function createProUpgradePayment(Request $request)
+    {
+        $user = Auth::user();
+        if (!$user) {
+            return response()->json(['success' => false, 'error' => 'Silakan login terlebih dahulu.'], 401);
+        }
+
+        $proPrice = (float)Setting::get('pro_activation_price', 300000);
+        $proPoints = (int)Setting::get('pro_activation_points', 100000);
+
+        $trxNo = 'PRO-UPGRADE-' . date('YmdHis') . '-' . strtoupper(substr(uniqid(), -4));
+
+        return $this->processGatewayCheckout($user, $trxNo, $proPrice, $proPoints, 'Aktivasi Paket Akun PRO Penerjemah IPPTI', 'pro_upgrade');
+    }
+
+    /**
+     * Internal helper to build iPaymu payment request
+     */
+    private function processGatewayCheckout($user, $trxNo, $amount, $points, $productName, $orderType = 'topup')
+    {
+        // Create topup order (Ledger Architecture)
         $topupOrder = TopupOrder::create([
             'order_id' => $trxNo,
             'user_id' => $user->id,
@@ -44,6 +71,7 @@ class PaymentController extends Controller
             'conversion_rate' => 1.00,
             'status' => 'pending',
             'payment_gateway' => 'ipaymu',
+            'metadata' => json_encode(['order_type' => $orderType]),
         ]);
 
         // Create legacy payment transaction for compatibility
@@ -62,7 +90,6 @@ class PaymentController extends Controller
 
         // Check if iPaymu credentials are configured
         if (empty($va) || empty($apiKey)) {
-            // Fallback for simulation / testing when credentials are not yet set in .env
             $simulatedUrl = url('/ipaymu/return?trx_no=' . $trxNo . '&simulated=true');
             
             $transaction->update([
@@ -88,7 +115,7 @@ class PaymentController extends Controller
         $cancelUrl = $appUrl . '/admin';
 
         $body = [
-            'product' => ['Top-Up Poin Verifikasi Dokumen IPPTI (' . number_format($points, 0, ',', '.') . ' Poin)'],
+            'product' => [$productName . ' (' . number_format($points, 0, ',', '.') . ' Poin)'],
             'qty' => [1],
             'price' => [$amount],
             'amount' => $amount,
@@ -128,7 +155,7 @@ class PaymentController extends Controller
                 ]);
 
                 $topupOrder->update([
-                    'metadata' => json_encode($resData['Data'] ?? []),
+                    'metadata' => json_encode(array_merge(['order_type' => $orderType], $resData['Data'] ?? [])),
                 ]);
 
                 return response()->json([
@@ -152,7 +179,7 @@ class PaymentController extends Controller
 
     /**
      * Webhook Callback from iPaymu (/ipaymu/callback)
-     * Handles idempotency via point_transactions idempotency_key
+     * Handles idempotency & Pro Activation via point_transactions
      */
     public function handleCallback(Request $request)
     {
@@ -172,11 +199,9 @@ class PaymentController extends Controller
         }
 
         $userId = $topupOrder ? $topupOrder->user_id : $transaction->user_id;
-        $amount = $topupOrder ? $topupOrder->amount_idr : $transaction->amount;
         $points = $topupOrder ? $topupOrder->points_issued : $transaction->points;
 
         $isSuccess = in_array($status, ['berhasil', 'paid', 'success', 'settlement']) || $statusNo == 200 || $statusNo == 1;
-
         $channel = $request->input('via') ?? $request->input('channel') ?? 'iPaymu';
         $rawPayload = json_encode($request->all());
 
@@ -196,26 +221,50 @@ class PaymentController extends Controller
                 ]);
             }
 
-            // Credit points via point_transactions ledger with Idempotency Key
             $user = User::find($userId);
             if ($user) {
-                $idempotencyKey = 'topup_order_' . $trxNo;
-                $user->creditPoints(
-                    $points,
-                    'Topup Poin via iPaymu (' . $trxNo . ')',
-                    'topup',
-                    $trxNo,
-                    $idempotencyKey,
-                    ['channel' => $channel, 'raw_response' => $request->all()]
-                );
+                $isProUpgrade = str_starts_with($trxNo, 'PRO-UPGRADE-');
 
-                AuditLog::log(
-                    'IPAYMU_TOPUP_PAID',
-                    TopupOrder::class,
-                    $topupOrder ? $topupOrder->id : $transaction->id,
-                    [],
-                    ['points' => $user->points, 'added' => $points, 'trx_no' => $trxNo]
-                );
+                if ($isProUpgrade) {
+                    // Update user level to PRO
+                    $user->update(['user_level' => 'pro']);
+
+                    $idempotencyKey = 'pro_activation_' . $trxNo;
+                    $user->creditPoints(
+                        $points,
+                        'Bonus Poin Aktivasi Akun PRO IPPTI',
+                        'pro_activation',
+                        $trxNo,
+                        $idempotencyKey,
+                        ['channel' => $channel, 'pro_upgrade' => true]
+                    );
+
+                    AuditLog::log(
+                        'PRO_UPGRADE_PAID',
+                        TopupOrder::class,
+                        $topupOrder ? $topupOrder->id : $transaction->id,
+                        [],
+                        ['user_level' => 'pro', 'points' => $user->points, 'trx_no' => $trxNo]
+                    );
+                } else {
+                    $idempotencyKey = 'topup_order_' . $trxNo;
+                    $user->creditPoints(
+                        $points,
+                        'Topup Poin via iPaymu (' . $trxNo . ')',
+                        'topup',
+                        $trxNo,
+                        $idempotencyKey,
+                        ['channel' => $channel, 'raw_response' => $request->all()]
+                    );
+
+                    AuditLog::log(
+                        'IPAYMU_TOPUP_PAID',
+                        TopupOrder::class,
+                        $topupOrder ? $topupOrder->id : $transaction->id,
+                        [],
+                        ['points' => $user->points, 'added' => $points, 'trx_no' => $trxNo]
+                    );
+                }
             }
 
             return response()->json(['status' => true, 'message' => 'Payment successfully credited']);
@@ -256,33 +305,56 @@ class PaymentController extends Controller
             }
         }
 
-        // If simulation mode and pending, confirm simulated top-up for testing
+        // If simulation mode and pending, confirm simulated payment for testing
         if ($isSimulated && $transaction && strtolower($transaction->status) === 'pending') {
             $user = User::find($transaction->user_id);
             if ($user) {
-                $idempotencyKey = 'topup_order_' . $trxNo;
-                $user->creditPoints(
-                    $transaction->points,
-                    'Simulasi Topup Poin via iPaymu (' . $trxNo . ')',
-                    'topup',
-                    $trxNo,
-                    $idempotencyKey,
-                    ['simulated' => true]
-                );
+                $isProUpgrade = str_starts_with($trxNo, 'PRO-UPGRADE-');
+
+                if ($isProUpgrade) {
+                    $user->update(['user_level' => 'pro']);
+                    $idempotencyKey = 'pro_activation_' . $trxNo;
+                    $user->creditPoints(
+                        $transaction->points,
+                        'Bonus Poin Aktivasi Akun PRO IPPTI (Simulasi)',
+                        'pro_activation',
+                        $trxNo,
+                        $idempotencyKey,
+                        ['simulated' => true]
+                    );
+
+                    AuditLog::log(
+                        'SIMULATED_PRO_UPGRADE_PAID',
+                        PaymentTransaction::class,
+                        $transaction->id ?? 0,
+                        [],
+                        ['user_level' => 'pro', 'added_points' => $transaction->points, 'trx_no' => $trxNo]
+                    );
+                } else {
+                    $idempotencyKey = 'topup_order_' . $trxNo;
+                    $user->creditPoints(
+                        $transaction->points,
+                        'Simulasi Topup Poin via iPaymu (' . $trxNo . ')',
+                        'topup',
+                        $trxNo,
+                        $idempotencyKey,
+                        ['simulated' => true]
+                    );
+
+                    AuditLog::log(
+                        'SIMULATED_TOPUP_PAID',
+                        PaymentTransaction::class,
+                        $transaction->id ?? 0,
+                        [],
+                        ['added_points' => $transaction->points, 'trx_no' => $trxNo]
+                    );
+                }
 
                 if (method_exists($transaction, 'update')) {
                     $transaction->update(['status' => 'paid', 'payment_method' => 'SIMULATED']);
                 }
                 
                 TopupOrder::where('order_id', $trxNo)->update(['status' => 'success', 'payment_channel' => 'SIMULATED']);
-
-                AuditLog::log(
-                    'SIMULATED_TOPUP_PAID',
-                    PaymentTransaction::class,
-                    $transaction->id ?? 0,
-                    [],
-                    ['added_points' => $transaction->points, 'trx_no' => $trxNo]
-                );
             }
         }
 
