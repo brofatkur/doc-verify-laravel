@@ -667,4 +667,25 @@ class AdminController extends Controller
 
         return view('admin.upgrade', compact('proPrice', 'proPoints'));
     }
+
+    public function transactions()
+    {
+        $currentUser = Auth::user();
+        if (!$currentUser) {
+            return redirect('/login');
+        }
+
+        $query = \App\Models\PointTransaction::orderBy('created_at', 'desc');
+
+        if ($currentUser->role === 'TRANSLATOR') {
+            $query->where('user_id', $currentUser->id);
+        }
+
+        $transactions = $query->paginate(20);
+
+        $totalCredit = \App\Models\PointTransaction::where('user_id', $currentUser->id)->where('type', 'credit')->sum('amount');
+        $totalDebit = \App\Models\PointTransaction::where('user_id', $currentUser->id)->where('type', 'debit')->sum('amount');
+
+        return view('admin.transactions', compact('transactions', 'totalCredit', 'totalDebit'));
+    }
 }

@@ -136,14 +136,8 @@
                                             {{ $doc->document_id }}
                                         </td>
                                         <td class="px-6 py-4 text-slate-700 font-semibold font-mono text-xs">{{ $doc->registration_number }}</td>
-                                        <td class="px-6 py-4 text-slate-600 font-mono text-xs" title="Nama Asli: {{ $doc->client_name }}">
-                                            @php
-                                                $words = explode(' ', $doc->client_name);
-                                                $masked = array_map(function($w) {
-                                                    return strlen($w) <= 1 ? $w : $w[0] . str_repeat('*', strlen($w) - 1);
-                                                }, $words);
-                                                echo implode(' ', $masked);
-                                            @endphp
+                                        <td class="px-6 py-4 text-slate-800 font-semibold text-xs">
+                                            {{ $doc->client_name }}
                                         </td>
                                         <td class="px-6 py-4 text-slate-600 truncate max-w-[150px] font-medium" title="{{ $doc->document_type }}">{{ $doc->document_type }}</td>
                                         <td class="px-6 py-4">
@@ -342,14 +336,8 @@
                                         {{ $doc->document_id }}
                                     </td>
                                     <td class="px-6 py-4 text-slate-700 font-semibold font-mono text-xs">{{ $doc->registration_number }}</td>
-                                    <td class="px-6 py-4 text-slate-600 font-mono text-xs" title="Nama Asli: {{ $doc->client_name }}">
-                                        @php
-                                            $words = explode(' ', $doc->client_name);
-                                            $masked = array_map(function($w) {
-                                                return strlen($w) <= 1 ? $w : $w[0] . str_repeat('*', strlen($w) - 1);
-                                            }, $words);
-                                            echo implode(' ', $masked);
-                                        @endphp
+                                    <td class="px-6 py-4 text-slate-800 font-semibold text-xs">
+                                        {{ $doc->client_name }}
                                     </td>
                                     <td class="px-6 py-4 text-slate-600 truncate max-w-[200px] font-medium" title="{{ $doc->document_type }}">{{ $doc->document_type }}</td>
                                     <td class="px-6 py-4">

@@ -81,8 +81,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/admin/settings', [AdminController::class, 'settings']);
     Route::post('/admin/settings', [AdminController::class, 'updateSettings']);
 
-    // Pro Mode Upgrade Checkout
+    // Pro Mode Upgrade Checkout & Transaction History
     Route::get('/admin/upgrade', [AdminController::class, 'upgrade']);
+    Route::get('/admin/transactions', [AdminController::class, 'transactions']);
     Route::post('/payment/pro-upgrade/create', [PaymentController::class, 'createProUpgradePayment']);
 
     // iPaymu Settings & Self-Service Payment

@@ -2,9 +2,22 @@
 
 @section('content')
 <div class="max-w-2xl mx-auto space-y-6">
-    <div>
-        <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Pengaturan Profil & Layanan</h1>
-        <p class="text-slate-500 text-sm mt-1">Lengkapi informasi profil penerjemah tersumpah Anda untuk kebutuhan publik.</p>
+    <div class="flex items-center justify-between gap-4 border-b border-slate-200 pb-4">
+        <div>
+            <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Pengaturan Profil & Layanan</h1>
+            <p class="text-slate-500 text-sm mt-1">Lengkapi informasi profil penerjemah tersumpah Anda untuk kebutuhan publik.</p>
+        </div>
+        @if($user->role === 'TRANSLATOR')
+            @if($user->isPro())
+                <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black bg-amber-100 text-amber-800 border border-amber-300 shadow-xs">
+                    <i data-lucide="award" class="w-4 h-4 text-amber-600"></i> AKUN PRO
+                </span>
+            @else
+                <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 text-slate-700 border border-slate-200">
+                    AKUN REGULER (TRIAL)
+                </span>
+            @endif
+        @endif
     </div>
 
     <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
