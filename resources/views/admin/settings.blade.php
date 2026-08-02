@@ -42,7 +42,7 @@
                         type="number"
                         id="trial_bonus_points"
                         name="trial_bonus_points"
-                        value="{{ old('trial_bonus_points', setting('trial_bonus_points', 10000)) }}"
+                        value="{{ old('trial_bonus_points', \App\Models\Setting::get('trial_bonus_points', 10000)) }}"
                         required
                         min="0"
                         step="1000"
@@ -63,7 +63,7 @@
                         type="number"
                         id="low_point_threshold"
                         name="low_point_threshold"
-                        value="{{ old('low_point_threshold', setting('low_point_threshold', 20000)) }}"
+                        value="{{ old('low_point_threshold', \App\Models\Setting::get('low_point_threshold', 20000)) }}"
                         required
                         min="0"
                         step="1000"
@@ -84,7 +84,7 @@
                         type="number"
                         id="pro_activation_price"
                         name="pro_activation_price"
-                        value="{{ old('pro_activation_price', setting('pro_activation_price', 300000)) }}"
+                        value="{{ old('pro_activation_price', \App\Models\Setting::get('pro_activation_price', 300000)) }}"
                         required
                         min="0"
                         step="10000"
@@ -105,7 +105,7 @@
                         type="number"
                         id="pro_activation_points"
                         name="pro_activation_points"
-                        value="{{ old('pro_activation_points', setting('pro_activation_points', 100000)) }}"
+                        value="{{ old('pro_activation_points', \App\Models\Setting::get('pro_activation_points', 100000)) }}"
                         required
                         min="0"
                         step="1000"

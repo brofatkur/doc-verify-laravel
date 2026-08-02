@@ -239,7 +239,7 @@
         @endif
 
         <!-- Low Balance Polite Reminder Alert (points <= low_point_threshold) -->
-        @if(Auth::check() && Auth::user()->points <= (int)setting('low_point_threshold', 20000))
+        @if(Auth::check() && Auth::user()->points <= (int)\App\Models\Setting::get('low_point_threshold', 20000))
             <div class="bg-amber-50 border border-amber-200 text-amber-900 p-4.5 rounded-2xl text-xs font-semibold flex items-start justify-between gap-4 shadow-xs">
                 <div class="flex items-start gap-3">
                     <i data-lucide="alert-triangle" class="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5"></i>
