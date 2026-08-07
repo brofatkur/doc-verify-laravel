@@ -154,9 +154,8 @@ class PaymentController extends Controller
                     'payment_url' => $paymentUrl,
                 ]);
             } else {
-                $code = $resData['code'] ?? '';
-                // If API returns UNKNOWN_IP_ADDRESS or running in sandbox mode without IP whitelist registered yet, fallback to simulation mode
-                if ($code === 'UNKNOWN_IP_ADDRESS' || !$isProduction) {
+                // If API fails in Sandbox mode (e.g. UNKNOWN_IP_ADDRESS), always fallback to simulation mode so checkout never fails
+                if (!$isProduction) {
                     $simulatedUrl = url('/xenith/return?trx_no=' . $trxNo . '&simulated=true');
                     $transaction->update([
                         'payment_url' => $simulatedUrl,
@@ -167,11 +166,10 @@ class PaymentController extends Controller
                         'success' => true,
                         'payment_url' => $simulatedUrl,
                         'is_simulated' => true,
-                        'message' => 'Simulasi Pembayaran (IP Server belum didaftarkan di Xenith IP Whitelist).',
                     ]);
                 }
 
-                $errMsg = $resData['message'] ?? ($resData['error']['message'] ?? 'Gagal membuat tautan pembayaran Xenith Pay.');
+                $errMsg = $resData['message'] ?? ($resData['error']['message'] ?? 'Gagal membuat tautan pembayaran.');
                 return response()->json([
                     'success' => false,
                     'error' => 'Respons Xenith Pay: ' . $errMsg,
@@ -190,7 +188,6 @@ class PaymentController extends Controller
                     'success' => true,
                     'payment_url' => $simulatedUrl,
                     'is_simulated' => true,
-                    'message' => 'Simulasi Pembayaran Testing.',
                 ]);
             }
 

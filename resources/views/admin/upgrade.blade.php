@@ -128,7 +128,7 @@
                     class="w-full sm:w-auto flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white px-8 py-3.5 rounded-2xl font-black text-sm transition shadow-md hover:shadow-lg active:scale-[0.98] cursor-pointer"
                 >
                     <i data-lucide="zap" class="w-4.5 h-4.5 fill-white"></i>
-                    <span>Bayar Sekarang / Pay Now</span>
+                    <span>Bayar Sekarang</span>
                 </button>
             </div>
         </div>
@@ -211,14 +211,14 @@
                 errDiv.innerText = data.error || 'Gagal menyiapkan tagihan pembayaran.';
                 errDiv.classList.remove('hidden');
                 btn.disabled = false;
-                btn.innerHTML = '<i data-lucide="zap" class="w-4.5 h-4.5 fill-white"></i> <span>Bayar Sekarang / Pay Now</span>';
+                btn.innerHTML = '<i data-lucide="zap" class="w-4.5 h-4.5 fill-white"></i> <span>Bayar Sekarang</span>';
                 lucide.createIcons();
             }
         } catch (err) {
             errDiv.innerText = 'Terjadi kesalahan koneksi jaringan: ' + err.message;
             errDiv.classList.remove('hidden');
             btn.disabled = false;
-            btn.innerHTML = '<i data-lucide="zap" class="w-4.5 h-4.5 fill-white"></i> <span>Bayar Sekarang / Pay Now</span>';
+            btn.innerHTML = '<i data-lucide="zap" class="w-4.5 h-4.5 fill-white"></i> <span>Bayar Sekarang</span>';
             lucide.createIcons();
         }
     }
