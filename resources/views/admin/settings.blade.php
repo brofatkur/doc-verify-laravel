@@ -74,45 +74,24 @@
                     </p>
                 </div>
 
-                <!-- pro_activation_price -->
-                <div class="space-y-2 p-4 bg-slate-50/60 rounded-2xl border border-slate-200/60">
-                    <label for="pro_activation_price" class="block text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+                <!-- min_topup_amount -->
+                <div class="space-y-2 p-4 bg-slate-50/60 rounded-2xl border border-slate-200/60 col-span-1 md:col-span-2">
+                    <label for="min_topup_amount" class="block text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
                         <i data-lucide="award" class="w-4 h-4 text-blue-600"></i>
-                        <span>Harga Aktivasi Mode Pro (Rp)</span>
+                        <span>Minimal Top-Up / Aktivasi Akun PRO (Rp)</span>
                     </label>
                     <input
                         type="number"
-                        id="pro_activation_price"
-                        name="pro_activation_price"
-                        value="{{ old('pro_activation_price', \App\Models\Setting::get('pro_activation_price', 300000)) }}"
+                        id="min_topup_amount"
+                        name="min_topup_amount"
+                        value="{{ old('min_topup_amount', \App\Models\Setting::get('min_topup_amount', 100000)) }}"
                         required
-                        min="0"
+                        min="10000"
                         step="10000"
                         class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-slate-900 text-sm font-black font-mono focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition bg-white"
                     />
                     <p class="text-[11px] text-slate-500 leading-relaxed">
-                        Harga paket upgrade sekali bayar ke akun PRO yang ditagihkan kepada penerjemah di halaman checkout.
-                    </p>
-                </div>
-
-                <!-- pro_activation_points -->
-                <div class="space-y-2 p-4 bg-slate-50/60 rounded-2xl border border-slate-200/60">
-                    <label for="pro_activation_points" class="block text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
-                        <i data-lucide="coins" class="w-4 h-4 text-amber-500"></i>
-                        <span>Bonus Poin Aktivasi Pro</span>
-                    </label>
-                    <input
-                        type="number"
-                        id="pro_activation_points"
-                        name="pro_activation_points"
-                        value="{{ old('pro_activation_points', \App\Models\Setting::get('pro_activation_points', 100000)) }}"
-                        required
-                        min="0"
-                        step="1000"
-                        class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-slate-900 text-sm font-black font-mono focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition bg-white"
-                    />
-                    <p class="text-[11px] text-slate-500 leading-relaxed">
-                        Total poin saldo yang langsung dikreditkan ke akun penerjemah setelah berhasil melakukan upgrade ke PRO.
+                        Bebas biaya awal aktivasi! 100% nominal top-up langsung menjadi Poin Verifikasi. Top-up minimal nominal ini (Default Rp 100.000) otomatis mengaktifkan status Akun PRO secara permanen.
                     </p>
                 </div>
             </div>

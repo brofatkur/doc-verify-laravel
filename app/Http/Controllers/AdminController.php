@@ -632,13 +632,13 @@ class AdminController extends Controller
 
         $request->validate([
             'trial_bonus_points' => 'required|numeric|min:0',
-            'pro_activation_price' => 'required|numeric|min:0',
-            'pro_activation_points' => 'required|numeric|min:0',
+            'min_topup_amount' => 'required|numeric|min:10000',
             'low_point_threshold' => 'required|numeric|min:0',
         ]);
 
         $keys = [
             'trial_bonus_points',
+            'min_topup_amount',
             'pro_activation_price',
             'pro_activation_points',
             'low_point_threshold',
@@ -662,10 +662,9 @@ class AdminController extends Controller
             return redirect('/admin');
         }
 
-        $proPrice = (float)\App\Models\Setting::get('pro_activation_price', 300000);
-        $proPoints = (int)\App\Models\Setting::get('pro_activation_points', 100000);
+        $minTopup = (float)\App\Models\Setting::get('min_topup_amount', 100000);
 
-        return view('admin.upgrade', compact('proPrice', 'proPoints'));
+        return view('admin.upgrade', compact('minTopup'));
     }
 
     public function transactions()
