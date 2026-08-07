@@ -254,23 +254,25 @@
                             <!-- Left Translator Info (2 columns) -->
                             <div class="sm:col-span-2 space-y-1.5 border-b sm:border-b-0 sm:border-r border-slate-200 pb-3 sm:pb-0 sm:pr-3">
                                 <div class="flex items-center gap-3">
-                                    @php
-                                        $translatorPic = $document->translator->profile_picture;
-                                        if ($translatorPic && !str_starts_with($translatorPic, 'http') && !str_starts_with($translatorPic, '/')) {
-                                            $translatorPic = '/' . $translatorPic;
-                                        }
-                                        $avatarFallback = 'https://ui-avatars.com/api/?name=' . urlencode($document->translator->name) . '&background=1E3A8A&color=fff';
-                                    @endphp
-
-                                    <!-- Translator Photo or Initials Fallback -->
-                                    <div class="rounded-full bg-slate-100 flex items-center justify-center flex-shrink-0 border-2 border-[#1E3A8A] shadow-xs overflow-hidden relative" style="width: 56px; height: 56px; min-width: 56px; min-height: 56px; max-width: 56px; max-height: 56px;">
-                                        <img 
-                                            src="{{ $translatorPic ?: $avatarFallback }}" 
-                                            alt="{{ $document->translator->name }}" 
-                                            onerror="this.onerror=null; this.src='{{ $avatarFallback }}';" 
-                                            class="rounded-full object-cover" 
-                                            style="width: 56px; height: 56px; max-width: 56px; max-height: 56px; object-fit: cover;"
-                                        />
+                                    <!-- Professional Sworn Translator Vector Badge with Tie & Verified Checklist -->
+                                    <div class="rounded-full flex items-center justify-center flex-shrink-0 border-2 border-[#1E3A8A] shadow-xs relative" style="width: 56px; height: 56px; min-width: 56px; min-height: 56px; max-width: 56px; max-height: 56px; background-color: #EFF6FF;">
+                                        <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" style="width: 36px; height: 36px;">
+                                            <!-- Head -->
+                                            <circle cx="32" cy="18" r="9" fill="#1E3A8A"/>
+                                            <!-- Formal Suit Jacket & Shoulders -->
+                                            <path d="M14 50C14 41.1634 21.1634 34 30 34H34C42.8366 34 50 41.1634 50 50V52H14V50Z" fill="#1E3A8A"/>
+                                            <!-- White Shirt Collar -->
+                                            <path d="M27 34L32 42L37 34H27Z" fill="#FFFFFF"/>
+                                            <!-- Formal Golden Tie -->
+                                            <path d="M30.5 40.5L32 48L33.5 40.5L33 38.5H31L30.5 40.5Z" fill="#D97706"/>
+                                            <path d="M30 48L32 54L34 48H30Z" fill="#D97706"/>
+                                        </svg>
+                                        <!-- Verified Checklist Shield / Circle Badge -->
+                                        <div class="absolute -bottom-0.5 -right-0.5 rounded-full flex items-center justify-center border-2 border-white shadow-xs" style="width: 20px; height: 20px; min-width: 20px; min-height: 20px; background-color: #16A34A;">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" style="width: 11px; height: 11px; color: #ffffff;">
+                                                <polyline points="20 6 9 17 4 12"></polyline>
+                                            </svg>
+                                        </div>
                                     </div>
 
                                     <div class="space-y-0.5">
