@@ -106,19 +106,28 @@ class PaymentController extends Controller
         $redirectUrl = $appUrl . '/xenith/return?trx_no=' . $trxNo;
         $callbackUrl = $appUrl . '/xenith/callback';
 
+        $customerName = trim($user->name ?: 'Penerjemah IPPTI');
+        if (strlen($customerName) < 5) {
+            $customerName = $customerName . ' IPPTI';
+        }
+
         $payload = [
             'amount' => (int)$amount,
             'currency' => 'IDR',
             'referenceCode' => $trxNo,
             'customerReference' => (string)$user->id,
-            'customerName' => substr($user->name ?: 'Penerjemah IPPTI', 0, 50),
+            'customerName' => substr($customerName, 0, 50),
             'redirectUrl' => $redirectUrl,
             'paymentLinkCallbackUrl' => $callbackUrl,
             'payinCallbackUrl' => $callbackUrl,
         ];
 
         $jsonBody = json_encode($payload, JSON_UNESCAPED_SLASHES);
-        $timestamp = gmdate('Y-m-d\TH:i:s.v\Z');
+        
+        $micro = microtime(true);
+        $seconds = (int)$micro;
+        $fraction = sprintf('%03d', ($micro - $seconds) * 1000);
+        $timestamp = gmdate('Y-m-d\TH:i:s', $seconds) . '.' . $fraction . 'Z';
         
         // Build signature: METHOD + "\n" + URI + "\n" + TIMESTAMP + "\n" + BODY
         $signaturePayload = "POST\n" . $endpoint . "\n" . $timestamp . "\n" . $jsonBody;
@@ -136,8 +145,13 @@ class PaymentController extends Controller
 
             $resData = $response->json();
 
-            if ($response->successful() && isset($resData['data']['paymentLinkUrl'])) {
-                $paymentUrl = $resData['data']['paymentLinkUrl'];
+            $paymentUrl = $resData['data']['paymentLinkUrl'] 
+                ?? $resData['data']['url'] 
+                ?? $resData['data']['checkoutUrl'] 
+                ?? $resData['paymentLinkUrl'] 
+                ?? null;
+
+            if ($response->successful() && !empty($paymentUrl)) {
                 $sessionId = $resData['data']['id'] ?? $trxNo;
 
                 $transaction->update([
@@ -154,22 +168,17 @@ class PaymentController extends Controller
                     'payment_url' => $paymentUrl,
                 ]);
             } else {
-                // If API fails in Sandbox mode (e.g. UNKNOWN_IP_ADDRESS), always fallback to simulation mode so checkout never fails
-                if (!$isProduction) {
-                    $simulatedUrl = url('/xenith/return?trx_no=' . $trxNo . '&simulated=true');
-                    $transaction->update([
-                        'payment_url' => $simulatedUrl,
-                        'session_id' => 'SIMULATED-' . $trxNo,
-                    ]);
+                $code = $resData['code'] ?? '';
+                $rawMsg = $resData['message'] ?? ($resData['error']['message'] ?? '');
 
-                    return response()->json([
-                        'success' => true,
-                        'payment_url' => $simulatedUrl,
-                        'is_simulated' => true,
-                    ]);
+                // Detect IP Whitelist restriction from Xenith Pay
+                if ($code === 'UNKNOWN_IP_ADDRESS' || stripos($rawMsg, 'IP Address') !== false) {
+                    $serverIp = request()->server('SERVER_ADDR') ?: (request()->ip() ?: 'IP Server');
+                    $errMsg = "IP Address server ({$serverIp}) belum terdaftar di menu Developer Settings -> IP Whitelist di Dashboard Xenith Pay. Silakan daftarkan IP tersebut agar pembayaran otomatis terbuka.";
+                } else {
+                    $errMsg = !empty($rawMsg) ? $rawMsg : 'Gagal membuat tautan pembayaran Xenith Pay.';
                 }
 
-                $errMsg = $resData['message'] ?? ($resData['error']['message'] ?? 'Gagal membuat tautan pembayaran.');
                 return response()->json([
                     'success' => false,
                     'error' => 'Respons Xenith Pay: ' . $errMsg,
@@ -177,20 +186,6 @@ class PaymentController extends Controller
                 ], 400);
             }
         } catch (\Exception $e) {
-            if (!$isProduction) {
-                $simulatedUrl = url('/xenith/return?trx_no=' . $trxNo . '&simulated=true');
-                $transaction->update([
-                    'payment_url' => $simulatedUrl,
-                    'session_id' => 'SIMULATED-' . $trxNo,
-                ]);
-
-                return response()->json([
-                    'success' => true,
-                    'payment_url' => $simulatedUrl,
-                    'is_simulated' => true,
-                ]);
-            }
-
             return response()->json([
                 'success' => false,
                 'error' => 'Gagal menghubungkan ke Xenith Pay: ' . $e->getMessage(),
