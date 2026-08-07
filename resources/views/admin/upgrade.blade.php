@@ -56,9 +56,9 @@
                         <p class="text-base font-black text-slate-900 font-mono mt-0.5">Rp 100.000</p>
                     </button>
 
-                    <button type="button" onclick="selectNominal(300000)" id="preset-300000" class="preset-btn p-4 rounded-2xl border-2 border-slate-200 bg-white text-left transition hover:border-slate-300 cursor-pointer group">
-                        <p class="text-xs font-extrabold text-slate-500">Poin: 300.000</p>
-                        <p class="text-base font-black text-slate-900 font-mono mt-0.5">Rp 300.000</p>
+                    <button type="button" onclick="selectNominal(200000)" id="preset-200000" class="preset-btn p-4 rounded-2xl border-2 border-slate-200 bg-white text-left transition hover:border-slate-300 cursor-pointer group">
+                        <p class="text-xs font-extrabold text-slate-500">Poin: 200.000</p>
+                        <p class="text-base font-black text-slate-900 font-mono mt-0.5">Rp 200.000</p>
                     </button>
 
                     <button type="button" onclick="selectNominal(500000)" id="preset-500000" class="preset-btn p-4 rounded-2xl border-2 border-slate-200 bg-white text-left transition hover:border-slate-300 cursor-pointer group">
