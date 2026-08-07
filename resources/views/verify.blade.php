@@ -37,7 +37,7 @@
 
         /* Guilloche Certificate Border Styling */
         .guilloche-border {
-            border: 12px double #1E3A8A;
+            border: 10px double #1E3A8A;
             box-shadow: inset 0 0 0 2px #F59E0B;
             position: relative;
         }
@@ -45,13 +45,13 @@
         /* Tab fieldset badge header */
         .section-tab-badge {
             position: absolute;
-            top: -12px;
-            left: 16px;
+            top: -11px;
+            left: 14px;
             background-color: #1E3A8A;
             color: #ffffff;
-            padding: 2px 12px;
-            border-radius: 6px;
-            font-size: 10px;
+            padding: 1.5px 10px;
+            border-radius: 5px;
+            font-size: 9.5px;
             font-weight: 800;
             letter-spacing: 0.05em;
             text-transform: uppercase;
@@ -108,10 +108,10 @@
         </div>
     @else
         <!-- Top Web Header (no-print) -->
-        <div class="w-full max-w-2xl mb-4 text-center pt-2 no-print flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div class="w-full max-w-[760px] mb-4 text-center pt-2 no-print flex flex-col sm:flex-row items-center justify-between gap-4">
             <div class="inline-flex items-center gap-3">
                 <a href="https://ippti.or.id" target="_blank" class="cursor-pointer">
-                    <img src="/ippti-logo.jpg" alt="IPPTI Logo" crossorigin="anonymous" class="h-10 w-auto rounded-lg bg-white p-1 border border-slate-200 shadow-xs" />
+                    <img src="/ippti-logo.jpg" alt="IPPTI Logo" class="h-10 w-auto rounded-lg bg-white p-1 border border-slate-200 shadow-xs" />
                 </a>
                 <div class="text-left">
                     <a href="/" class="text-lg font-black text-[#1E3A8A] tracking-tight hover:underline">DocVerify IPPTI</a>
@@ -132,42 +132,42 @@
             </div>
         </div>
 
-        <!-- E-Certificate Card Container (Exact Mockup Match & A4 Printable) -->
-        <div class="w-full max-w-2xl mb-6">
-            <div id="pdf-card" class="bg-white p-5 sm:p-7 rounded-2xl guilloche-border relative shadow-2xl overflow-hidden font-sans text-slate-800">
+        <!-- E-Certificate Card Container (Exact Mockup Match & Fits 1 Page A4) -->
+        <div class="w-full max-w-[760px] mb-6">
+            <div id="pdf-card" class="bg-white p-4 sm:p-5 rounded-2xl guilloche-border relative shadow-2xl overflow-hidden font-sans text-slate-800 w-full max-w-[760px] mx-auto">
                 
                 <!-- Watermark Background Logo -->
-                <div class="absolute inset-0 flex items-center justify-center opacity-[0.05] pointer-events-none z-0">
-                    <img src="/ippti-logo.jpg" alt="Watermark" crossorigin="anonymous" class="w-96 h-auto grayscale" />
+                <div class="absolute inset-0 flex items-center justify-center opacity-[0.04] pointer-events-none z-0">
+                    <img src="/ippti-logo.jpg" alt="Watermark" class="w-80 h-auto grayscale" />
                 </div>
 
-                <div class="relative z-10 space-y-4">
+                <div class="relative z-10 space-y-3">
 
                     <!-- Header Row: Logo Left, Title & Green Badge Right -->
-                    <div class="flex flex-col sm:flex-row justify-between items-center gap-4 border-b-2 border-[#1E3A8A]/20 pb-4">
+                    <div class="flex flex-row justify-between items-center gap-3 border-b-2 border-[#1E3A8A]/20 pb-3">
                         <!-- Left Logo & Organization Info -->
-                        <div class="flex items-center gap-3 text-center sm:text-left">
-                            <img src="/ippti-logo.jpg" alt="IPPTI Logo" crossorigin="anonymous" class="h-16 w-auto object-contain flex-shrink-0" />
+                        <div class="flex items-center gap-3 text-left">
+                            <img src="/ippti-logo.jpg" alt="IPPTI Logo" class="h-14 w-auto object-contain flex-shrink-0" />
                             <div>
                                 <h2 class="text-2xl font-black text-[#1E3A8A] tracking-tight leading-none">IPPTI</h2>
-                                <p class="text-[9px] font-bold text-[#1E3A8A] uppercase tracking-wide mt-1 max-w-[220px] leading-tight" id="cert-header-org">
+                                <p class="text-[8.5px] font-bold text-[#1E3A8A] uppercase tracking-wide mt-0.5 max-w-[210px] leading-tight" id="cert-header-org">
                                     IKATAN PENERJEMAH DAN PENGALIH BAHASA TERSUMPAH DI INDONESIA
                                 </p>
                             </div>
                         </div>
 
                         <!-- Right Certificate Title & Green Badge -->
-                        <div class="flex items-start gap-3 text-center sm:text-right">
+                        <div class="flex items-start gap-3 text-right">
                             <div>
-                                <h1 class="text-xl font-black text-[#1E3A8A] tracking-tight leading-none" id="cert-title">E-CERTIFICATE</h1>
-                                <p class="text-sm font-black text-[#F59E0B] tracking-wider uppercase mt-0.5" id="cert-subtitle">HASIL VERIFIKASI</p>
-                                <p class="text-[9px] font-bold text-[#1E3A8A] tracking-wider uppercase" id="cert-desc">DOKUMEN TERJEMAHAN TERSUMPAH</p>
+                                <h1 class="text-lg font-black text-[#1E3A8A] tracking-tight leading-none" id="cert-title">E-CERTIFICATE</h1>
+                                <p class="text-xs font-black text-[#F59E0B] tracking-wider uppercase mt-0.5" id="cert-subtitle">HASIL VERIFIKASI</p>
+                                <p class="text-[8.5px] font-bold text-[#1E3A8A] tracking-wider uppercase" id="cert-desc">DOKUMEN TERJEMAHAN TERSUMPAH</p>
                             </div>
 
                             <!-- Verified Square Badge -->
-                            <div id="cert-status-badge" class="w-12 h-12 bg-[#16A34A] text-white rounded-xl flex flex-col items-center justify-center flex-shrink-0 shadow-sm">
-                                <i id="cert-badge-icon" data-lucide="check-circle-2" class="w-6 h-6 stroke-[2.5]"></i>
-                                <span id="cert-badge-text" class="text-[8px] font-black tracking-wider uppercase mt-0.5">VERIFIED</span>
+                            <div id="cert-status-badge" class="w-11 h-11 bg-[#16A34A] text-white rounded-xl flex flex-col items-center justify-center flex-shrink-0 shadow-xs">
+                                <i id="cert-badge-icon" data-lucide="check-circle-2" class="w-5 h-5 stroke-[2.5]"></i>
+                                <span id="cert-badge-text" class="text-[7.5px] font-black tracking-wider uppercase mt-0.5">VERIFIED</span>
                             </div>
                         </div>
                     </div>
@@ -175,77 +175,77 @@
                     <!-- Certificate ID Sub-Header Box (Right Aligned) -->
                     <div class="flex justify-end items-center gap-2">
                         <div class="text-right">
-                            <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest block">CERTIFICATE ID</span>
-                            <div class="inline-block bg-white border-2 border-slate-300 px-5 py-1 rounded-xl shadow-xs">
-                                <span class="text-sm font-black font-mono text-slate-900 tracking-wider notranslate" translate="no">{{ $document->document_id }}</span>
+                            <span class="text-[8.5px] font-bold text-slate-400 uppercase tracking-widest block">CERTIFICATE ID</span>
+                            <div class="inline-block bg-white border-2 border-slate-300 px-4 py-0.5 rounded-xl shadow-xs">
+                                <span class="text-xs font-black font-mono text-slate-900 tracking-wider notranslate" translate="no">{{ $document->document_id }}</span>
                             </div>
                         </div>
                     </div>
 
                     <!-- Hero Verification Notice Section -->
-                    <div id="cert-notice-box" class="flex items-center gap-4 p-2 text-left">
-                        <div id="cert-notice-icon-bg" class="w-14 h-14 bg-[#16A34A] text-white rounded-2xl flex items-center justify-center flex-shrink-0 shadow-md ring-4 ring-emerald-500/20">
-                            <i id="cert-notice-icon" data-lucide="shield-check" class="w-9 h-9"></i>
+                    <div id="cert-notice-box" class="flex items-center gap-3 p-2 text-left bg-emerald-50/70 rounded-xl border border-emerald-200/90">
+                        <div id="cert-notice-icon-bg" class="w-11 h-11 bg-[#16A34A] text-white rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm ring-2 ring-emerald-500/20">
+                            <i id="cert-notice-icon" data-lucide="shield-check" class="w-7 h-7"></i>
                         </div>
                         <div>
-                            <h3 class="font-black text-base text-[#16A34A] uppercase tracking-wide leading-tight" id="cert-notice-title">DOKUMEN TELAH DIVERIFIKASI</h3>
-                            <p class="text-xs text-slate-600 font-medium leading-relaxed mt-1" id="cert-notice-desc">
+                            <h3 class="font-black text-xs sm:text-sm text-[#16A34A] uppercase tracking-wide leading-tight" id="cert-notice-title">DOKUMEN TELAH DIVERIFIKASI</h3>
+                            <p class="text-[10.5px] text-slate-600 font-medium leading-normal mt-0.5" id="cert-notice-desc">
                                 Dokumen terjemahan ini telah berhasil diverifikasi melalui sistem resmi IPPTI dan dinyatakan sebagai dokumen terjemahan tersumpah yang sah sesuai data registrasi.
                             </p>
                         </div>
                     </div>
 
                     <!-- DATA VERIFIKASI Section Box -->
-                    <div class="border border-slate-300 rounded-xl relative pt-4 pb-3 px-4 bg-white/80">
+                    <div class="border border-slate-300 rounded-xl relative pt-3.5 pb-2.5 px-3.5 bg-white/90">
                         <span class="section-tab-badge" id="cert-data-title">DATA VERIFIKASI</span>
 
-                        <div class="divide-y divide-slate-100 text-xs">
-                            <div class="py-2 flex items-center justify-between">
+                        <div class="divide-y divide-slate-100 text-[11px]">
+                            <div class="py-1.5 flex items-center justify-between">
                                 <div class="flex items-center gap-2 text-slate-600">
-                                    <i data-lucide="file-text" class="w-4 h-4 text-slate-400"></i>
+                                    <i data-lucide="file-text" class="w-3.5 h-3.5 text-slate-400"></i>
                                     <span class="font-semibold text-slate-600" id="cert-label-reg-no">Nomor Registrasi</span>
                                 </div>
-                                <span class="font-black font-mono text-slate-900 text-sm notranslate" translate="no">{{ $document->registration_number }}</span>
+                                <span class="font-black font-mono text-slate-900 text-xs notranslate" translate="no">{{ $document->registration_number }}</span>
                             </div>
 
-                            <div class="py-2 flex items-center justify-between">
+                            <div class="py-1.5 flex items-center justify-between">
                                 <div class="flex items-center gap-2 text-slate-600">
-                                    <i data-lucide="id-card" class="w-4 h-4 text-slate-400"></i>
+                                    <i data-lucide="id-card" class="w-3.5 h-3.5 text-slate-400"></i>
                                     <span class="font-semibold text-slate-600" id="cert-label-doc-id">ID Dokumen</span>
                                 </div>
-                                <span class="font-black font-mono text-slate-900 text-sm notranslate" translate="no">{{ $document->document_id }}</span>
+                                <span class="font-black font-mono text-slate-900 text-xs notranslate" translate="no">{{ $document->document_id }}</span>
                             </div>
 
-                            <div class="py-2 flex items-center justify-between">
+                            <div class="py-1.5 flex items-center justify-between">
                                 <div class="flex items-center gap-2 text-slate-600">
-                                    <i data-lucide="shield" class="w-4 h-4 text-slate-400"></i>
+                                    <i data-lucide="shield" class="w-3.5 h-3.5 text-slate-400"></i>
                                     <span class="font-semibold text-slate-600" id="cert-label-status">Status Verifikasi</span>
                                 </div>
-                                <div class="flex items-center gap-1.5">
-                                    <span class="font-extrabold uppercase text-xs" id="cert-value-status">VERIFIED</span>
-                                    <i id="cert-status-check" data-lucide="check-circle-2" class="w-4 h-4 text-[#16A34A]"></i>
+                                <div class="flex items-center gap-1">
+                                    <span class="font-extrabold uppercase text-[11px]" id="cert-value-status">VERIFIED</span>
+                                    <i id="cert-status-check" data-lucide="check-circle-2" class="w-3.5 h-3.5 text-[#16A34A]"></i>
                                 </div>
                             </div>
 
-                            <div class="py-2 flex items-center justify-between">
+                            <div class="py-1.5 flex items-center justify-between">
                                 <div class="flex items-center gap-2 text-slate-600">
-                                    <i data-lucide="calendar" class="w-4 h-4 text-slate-400"></i>
+                                    <i data-lucide="calendar" class="w-3.5 h-3.5 text-slate-400"></i>
                                     <span class="font-semibold text-slate-600" id="cert-label-trans-date">Tanggal Terjemah</span>
                                 </div>
                                 <span class="font-bold text-slate-900 notranslate" translate="no" id="cert-value-trans-date"></span>
                             </div>
 
-                            <div class="py-2 flex items-center justify-between">
+                            <div class="py-1.5 flex items-center justify-between">
                                 <div class="flex items-center gap-2 text-slate-600">
-                                    <i data-lucide="file" class="w-4 h-4 text-slate-400"></i>
+                                    <i data-lucide="file" class="w-3.5 h-3.5 text-slate-400"></i>
                                     <span class="font-semibold text-slate-600" id="cert-label-doc-type">Jenis Dokumen</span>
                                 </div>
-                                <span class="font-extrabold text-slate-900 text-right max-w-[280px] truncate">{{ $document->document_type }}</span>
+                                <span class="font-extrabold text-slate-900 text-right max-w-[320px] truncate">{{ $document->document_type }}</span>
                             </div>
 
-                            <div class="py-2 flex items-center justify-between">
+                            <div class="py-1.5 flex items-center justify-between">
                                 <div class="flex items-center gap-2 text-slate-600">
-                                    <i data-lucide="languages" class="w-4 h-4 text-slate-400"></i>
+                                    <i data-lucide="languages" class="w-3.5 h-3.5 text-slate-400"></i>
                                     <span class="font-semibold text-slate-600" id="cert-label-lang-pair">Pasangan Bahasa</span>
                                 </div>
                                 <span class="font-extrabold text-slate-900 notranslate" translate="no">{{ $document->language_pair }}</span>
@@ -254,7 +254,7 @@
                     </div>
 
                     <!-- NAMA DI DOKUMEN (DISAMARKAN) Section Box -->
-                    <div class="border border-slate-300 rounded-xl relative pt-4 pb-3 px-4 bg-slate-50/50">
+                    <div class="border border-slate-300 rounded-xl relative pt-3.5 pb-2.5 px-3.5 bg-slate-50/50">
                         <span class="section-tab-badge" id="cert-label-masked-name">NAMA DI DOKUMEN (DISAMARKAN)</span>
                         @php
                             $masked = '';
@@ -265,108 +265,113 @@
                                 }, explode(" ", $document->client_name)));
                             }
                         @endphp
-                        <p class="text-base sm:text-lg font-black font-mono tracking-widest text-slate-900 text-center uppercase py-1 notranslate" translate="no">{{ $masked }}</p>
+                        <p class="text-sm font-black font-mono tracking-widest text-slate-900 text-center uppercase py-0.5 notranslate" translate="no">{{ $masked }}</p>
                     </div>
 
                     <!-- PENERJEMAH TERSUMPAH & QR CODE Section Box -->
-                    <div class="border border-slate-300 rounded-xl relative pt-4 pb-3 px-4 bg-white/80">
+                    <div class="border border-slate-300 rounded-xl relative pt-3.5 pb-2.5 px-3.5 bg-white/90">
                         <span class="section-tab-badge" id="cert-label-translator-title">PENERJEMAH TERSUMPAH</span>
 
-                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 items-center">
+                        <div class="grid grid-cols-3 gap-3 items-center">
                             <!-- Left Translator Info (2 columns) -->
-                            <div class="sm:col-span-2 space-y-2 border-b sm:border-b-0 sm:border-r border-slate-200 pb-3 sm:pb-0 sm:pr-4">
-                                <div class="flex items-center gap-3.5">
-                                    <div class="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center flex-shrink-0 border-2 border-[#1E3A8A] shadow-sm overflow-hidden">
-                                        @if($document->translator->profile_picture)
-                                            <img src="{{ $document->translator->profile_picture }}" alt="{{ $document->translator->name }}" crossorigin="anonymous" class="w-full h-full object-cover" />
-                                        @else
-                                            <i data-lucide="user" class="w-8 h-8 text-[#1E3A8A]"></i>
-                                        @endif
+                            <div class="col-span-2 space-y-1.5 border-r border-slate-200 pr-3">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-13 h-13 rounded-full bg-slate-100 flex items-center justify-center flex-shrink-0 border-2 border-[#1E3A8A] shadow-xs overflow-hidden relative">
+                                        @php
+                                            $translatorPic = $document->translator->profile_picture;
+                                            $avatarFallback = 'https://ui-avatars.com/api/?name=' . urlencode($document->translator->name) . '&background=1E3A8A&color=fff';
+                                        @endphp
+                                        <img 
+                                            src="{{ $translatorPic ?: $avatarFallback }}" 
+                                            alt="{{ $document->translator->name }}" 
+                                            onerror="this.onerror=null; this.src='{{ $avatarFallback }}';" 
+                                            class="w-full h-full object-cover" 
+                                        />
                                     </div>
                                     <div class="space-y-0.5 overflow-hidden">
-                                        <h4 class="text-sm font-extrabold text-slate-950 notranslate" translate="no">{{ $document->translator->name }}</h4>
-                                        <p class="text-xs font-bold text-slate-700 font-mono notranslate" translate="no" id="cert-value-member-no">No. Anggota : {{ $document->translator->sk_number }}</p>
-                                        <p class="text-[11px] font-semibold text-slate-600" id="cert-value-translator-service">Penerjemah Tersumpah Bahasa {{ $document->translator->language_services ?: $document->language_pair }}</p>
+                                        <h4 class="text-xs sm:text-sm font-extrabold text-slate-950 truncate notranslate" translate="no">{{ $document->translator->name }}</h4>
+                                        <p class="text-[11px] font-bold text-slate-700 font-mono notranslate" translate="no" id="cert-value-member-no">No. Anggota : {{ $document->translator->sk_number }}</p>
+                                        <p class="text-[10px] font-semibold text-slate-600 truncate" id="cert-value-translator-service">Penerjemah Tersumpah Bahasa {{ $document->translator->language_services ?: $document->language_pair }}</p>
                                     </div>
                                 </div>
-                                <p class="text-[10px] text-slate-500 font-medium leading-tight border-t border-slate-100 pt-2" id="cert-value-decree">
+                                <p class="text-[9.5px] text-slate-500 font-medium leading-tight border-t border-slate-100 pt-1.5" id="cert-value-decree">
                                     Sesuai dengan SK Menteri Hukum dan HAM {{ $document->translator->no_sk_kemenkum ?: 'AHU-56 AH.03.07.2022' }} {{ $document->translator->tgl_sk ? 'tanggal ' . \Carbon\Carbon::parse($document->translator->tgl_sk)->translatedFormat('d F Y') : '' }}
                                 </p>
                             </div>
 
                             <!-- Right QR Code (1 column) -->
-                            <div class="sm:col-span-1 flex flex-col items-center justify-center text-center space-y-1">
-                                <span class="text-[9px] font-bold text-[#1E3A8A] uppercase tracking-wider block" id="cert-qr-title">QR VERIFICATION</span>
-                                <img src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&data={{ urlencode(url('/verify/' . $document->document_id)) }}" alt="QR" crossorigin="anonymous" class="w-24 h-24 bg-white p-1 rounded-xl border border-slate-300 shadow-xs" />
-                                <span class="text-[8px] text-slate-500 font-medium leading-tight max-w-[120px]" id="cert-qr-caption">Scan untuk verifikasi keaslian dokumen di sistem IPPTI</span>
+                            <div class="col-span-1 flex flex-col items-center justify-center text-center space-y-1">
+                                <span class="text-[8.5px] font-bold text-[#1E3A8A] uppercase tracking-wider block" id="cert-qr-title">QR VERIFICATION</span>
+                                <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data={{ urlencode(url('/verify/' . $document->document_id)) }}" alt="QR" class="w-20 h-20 bg-white p-0.5 rounded-lg border border-slate-300 shadow-xs" />
+                                <span class="text-[7.5px] text-slate-500 font-medium leading-tight max-w-[110px]" id="cert-qr-caption">Scan untuk verifikasi keaslian dokumen di sistem IPPTI</span>
                             </div>
                         </div>
                     </div>
 
                     <!-- Digital Signature & Verification Time Sub-Boxes -->
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div class="grid grid-cols-2 gap-3">
                         <!-- Digital Signature Sub-Box -->
-                        <div class="border border-slate-300 rounded-xl p-3 flex items-center gap-3 bg-slate-50/50">
-                            <div class="w-10 h-10 rounded-xl bg-slate-900 text-emerald-400 flex items-center justify-center flex-shrink-0 shadow-xs">
-                                <i data-lucide="shield-check" class="w-6 h-6"></i>
+                        <div class="border border-slate-300 rounded-xl p-2.5 flex items-center gap-2.5 bg-slate-50/50">
+                            <div class="w-9 h-9 rounded-lg bg-slate-900 text-emerald-400 flex items-center justify-center flex-shrink-0 shadow-xs">
+                                <i data-lucide="shield-check" class="w-5 h-5"></i>
                             </div>
                             <div>
-                                <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider block" id="cert-label-digisig">DIGITAL SIGNATURE</span>
-                                <p class="text-xs font-bold text-slate-800" id="cert-val-digisig-title">Tanda Tangan Digital</p>
-                                <span class="text-[10px] font-extrabold text-[#16A34A]" id="cert-val-digisig-sub">Valid & Terverifikasi</span>
+                                <span class="text-[8px] font-bold text-slate-400 uppercase tracking-wider block" id="cert-label-digisig">DIGITAL SIGNATURE</span>
+                                <p class="text-[11px] font-bold text-slate-800" id="cert-val-digisig-title">Tanda Tangan Digital</p>
+                                <span class="text-[9.5px] font-extrabold text-[#16A34A]" id="cert-val-digisig-sub">Valid & Terverifikasi</span>
                             </div>
                         </div>
 
                         <!-- Verification Time Sub-Box -->
-                        <div class="border border-slate-300 rounded-xl p-3 flex items-center gap-3 bg-slate-50/50">
-                            <div class="w-10 h-10 rounded-xl bg-slate-900 text-amber-400 flex items-center justify-center flex-shrink-0 shadow-xs">
-                                <i data-lucide="clock" class="w-6 h-6"></i>
+                        <div class="border border-slate-300 rounded-xl p-2.5 flex items-center gap-2.5 bg-slate-50/50">
+                            <div class="w-9 h-9 rounded-lg bg-slate-900 text-amber-400 flex items-center justify-center flex-shrink-0 shadow-xs">
+                                <i data-lucide="clock" class="w-5 h-5"></i>
                             </div>
                             <div>
-                                <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider block" id="cert-label-ver-time">VERIFICATION TIME</span>
-                                <p class="text-xs font-black font-mono text-slate-900" id="cert-verify-time">{{ now()->translatedFormat('d M Y H:i') }} WIB</p>
+                                <span class="text-[8px] font-bold text-slate-400 uppercase tracking-wider block" id="cert-label-ver-time">VERIFICATION TIME</span>
+                                <p class="text-[11px] font-black font-mono text-slate-900" id="cert-verify-time">{{ now()->translatedFormat('d M Y H:i') }} WIB</p>
                             </div>
                         </div>
                     </div>
 
                     <!-- Solid Green Status Banner Bar -->
-                    <div id="cert-status-banner-bar" class="bg-[#16A34A] text-white p-3 rounded-xl flex flex-col sm:flex-row items-center justify-between gap-2 shadow-sm">
+                    <div id="cert-status-banner-bar" class="bg-[#16A34A] text-white p-2.5 rounded-xl flex flex-row items-center justify-between gap-2 shadow-xs">
                         <div class="flex items-center gap-2">
-                            <div class="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center">
-                                <i id="cert-banner-check-icon" data-lucide="check-circle-2" class="w-4 h-4 text-white"></i>
+                            <div class="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center">
+                                <i id="cert-banner-check-icon" data-lucide="check-circle-2" class="w-3.5 h-3.5 text-white"></i>
                             </div>
-                            <span class="text-base font-black tracking-widest uppercase" id="cert-banner-status-text">VERIFIED</span>
+                            <span class="text-sm font-black tracking-widest uppercase" id="cert-banner-status-text">VERIFIED</span>
                         </div>
-                        <p class="text-[11px] text-emerald-100 font-semibold tracking-wide text-center sm:text-right" id="cert-banner-status-desc">
+                        <p class="text-[10px] text-emerald-100 font-semibold tracking-wide text-right" id="cert-banner-status-desc">
                             This translated document has been officially verified by IPPTI Verification System.
                         </p>
                     </div>
 
                     <!-- Disclaimer Resmi Section -->
-                    <div class="space-y-1 relative pt-1">
-                        <h5 class="text-xs font-black text-slate-900 uppercase tracking-wider" id="cert-disclaimer-title">DISCLAIMER RESMI</h5>
-                        <p class="text-[10px] sm:text-[11px] text-slate-600 leading-relaxed font-medium text-justify max-w-xl" id="cert-disclaimer-text">
+                    <div class="space-y-0.5 relative pt-0.5">
+                        <h5 class="text-[10px] font-black text-slate-900 uppercase tracking-wider" id="cert-disclaimer-title">DISCLAIMER RESMI</h5>
+                        <p class="text-[9.5px] text-slate-600 leading-normal font-medium text-justify max-w-[620px]" id="cert-disclaimer-text">
                             Sertifikat elektronik ini hanya menyatakan bahwa data dokumen terjemahan telah diverifikasi pada sistem IPPTI. Keabsahan hukum dokumen fisik tetap mengacu pada cap basah, tanda tangan penerjemah tersumpah, dan ketentuan peraturan perundang-undangan yang berlaku.
                         </p>
 
                         <!-- Hologram Stamp Watermark Bottom-Right -->
-                        <div class="absolute right-0 bottom-0 opacity-80 pointer-events-none">
-                            <div class="w-16 h-16 rounded-full border-2 border-slate-300 bg-gradient-to-tr from-amber-100 via-emerald-100 to-blue-100 flex items-center justify-center shadow-xs">
-                                <span class="text-[9px] font-black text-[#1E3A8A] tracking-wider">IPPTI</span>
+                        <div class="absolute right-0 bottom-0 opacity-85 pointer-events-none">
+                            <div class="w-14 h-14 rounded-full border-2 border-slate-300 bg-gradient-to-tr from-amber-100 via-emerald-100 to-blue-100 flex items-center justify-center shadow-xs">
+                                <span class="text-[8.5px] font-black text-[#1E3A8A] tracking-wider">IPPTI</span>
                             </div>
                         </div>
                     </div>
 
                     <!-- Footer Bar -->
-                    <div class="pt-3 border-t-2 border-[#1E3A8A]/20 flex flex-col sm:flex-row items-center justify-between gap-2 text-[9px] text-slate-600">
-                        <div class="flex items-center gap-2">
-                            <img src="/ippti-logo.jpg" alt="IPPTI Logo" crossorigin="anonymous" class="h-5 w-auto" />
+                    <div class="pt-2 border-t-2 border-[#1E3A8A]/20 flex flex-row items-center justify-between gap-2 text-[8.5px] text-slate-600">
+                        <div class="flex items-center gap-1.5">
+                            <img src="/ippti-logo.jpg" alt="IPPTI Logo" class="h-4.5 w-auto" />
                             <span class="font-bold text-[#1E3A8A]" id="cert-footer-org-bottom">IPPTI – Ikatan Penerjemah dan Pengalih Bahasa Tersumpah di Indonesia</span>
                         </div>
-                        <div class="flex items-center gap-3 font-semibold dir-ltr" dir="ltr">
-                            <span class="flex items-center gap-1"><i data-lucide="globe" class="w-3 h-3 text-[#1E3A8A]"></i> ippti.or.id</span>
-                            <span class="flex items-center gap-1"><i data-lucide="mail" class="w-3 h-3 text-[#1E3A8A]"></i> info@ippti.or.id</span>
-                            <span class="flex items-center gap-1"><i data-lucide="phone" class="w-3 h-3 text-[#1E3A8A]"></i> +62 811 8117 0118</span>
+                        <div class="flex items-center gap-2.5 font-semibold dir-ltr" dir="ltr">
+                            <span class="flex items-center gap-0.5"><i data-lucide="globe" class="w-2.5 h-2.5 text-[#1E3A8A]"></i> ippti.or.id</span>
+                            <span class="flex items-center gap-0.5"><i data-lucide="mail" class="w-2.5 h-2.5 text-[#1E3A8A]"></i> info@ippti.or.id</span>
+                            <span class="flex items-center gap-0.5"><i data-lucide="phone" class="w-2.5 h-2.5 text-[#1E3A8A]"></i> +62 811 8117 0118</span>
                         </div>
                     </div>
 
@@ -375,7 +380,7 @@
         </div>
 
         <!-- Action Buttons (no-print) -->
-        <div class="flex flex-col sm:flex-row gap-4 w-full max-w-2xl no-print mb-8">
+        <div class="flex flex-col sm:flex-row gap-4 w-full max-w-[760px] no-print mb-8">
             <button id="btn-download-pdf" onclick="downloadPDF()" class="flex-1 flex items-center justify-center gap-2 py-3.5 px-6 bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl text-sm font-bold transition shadow-md hover:shadow-lg cursor-pointer active:scale-[0.98]">
                 <i data-lucide="download" class="w-4.5 h-4.5 text-white"></i>
                 <span>Download E-Sertifikat PDF (A4)</span>
@@ -629,29 +634,29 @@
 
             if (isArchived) {
                 if (badgeText) badgeText.innerText = t.badge_cancelled;
-                if (statusBadge) statusBadge.className = "w-12 h-12 bg-[#DC2626] text-white rounded-xl flex flex-col items-center justify-center flex-shrink-0 shadow-sm";
+                if (statusBadge) statusBadge.className = "w-11 h-11 bg-[#DC2626] text-white rounded-xl flex flex-col items-center justify-center flex-shrink-0 shadow-xs";
                 if (badgeIcon) badgeIcon.setAttribute('data-lucide', 'alert-triangle');
-                if (noticeBox) noticeBox.className = "flex items-center gap-4 p-2 text-left bg-rose-50/80 rounded-xl border border-rose-200";
-                if (noticeIconBg) noticeIconBg.className = "w-14 h-14 bg-[#DC2626] text-white rounded-2xl flex items-center justify-center flex-shrink-0 shadow-md ring-4 ring-rose-500/20";
-                if (certValStatus) certValStatus.className = "font-extrabold uppercase text-xs text-rose-600";
-                if (certBannerBar) certBannerBar.className = "bg-[#DC2626] text-white p-3 rounded-xl flex flex-col sm:flex-row items-center justify-between gap-2 shadow-sm";
+                if (noticeBox) noticeBox.className = "flex items-center gap-3 p-2 text-left bg-rose-50/80 rounded-xl border border-rose-200";
+                if (noticeIconBg) noticeIconBg.className = "w-11 h-11 bg-[#DC2626] text-white rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm ring-2 ring-rose-500/20";
+                if (certValStatus) certValStatus.className = "font-extrabold uppercase text-[11px] text-rose-600";
+                if (certBannerBar) certBannerBar.className = "bg-[#DC2626] text-white p-2.5 rounded-xl flex flex-row items-center justify-between gap-2 shadow-xs";
                 if (certBannerText) certBannerText.innerText = "REVOKED";
                 if (certStatusCheck) {
                     certStatusCheck.setAttribute('data-lucide', 'x-circle');
-                    certStatusCheck.className = "w-4 h-4 text-rose-600";
+                    certStatusCheck.className = "w-3.5 h-3.5 text-rose-600";
                 }
             } else {
                 if (badgeText) badgeText.innerText = t.badge_verified;
-                if (statusBadge) statusBadge.className = "w-12 h-12 bg-[#16A34A] text-white rounded-xl flex flex-col items-center justify-center flex-shrink-0 shadow-sm";
+                if (statusBadge) statusBadge.className = "w-11 h-11 bg-[#16A34A] text-white rounded-xl flex flex-col items-center justify-center flex-shrink-0 shadow-xs";
                 if (badgeIcon) badgeIcon.setAttribute('data-lucide', 'check-circle-2');
-                if (noticeBox) noticeBox.className = "flex items-center gap-4 p-2 text-left bg-emerald-50/70 rounded-xl border border-emerald-200/90";
-                if (noticeIconBg) noticeIconBg.className = "w-14 h-14 bg-[#16A34A] text-white rounded-2xl flex items-center justify-center flex-shrink-0 shadow-md ring-4 ring-emerald-500/20";
-                if (certValStatus) certValStatus.className = "font-extrabold uppercase text-xs text-[#16A34A]";
-                if (certBannerBar) certBannerBar.className = "bg-[#16A34A] text-white p-3 rounded-xl flex flex-col sm:flex-row items-center justify-between gap-2 shadow-sm";
+                if (noticeBox) noticeBox.className = "flex items-center gap-3 p-2 text-left bg-emerald-50/70 rounded-xl border border-emerald-200/90";
+                if (noticeIconBg) noticeIconBg.className = "w-11 h-11 bg-[#16A34A] text-white rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm ring-2 ring-emerald-500/20";
+                if (certValStatus) certValStatus.className = "font-extrabold uppercase text-[11px] text-[#16A34A]";
+                if (certBannerBar) certBannerBar.className = "bg-[#16A34A] text-white p-2.5 rounded-xl flex flex-row items-center justify-between gap-2 shadow-xs";
                 if (certBannerText) certBannerText.innerText = "VERIFIED";
                 if (certStatusCheck) {
                     certStatusCheck.setAttribute('data-lucide', 'check-circle-2');
-                    certStatusCheck.className = "w-4 h-4 text-[#16A34A]";
+                    certStatusCheck.className = "w-3.5 h-3.5 text-[#16A34A]";
                 }
             }
 
@@ -681,7 +686,7 @@
             const originalBtnHTML = btn ? btn.innerHTML : '';
             if (btn) {
                 btn.disabled = true;
-                btn.innerHTML = '<div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div><span>Menyiapkan E-Sertifikat PDF...</span>';
+                btn.innerHTML = '<div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div><span>Menyiapkan E-Sertifikat PDF (A4)...</span>';
             }
 
             const docId = "{{ $document ? $document->document_id : 'doc' }}";
@@ -704,14 +709,14 @@
                     filename:     filename,
                     image:        { type: 'jpeg', quality: 0.98 },
                     html2canvas:  { 
-                        scale: 2.5, 
+                        scale: 2, 
                         useCORS: true, 
                         allowTaint: true,
                         logging: false,
-                        windowWidth: 1024
+                        windowWidth: 800
                     },
                     jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
-                    pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }
+                    pagebreak:    { mode: ['avoid-all'] }
                 };
 
                 await html2pdf().set(opt).from(element).save();
