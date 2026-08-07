@@ -14,7 +14,7 @@ use App\Models\AuditLog;
 class PaymentController extends Controller
 {
     /**
-     * Create iPaymu Payment Session for Translator Self-Service Topup
+     * Create Payment Session for Translator Self-Service Topup (Xenith Pay Sandbox / Production)
      */
     public function createPayment(Request $request)
     {
@@ -50,11 +50,11 @@ class PaymentController extends Controller
     }
 
     /**
-     * Internal helper to build iPaymu payment request
+     * Internal helper to build Xenith Pay payment link checkout request
      */
     private function processGatewayCheckout($user, $trxNo, $amount, $points, $productName, $orderType = 'topup')
     {
-        // Create topup order (Ledger Architecture)
+        // 1. Create topup order (Ledger Architecture)
         $topupOrder = TopupOrder::create([
             'order_id' => $trxNo,
             'user_id' => $user->id,
@@ -62,11 +62,11 @@ class PaymentController extends Controller
             'points_issued' => $points,
             'conversion_rate' => 1.00,
             'status' => 'pending',
-            'payment_gateway' => 'ipaymu',
+            'payment_gateway' => 'xenith',
             'metadata' => json_encode(['order_type' => $orderType]),
         ]);
 
-        // Create legacy payment transaction for compatibility
+        // 2. Create payment transaction for legacy compatibility
         $transaction = PaymentTransaction::create([
             'transaction_no' => $trxNo,
             'user_id' => $user->id,
@@ -75,14 +75,14 @@ class PaymentController extends Controller
             'status' => 'pending',
         ]);
 
-        // Fetch iPaymu configuration
-        $va = config('services.ipaymu.va') ?: env('IPAYMU_VA', '');
-        $apiKey = config('services.ipaymu.api_key') ?: env('IPAYMU_API_KEY', '');
-        $env = config('services.ipaymu.env') ?: env('IPAYMU_ENV', 'sandbox');
+        // 3. Fetch Xenith Pay configuration
+        $accessKey = config('services.xenith.access_key') ?: env('XENITH_ACCESS_KEY', 'ak-9ec9d28a3464154019f281404d6393b814bb0f14ad2981533999ad7cd22e1b88');
+        $secretKey = config('services.xenith.secret_key') ?: env('XENITH_SECRET_KEY', 'sk-f5d8181853248796c878203d8a276a5bbb4be3a91d422b087dc8e142d2bbe6e9b048e381afd4cd91f2cddad9b785a1ac5503cf98bf70cc1609ccb4af6870656e');
+        $env = config('services.xenith.env') ?: env('XENITH_ENV', 'sandbox');
 
-        // Check if iPaymu credentials are configured
-        if (empty($va) || empty($apiKey)) {
-            $simulatedUrl = url('/ipaymu/return?trx_no=' . $trxNo . '&simulated=true');
+        // Check if Xenith credentials are configured
+        if (empty($accessKey) || empty($secretKey)) {
+            $simulatedUrl = url('/xenith/return?trx_no=' . $trxNo . '&simulated=true');
             
             $transaction->update([
                 'payment_url' => $simulatedUrl,
@@ -93,61 +93,61 @@ class PaymentController extends Controller
                 'success' => true,
                 'payment_url' => $simulatedUrl,
                 'is_simulated' => true,
-                'message' => 'Simulasi Pembayaran (Kredensial iPaymu belum dikonfigurasi di admin).',
+                'message' => 'Simulasi Pembayaran (Kredensial Xenith Pay belum dikonfigurasi di admin).',
             ]);
         }
 
-        $baseUrl = strtolower($env) === 'production'
-            ? 'https://api.ipaymu.com/api/v2/payment'
-            : 'https://sandbox.ipaymu.com/api/v2/payment';
+        $isProduction = strtolower($env) === 'production';
+        $baseUrl = $isProduction ? 'https://openapi.xenithpay.com' : 'https://openapi.sandbox.xenithpay.com';
+        $endpoint = '/v1/payment-links';
+        $fullUrl = $baseUrl . $endpoint;
 
         $appUrl = url('/');
-        $returnUrl = $appUrl . '/ipaymu/return?trx_no=' . $trxNo;
-        $notifyUrl = $appUrl . '/ipaymu/callback';
-        $cancelUrl = $appUrl . '/admin';
+        $redirectUrl = $appUrl . '/xenith/return?trx_no=' . $trxNo;
+        $callbackUrl = $appUrl . '/xenith/callback';
 
-        $body = [
-            'product' => [$productName . ' (' . number_format($points, 0, ',', '.') . ' Poin)'],
-            'qty' => [1],
-            'price' => [$amount],
-            'amount' => $amount,
-            'returnUrl' => $returnUrl,
-            'notifyUrl' => $notifyUrl,
-            'cancelUrl' => $cancelUrl,
-            'referenceId' => $trxNo,
-            'buyerName' => $user->name,
-            'buyerEmail' => $user->email,
-            'buyerPhone' => $user->whatsapp ?: '08123456789',
+        $payload = [
+            'amount' => (int)$amount,
+            'currency' => 'IDR',
+            'referenceCode' => $trxNo,
+            'customerReference' => (string)$user->id,
+            'customerName' => substr($user->name ?: 'Penerjemah IPPTI', 0, 50),
+            'customerPhoneNumber' => $user->whatsapp ?: '08123456789',
+            'redirectUrl' => $redirectUrl,
+            'paymentLinkCallbackUrl' => $callbackUrl,
+            'payinCallbackUrl' => $callbackUrl,
         ];
 
-        $jsonBody = json_encode($body, JSON_UNESCAPED_SLASHES);
-        $bodyHash = strtolower(hash('sha256', $jsonBody));
-        $stringToSign = 'POST:' . trim($va) . ':' . $bodyHash . ':' . trim($apiKey);
-        $signature = hash_hmac('sha256', $stringToSign, trim($apiKey));
+        $jsonBody = json_encode($payload, JSON_UNESCAPED_SLASHES);
+        $timestamp = gmdate('Y-m-d\TH:i:s.v\Z');
+        
+        // Build signature: METHOD + "\n" + URI + "\n" + TIMESTAMP + "\n" + BODY
+        $signaturePayload = "POST\n" . $endpoint . "\n" . $timestamp . "\n" . $jsonBody;
+        $signature = base64_encode(hash_hmac('sha256', $signaturePayload, trim($secretKey), true));
 
         try {
             $response = Http::withHeaders([
                 'Accept' => 'application/json',
                 'Content-Type' => 'application/json',
-                'va' => trim($va),
-                'signature' => $signature,
-                'timestamp' => date('YmdHis'),
-            ])->post($baseUrl, $body);
+                'Xenith-Api-Key' => trim($accessKey),
+                'Xenith-Request-Timestamp' => $timestamp,
+                'Xenith-Request-Signature' => $signature,
+                'X-Idempotency-Key' => $trxNo,
+            ])->withBody($jsonBody, 'application/json')->post($fullUrl);
 
             $resData = $response->json();
 
-            if ($response->successful() && isset($resData['Data']['Url'])) {
-                $paymentUrl = $resData['Data']['Url'];
-                $sessionId = $resData['Data']['SessionID'] ?? null;
+            if ($response->successful() && isset($resData['data']['paymentLinkUrl'])) {
+                $paymentUrl = $resData['data']['paymentLinkUrl'];
+                $sessionId = $resData['data']['id'] ?? $trxNo;
 
                 $transaction->update([
                     'payment_url' => $paymentUrl,
                     'session_id' => $sessionId,
-                    'ipaymu_trx_id' => $resData['Data']['TransactionId'] ?? null,
                 ]);
 
                 $topupOrder->update([
-                    'metadata' => json_encode(array_merge(['order_type' => $orderType], $resData['Data'] ?? [])),
+                    'metadata' => json_encode(array_merge(['order_type' => $orderType, 'gateway' => 'xenith'], $resData['data'] ?? [])),
                 ]);
 
                 return response()->json([
@@ -155,36 +155,37 @@ class PaymentController extends Controller
                     'payment_url' => $paymentUrl,
                 ]);
             } else {
-                $errMsg = $resData['Message'] ?? ($resData['message'] ?? 'Gagal menghubungi server iPaymu.');
+                $errMsg = $resData['message'] ?? ($resData['error']['message'] ?? 'Gagal membuat tautan pembayaran Xenith Pay.');
                 return response()->json([
                     'success' => false,
-                    'error' => 'Respons iPaymu: ' . $errMsg,
+                    'error' => 'Respons Xenith Pay: ' . $errMsg,
+                    'details' => $resData,
                 ], 400);
             }
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'error' => 'Gagal menghubungkan ke iPaymu: ' . $e->getMessage(),
+                'error' => 'Gagal menghubungkan ke Xenith Pay: ' . $e->getMessage(),
             ], 500);
         }
     }
 
     /**
-     * Webhook Callback from iPaymu (/ipaymu/callback)
+     * Webhook Callback from Xenith Pay (/xenith/callback)
      * Handles idempotency & Pro Activation via point_transactions
      */
-    public function handleCallback(Request $request)
+    public function handleXenithCallback(Request $request)
     {
-        $trxNo = $request->input('reference_id') ?? $request->input('referenceId');
-        $status = strtolower((string)($request->input('status') ?? $request->input('trx_status') ?? ''));
-        $statusNo = $request->input('status_code') ?? $request->input('status');
+        $data = $request->input('data', []);
+        $refCode = $data['referenceCode'] ?? $request->input('referenceCode') ?? $request->input('reference_id');
+        $status = strtoupper((string)($data['status'] ?? $request->input('status', '')));
 
-        if (!$trxNo) {
-            return response()->json(['status' => false, 'message' => 'Reference ID missing'], 400);
+        if (!$refCode) {
+            return response()->json(['status' => false, 'message' => 'Reference Code missing'], 400);
         }
 
-        $topupOrder = TopupOrder::where('order_id', $trxNo)->first();
-        $transaction = PaymentTransaction::where('transaction_no', $trxNo)->first();
+        $topupOrder = TopupOrder::where('order_id', $refCode)->first();
+        $transaction = PaymentTransaction::where('transaction_no', $refCode)->first();
 
         if (!$topupOrder && !$transaction) {
             return response()->json(['status' => false, 'message' => 'Transaction order not found'], 404);
@@ -193,8 +194,8 @@ class PaymentController extends Controller
         $userId = $topupOrder ? $topupOrder->user_id : $transaction->user_id;
         $points = $topupOrder ? $topupOrder->points_issued : $transaction->points;
 
-        $isSuccess = in_array($status, ['berhasil', 'paid', 'success', 'settlement']) || $statusNo == 200 || $statusNo == 1;
-        $channel = $request->input('via') ?? $request->input('channel') ?? 'iPaymu';
+        $isSuccess = in_array($status, ['COMPLETED', 'SUCCESS', 'PAID']);
+        $channel = $data['paymentChannel'] ?? $data['paymentMethod'] ?? 'Xenith Pay';
         $rawPayload = json_encode($request->all());
 
         if ($isSuccess) {
@@ -208,7 +209,6 @@ class PaymentController extends Controller
             if ($transaction) {
                 $transaction->update([
                     'status' => 'paid',
-                    'ipaymu_trx_id' => $request->input('trx_id') ?? $transaction->ipaymu_trx_id,
                     'payment_method' => $channel,
                 ]);
             }
@@ -220,43 +220,51 @@ class PaymentController extends Controller
                     $user->update(['user_level' => 'pro']);
                 }
 
-                $idempotencyKey = 'topup_order_' . $trxNo;
+                $idempotencyKey = 'topup_order_' . $refCode;
                 $user->creditPoints(
                     $points,
-                    'Topup Poin via iPaymu (' . $trxNo . ')',
+                    'Topup Poin via Xenith Pay (' . $refCode . ')',
                     'topup',
-                    $trxNo,
+                    $refCode,
                     $idempotencyKey,
                     ['channel' => $channel, 'raw_response' => $request->all()]
                 );
 
                 AuditLog::log(
-                    'IPAYMU_TOPUP_PAID',
+                    'XENITH_TOPUP_PAID',
                     TopupOrder::class,
                     $topupOrder ? $topupOrder->id : $transaction->id,
                     [],
-                    ['points' => $user->points, 'added' => $points, 'user_level' => $user->user_level, 'trx_no' => $trxNo]
+                    ['points' => $user->points, 'added' => $points, 'user_level' => $user->user_level, 'trx_no' => $refCode]
                 );
             }
 
             return response()->json(['status' => true, 'message' => 'Payment successfully credited']);
         } else {
             if ($topupOrder) {
-                $topupOrder->update(['status' => 'failed', 'payment_response_text' => $rawPayload]);
+                $topupOrder->update(['status' => strtolower($status) ?: 'failed', 'payment_response_text' => $rawPayload]);
             }
             if ($transaction) {
-                $transaction->update(['status' => 'failed']);
+                $transaction->update(['status' => strtolower($status) ?: 'failed']);
             }
-            return response()->json(['status' => true, 'message' => 'Transaction marked as failed']);
+            return response()->json(['status' => true, 'message' => 'Transaction status updated to ' . $status]);
         }
     }
 
     /**
-     * Return Page after payment (/ipaymu/return)
+     * Legacy Callback for iPaymu (/ipaymu/callback)
      */
-    public function handleReturn(Request $request)
+    public function handleCallback(Request $request)
     {
-        $trxNo = $request->input('trx_no') ?? $request->input('reference_id');
+        return $this->handleXenithCallback($request);
+    }
+
+    /**
+     * Return Page after payment (/xenith/return)
+     */
+    public function handleXenithReturn(Request $request)
+    {
+        $trxNo = $request->input('trx_no') ?? $request->input('referenceCode') ?? $request->input('reference_id');
         $isSimulated = $request->boolean('simulated');
 
         $transaction = null;
@@ -288,7 +296,7 @@ class PaymentController extends Controller
                 $idempotencyKey = 'topup_order_' . $trxNo;
                 $user->creditPoints(
                     $transaction->points,
-                    'Simulasi Topup Poin via iPaymu (' . $trxNo . ')',
+                    'Simulasi Topup Poin via Xenith Pay (' . $trxNo . ')',
                     'topup',
                     $trxNo,
                     $idempotencyKey,
@@ -296,7 +304,7 @@ class PaymentController extends Controller
                 );
 
                 AuditLog::log(
-                    'SIMULATED_TOPUP_PAID',
+                    'SIMULATED_XENITH_TOPUP_PAID',
                     PaymentTransaction::class,
                     $transaction->id ?? 0,
                     [],
@@ -312,5 +320,13 @@ class PaymentController extends Controller
         }
 
         return view('payment.return', compact('transaction', 'isSimulated'));
+    }
+
+    /**
+     * Legacy Return Page for iPaymu (/ipaymu/return)
+     */
+    public function handleReturn(Request $request)
+    {
+        return $this->handleXenithReturn($request);
     }
 }

@@ -41,4 +41,10 @@ return [
         'env' => env('IPAYMU_ENV', 'sandbox'),
     ],
 
+    'xenith' => [
+        'access_key' => env('XENITH_ACCESS_KEY', 'ak-9ec9d28a3464154019f281404d6393b814bb0f14ad2981533999ad7cd22e1b88'),
+        'secret_key' => env('XENITH_SECRET_KEY', 'sk-f5d8181853248796c878203d8a276a5bbb4be3a91d422b087dc8e142d2bbe6e9b048e381afd4cd91f2cddad9b785a1ac5503cf98bf70cc1609ccb4af6870656e'),
+        'env' => env('XENITH_ENV', 'sandbox'),
+    ],
+
 ];

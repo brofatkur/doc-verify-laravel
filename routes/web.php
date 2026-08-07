@@ -86,11 +86,18 @@ Route::middleware('auth')->group(function () {
     Route::get('/admin/transactions', [AdminController::class, 'transactions']);
     Route::post('/payment/pro-upgrade/create', [PaymentController::class, 'createProUpgradePayment']);
 
-    // iPaymu Settings & Self-Service Payment
+    // Payment Gateway Checkout & Settings (Xenith Pay & Legacy iPaymu)
     Route::post('/admin/settings/ipaymu', [AdminController::class, 'updateIpaymuSettings']);
     Route::post('/payment/ipaymu/create', [PaymentController::class, 'createPayment']);
+    Route::post('/payment/xenith/create', [PaymentController::class, 'createPayment']);
+    Route::post('/payment/checkout', [PaymentController::class, 'createPayment']);
 });
 
-// iPaymu Webhook Callback & Return
+// Xenith Pay Webhook Callback & Return Page
+Route::post('/xenith/callback', [PaymentController::class, 'handleXenithCallback']);
+Route::get('/xenith/return', [PaymentController::class, 'handleXenithReturn']);
+
+// Legacy iPaymu Webhook Callback & Return Page (Backwards Compatibility)
 Route::post('/ipaymu/callback', [PaymentController::class, 'handleCallback']);
 Route::get('/ipaymu/return', [PaymentController::class, 'handleReturn']);
+

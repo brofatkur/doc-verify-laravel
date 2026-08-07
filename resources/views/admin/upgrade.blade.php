@@ -119,7 +119,7 @@
             <div class="pt-2 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4">
                 <div class="text-xs text-slate-500">
                     <p class="font-semibold text-slate-700">Metode Pembayaran Online Resmi:</p>
-                    <p>QRIS, Virtual Account BCA/Mandiri/BNI/BRI, E-Wallet & CC (via iPaymu)</p>
+                    <p>QRIS, Virtual Account BCA/Mandiri/BNI/BRI, E-Wallet & CC (via Xenith Pay Sandbox)</p>
                 </div>
                 <button
                     type="button"
@@ -191,10 +191,10 @@
         }
 
         btn.disabled = true;
-        btn.innerHTML = '<div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div> <span>Menyiapkan Tagihan iPaymu...</span>';
+        btn.innerHTML = '<div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div> <span>Menyiapkan Tagihan Xenith Pay...</span>';
 
         try {
-            const response = await fetch('/payment/ipaymu/create', {
+            const response = await fetch('/payment/xenith/create', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

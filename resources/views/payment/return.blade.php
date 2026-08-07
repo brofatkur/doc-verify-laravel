@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Status Pembayaran iPaymu')
+@section('title', 'Status Pembayaran Xenith Pay')
 
 @section('content')
 <div class="max-w-xl mx-auto py-10 space-y-6">
@@ -35,7 +35,7 @@
                 </div>
                 <div class="flex justify-between items-center py-1">
                     <span class="text-slate-500 font-medium">Waktu Selesai</span>
-                    <span class="text-slate-700 font-semibold">{{ $transaction->updated_at->format('d/m/Y H:i') }} WIB</span>
+                    <span class="text-slate-700 font-semibold">{{ is_object($transaction->updated_at) ? $transaction->updated_at->format('d/m/Y H:i') : now()->format('d/m/Y H:i') }} WIB</span>
                 </div>
             </div>
         @elseif($transaction && $transaction->status === 'pending')
@@ -45,12 +45,12 @@
             
             <div class="space-y-2">
                 <h1 class="text-2xl font-black text-slate-900">Menunggu Pembayaran</h1>
-                <p class="text-slate-600 text-sm">Transaksi Anda sedang menunggu konfirmasi pembayaran dari iPaymu.</p>
+                <p class="text-slate-600 text-sm">Transaksi Anda sedang menunggu konfirmasi pembayaran dari Xenith Pay.</p>
             </div>
 
             <div class="bg-amber-50/70 border border-amber-200 rounded-xl p-4 text-left text-xs space-y-2">
                 <p class="font-bold text-amber-900">Nomor Transaksi: <span class="font-mono">{{ $transaction->transaction_no }}</span></p>
-                <p class="text-amber-800">Silakan selesaikan pembayaran sesuai petunjuk pada iPaymu. Poin akan bertambah secara otomatis begitu pembayaran diterima.</p>
+                <p class="text-amber-800">Silakan selesaikan pembayaran sesuai petunjuk pada Xenith Pay. Poin akan bertambah secara otomatis begitu pembayaran diterima.</p>
             </div>
         @else
             <div class="w-16 h-16 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center mx-auto shadow-sm">
