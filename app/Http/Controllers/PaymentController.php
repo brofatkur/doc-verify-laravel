@@ -151,6 +151,13 @@ class PaymentController extends Controller
                 ?? $resData['paymentLinkUrl'] 
                 ?? null;
 
+            // If relative URL or if custom domain https://ippti.sandbox.pymnt.global is used
+            if (!empty($paymentUrl) && str_starts_with($paymentUrl, '/')) {
+                $paymentUrl = 'https://ippti.sandbox.pymnt.global' . $paymentUrl;
+            } elseif (empty($paymentUrl) && !empty($resData['data']['id'])) {
+                $paymentUrl = 'https://ippti.sandbox.pymnt.global/checkout/' . $resData['data']['id'];
+            }
+
             if ($response->successful() && !empty($paymentUrl)) {
                 $sessionId = $resData['data']['id'] ?? $trxNo;
 
