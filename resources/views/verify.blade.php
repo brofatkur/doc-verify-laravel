@@ -118,133 +118,120 @@
             </div>
         </div>
 
-        <!-- E-Certificate Card Container (Exact Mockup Match & Fits 1 Page A4) -->
+        <!-- E-Certificate Card Container (Official Professional Executive A4 Template) -->
         <div class="w-full max-w-[760px] mb-6">
-            <div id="pdf-card" class="bg-white p-5 rounded-2xl guilloche-border relative shadow-2xl overflow-hidden font-sans text-slate-800 w-full max-w-[760px] mx-auto">
+            <div id="pdf-card" class="bg-white p-5 sm:p-6 rounded-2xl guilloche-border relative shadow-2xl overflow-hidden font-sans text-slate-800 w-full max-w-[760px] mx-auto">
                 
                 <!-- Watermark Background Logo -->
-                <div class="absolute inset-0 flex items-center justify-center opacity-[0.04] pointer-events-none z-0">
+                <div class="absolute inset-0 flex items-center justify-center opacity-[0.035] pointer-events-none z-0">
                     <img src="/ippti-logo.jpg" alt="Watermark" class="w-80 h-auto grayscale" />
                 </div>
 
                 <div class="relative z-10 space-y-3">
 
-                    <!-- Header Row: Logo Left, Title & Green Badge Right -->
-                    <div class="flex flex-row justify-between items-center gap-3 border-b-2 border-[#1E3A8A]/20 pb-3">
-                        <!-- Left Logo & Organization Info -->
+                    <!-- Header Row: 1 Logo Left + Organization Name, Title & Certificate ID Right -->
+                    <div class="flex flex-row justify-between items-center gap-4 border-b-2 border-[#1E3A8A]/20 pb-3">
+                        <!-- Left Single Logo & Organization Name -->
                         <div class="flex items-center gap-3 text-left">
-                            <img src="/ippti-logo.jpg" alt="IPPTI Logo" class="h-14 w-auto object-contain flex-shrink-0" style="height: 56px; max-height: 56px; width: auto;" />
+                            <img src="/ippti-logo.jpg" alt="IPPTI Logo" class="h-14 w-auto object-contain flex-shrink-0" style="height: 54px; max-height: 54px; width: auto;" />
                             <div>
                                 <h2 class="text-2xl font-black text-[#1E3A8A] tracking-tight leading-none">IPPTI</h2>
-                                <p class="text-[8.5px] font-bold text-[#1E3A8A] uppercase tracking-wide mt-0.5 max-w-[210px] leading-tight" id="cert-header-org">
+                                <p class="text-[8.5px] font-extrabold text-[#1E3A8A] uppercase tracking-wide mt-0.5 max-w-[210px] leading-tight" id="cert-header-org">
                                     IKATAN PENERJEMAH DAN PENGALIH BAHASA TERSUMPAH DI INDONESIA
                                 </p>
                             </div>
                         </div>
 
-                        <!-- Right Certificate Title & Green Badge -->
+                        <!-- Right Certificate Title, Certificate ID & Status Badge -->
                         <div class="flex items-start gap-3 text-right">
                             <div>
                                 <h1 class="text-lg font-black text-[#1E3A8A] tracking-tight leading-none" id="cert-title">E-CERTIFICATE</h1>
                                 <p class="text-xs font-black text-[#F59E0B] tracking-wider uppercase mt-0.5" id="cert-subtitle">HASIL VERIFIKASI</p>
-                                <p class="text-[8.5px] font-bold text-[#1E3A8A] tracking-wider uppercase" id="cert-desc">DOKUMEN TERJEMAHAN TERSUMPAH</p>
+                                <p class="text-[10px] font-bold font-mono text-slate-600 mt-1 notranslate" translate="no">Certificate ID: <strong class="text-slate-900 font-extrabold">{{ $document->document_id }}</strong></p>
                             </div>
 
-                            <!-- Verified Square Badge -->
-                            <div id="cert-status-badge" class="w-11 h-11 bg-[#16A34A] text-white rounded-xl flex flex-col items-center justify-center flex-shrink-0 shadow-xs">
-                                <i id="cert-badge-icon" data-lucide="check-circle-2" class="w-5 h-5 stroke-[2.5]"></i>
-                                <span id="cert-badge-text" class="text-[7.5px] font-black tracking-wider uppercase mt-0.5">VERIFIED</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Certificate ID Sub-Header Box (Right Aligned) -->
-                    <div class="flex justify-end items-center gap-2 pt-0.5">
-                        <div class="text-right">
-                            <span class="text-[8px] font-bold text-slate-400 uppercase tracking-widest block mb-0.5">CERTIFICATE ID</span>
-                            <div class="inline-block bg-white border-2 border-slate-300 px-4 py-1 rounded-xl shadow-xs">
-                                <span class="text-xs font-black font-mono text-slate-900 tracking-wider notranslate leading-none" translate="no">{{ $document->document_id }}</span>
+                            <!-- Verified Square Badge (Compact & Elegant) -->
+                            <div id="cert-status-badge" class="w-9 h-9 bg-[#16A34A] text-white rounded-lg flex flex-col items-center justify-center flex-shrink-0 shadow-xs">
+                                <i id="cert-badge-icon" data-lucide="check-circle-2" class="w-4.5 h-4.5 stroke-[2.5]"></i>
+                                <span id="cert-badge-text" class="text-[7px] font-black tracking-wider uppercase mt-0.5">VERIFIED</span>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Hero Verification Notice Section -->
-                    <div id="cert-notice-box" class="flex items-center gap-3 p-2.5 text-left bg-emerald-50/70 rounded-xl border border-emerald-200/90">
-                        <div id="cert-notice-icon-bg" class="w-11 h-11 bg-[#16A34A] text-white rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm ring-2 ring-emerald-500/20">
-                            <i id="cert-notice-icon" data-lucide="shield-check" class="w-7 h-7"></i>
+                    <!-- Compact Verification Notice Banner Section -->
+                    <div id="cert-notice-box" class="flex items-center gap-3 p-2 px-3 text-left bg-emerald-50/70 rounded-lg border border-emerald-200/90">
+                        <div id="cert-notice-icon-bg" class="w-8 h-8 bg-[#16A34A] text-white rounded-lg flex items-center justify-center flex-shrink-0 shadow-xs">
+                            <i id="cert-notice-icon" data-lucide="shield-check" class="w-5 h-5"></i>
                         </div>
                         <div>
-                            <h3 class="font-black text-xs sm:text-sm text-[#16A34A] uppercase tracking-wide leading-tight" id="cert-notice-title">DOKUMEN TELAH DIVERIFIKASI</h3>
-                            <p class="text-[10.5px] text-slate-600 font-medium leading-normal mt-0.5" id="cert-notice-desc">
+                            <h3 class="font-black text-xs text-[#16A34A] uppercase tracking-wide leading-tight" id="cert-notice-title">DOKUMEN TELAH DIVERIFIKASI</h3>
+                            <p class="text-[10px] text-slate-600 font-medium leading-normal mt-0.5" id="cert-notice-desc">
                                 Dokumen terjemahan ini telah berhasil diverifikasi melalui sistem resmi IPPTI dan dinyatakan sebagai dokumen terjemahan tersumpah yang sah sesuai data registrasi.
                             </p>
                         </div>
                     </div>
 
-                    <!-- DATA VERIFIKASI Section Box -->
-                    <div class="border border-slate-300 rounded-xl p-3.5 bg-white/90 space-y-2">
-                        <div class="inline-block bg-[#1E3A8A] text-white px-3 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider shadow-xs" id="cert-data-title">
+                    <!-- DATA VERIFIKASI Section Box (Disciplined 2-Column Alignment) -->
+                    <div class="border border-slate-300 rounded-xl p-3 px-3.5 bg-white/90 space-y-1.5">
+                        <div class="inline-block bg-[#1E3A8A] text-white px-2.5 py-0.5 rounded text-[8.5px] font-black uppercase tracking-wider shadow-xs" id="cert-data-title">
                             DATA VERIFIKASI
                         </div>
 
-                        <div class="divide-y divide-slate-100 text-[11px] pt-1">
+                        <div class="divide-y divide-slate-100 text-[11px] pt-0.5">
                             <div class="py-1.5 flex items-center justify-between">
-                                <div class="flex items-center gap-2 text-slate-600">
-                                    <i data-lucide="file-text" class="w-3.5 h-3.5 text-slate-400"></i>
-                                    <span class="font-semibold text-slate-600" id="cert-label-reg-no">Nomor Registrasi</span>
-                                </div>
+                                <span class="font-semibold text-slate-600" id="cert-label-reg-no">Nomor Registrasi</span>
                                 <span class="font-black font-mono text-slate-900 text-xs notranslate leading-snug" translate="no">{{ $document->registration_number }}</span>
                             </div>
 
                             <div class="py-1.5 flex items-center justify-between">
-                                <div class="flex items-center gap-2 text-slate-600">
-                                    <i data-lucide="id-card" class="w-3.5 h-3.5 text-slate-400"></i>
-                                    <span class="font-semibold text-slate-600" id="cert-label-doc-id">ID Dokumen</span>
-                                </div>
+                                <span class="font-semibold text-slate-600" id="cert-label-doc-id">ID Dokumen</span>
                                 <span class="font-black font-mono text-slate-900 text-xs notranslate leading-snug" translate="no">{{ $document->document_id }}</span>
                             </div>
 
                             <div class="py-1.5 flex items-center justify-between">
-                                <div class="flex items-center gap-2 text-slate-600">
-                                    <i data-lucide="shield" class="w-3.5 h-3.5 text-slate-400"></i>
-                                    <span class="font-semibold text-slate-600" id="cert-label-status">Status Verifikasi</span>
-                                </div>
+                                <span class="font-semibold text-slate-600" id="cert-label-status">Status Verifikasi</span>
                                 <div class="flex items-center gap-1">
-                                    <span class="font-extrabold uppercase text-[11px] leading-snug" id="cert-value-status">VERIFIED</span>
+                                    <span class="font-extrabold uppercase text-[11px] text-[#16A34A] leading-snug" id="cert-value-status">VERIFIED</span>
                                     <i id="cert-status-check" data-lucide="check-circle-2" class="w-3.5 h-3.5 text-[#16A34A]"></i>
                                 </div>
                             </div>
 
                             <div class="py-1.5 flex items-center justify-between">
-                                <div class="flex items-center gap-2 text-slate-600">
-                                    <i data-lucide="calendar" class="w-3.5 h-3.5 text-slate-400"></i>
-                                    <span class="font-semibold text-slate-600" id="cert-label-trans-date">Tanggal Terjemah</span>
-                                </div>
-                                <span class="font-bold text-slate-900 notranslate leading-snug" translate="no" id="cert-value-trans-date"></span>
+                                <span class="font-semibold text-slate-600" id="cert-label-trans-date">Tanggal Terjemah</span>
+                                <span class="font-bold text-slate-900 notranslate leading-snug" translate="no" id="cert-value-trans-date">
+                                    {{ \Carbon\Carbon::parse($document->document_date)->translatedFormat('d F Y') }}
+                                </span>
                             </div>
 
-                            <div class="py-1.5 flex items-center justify-between gap-4">
-                                <div class="flex items-center gap-2 text-slate-600 flex-shrink-0">
-                                    <i data-lucide="file" class="w-3.5 h-3.5 text-slate-400"></i>
-                                    <span class="font-semibold text-slate-600" id="cert-label-doc-type">Jenis Dokumen</span>
+                            <div class="py-1.5 flex items-start justify-between gap-4">
+                                <span class="font-semibold text-slate-600 flex-shrink-0" id="cert-label-doc-type">Jenis Dokumen</span>
+                                @php
+                                    $docType = $document->document_type;
+                                    $primaryType = $docType;
+                                    $secondaryType = '';
+                                    if (preg_match('/^(.*?)\s*\((.*?)\)$/', $docType, $matches)) {
+                                        $primaryType = trim($matches[1]);
+                                        $secondaryType = '(' . trim($matches[2]) . ')';
+                                    }
+                                @endphp
+                                <div class="text-right">
+                                    <span class="font-extrabold text-slate-900 text-xs leading-snug block">{{ $primaryType }}</span>
+                                    @if($secondaryType)
+                                        <span class="text-[10px] text-slate-500 font-medium italic leading-snug block">{{ $secondaryType }}</span>
+                                    @endif
                                 </div>
-                                <!-- Clean Multi-Line Text without Truncation Clipping -->
-                                <span class="font-extrabold text-slate-900 text-right text-xs leading-normal max-w-[380px] inline-block py-0.5">{{ $document->document_type }}</span>
                             </div>
 
                             <div class="py-1.5 flex items-center justify-between">
-                                <div class="flex items-center gap-2 text-slate-600">
-                                    <i data-lucide="languages" class="w-3.5 h-3.5 text-slate-400"></i>
-                                    <span class="font-semibold text-slate-600" id="cert-label-lang-pair">Pasangan Bahasa</span>
-                                </div>
+                                <span class="font-semibold text-slate-600" id="cert-label-lang-pair">Pasangan Bahasa</span>
                                 <span class="font-extrabold text-slate-900 notranslate leading-snug" translate="no">{{ $document->language_pair }}</span>
                             </div>
                         </div>
                     </div>
 
-                    <!-- NAMA DI DOKUMEN (DISAMARKAN) Section Box -->
-                    <div class="border border-slate-300 rounded-xl p-3.5 bg-slate-50/70 space-y-1.5">
-                        <div class="inline-block bg-[#1E3A8A] text-white px-3 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider shadow-xs" id="cert-label-masked-name">
+                    <!-- NAMA DI DOKUMEN (DISAMARKAN) Section Box (Compact Sizing) -->
+                    <div class="border border-slate-300 rounded-xl p-2.5 px-3.5 bg-slate-50/70 space-y-1">
+                        <div class="inline-block bg-[#1E3A8A] text-white px-2.5 py-0.5 rounded text-[8.5px] font-black uppercase tracking-wider shadow-xs" id="cert-label-masked-name">
                             NAMA DI DOKUMEN (DISAMARKAN)
                         </div>
                         @php
@@ -260,45 +247,50 @@
                     </div>
 
                     <!-- PENERJEMAH TERSUMPAH & QR CODE Section Box -->
-                    <div class="border border-slate-300 rounded-xl p-3.5 bg-white/90 space-y-2">
-                        <div class="inline-block bg-[#1E3A8A] text-white px-3 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider shadow-xs" id="cert-label-translator-title">
+                    <div class="border border-slate-300 rounded-xl p-3 px-3.5 bg-white/90 space-y-2">
+                        <div class="inline-block bg-[#1E3A8A] text-white px-2.5 py-0.5 rounded text-[8.5px] font-black uppercase tracking-wider shadow-xs" id="cert-label-translator-title">
                             PENERJEMAH TERSUMPAH
                         </div>
 
-                        <div class="grid grid-cols-3 gap-3 items-center pt-1">
+                        <div class="grid grid-cols-3 gap-3 items-center pt-0.5">
                             <!-- Left Translator Info (2 columns) -->
-                            <div class="col-span-2 space-y-2 border-r border-slate-200 pr-3">
+                            <div class="col-span-2 space-y-1.5 border-r border-slate-200 pr-3">
                                 <div class="flex items-center gap-3">
-                                    <!-- Explicit Fixed Sizing Container for Translator Photo -->
-                                    <div class="rounded-full bg-slate-100 flex items-center justify-center flex-shrink-0 border-2 border-[#1E3A8A] shadow-xs overflow-hidden relative" style="width: 56px; height: 56px; min-width: 56px; min-height: 56px; max-width: 56px; max-height: 56px;">
-                                        @php
-                                            $translatorPic = $document->translator->profile_picture;
-                                            $avatarFallback = 'https://ui-avatars.com/api/?name=' . urlencode($document->translator->name) . '&background=1E3A8A&color=fff';
-                                        @endphp
-                                        <img 
-                                            src="{{ $translatorPic ?: $avatarFallback }}" 
-                                            alt="{{ $document->translator->name }}" 
-                                            onerror="this.onerror=null; this.src='{{ $avatarFallback }}';" 
-                                            class="rounded-full object-cover" 
-                                            style="width: 56px; height: 56px; max-width: 56px; max-height: 56px; object-fit: cover;"
-                                        />
-                                    </div>
+                                    <!-- Photo or Official Legal Seal Badge -->
+                                    @if($document->translator->profile_picture)
+                                        <div class="rounded-full bg-slate-100 flex items-center justify-center flex-shrink-0 border-2 border-[#1E3A8A] shadow-xs overflow-hidden relative" style="width: 56px; height: 56px; min-width: 56px; min-height: 56px; max-width: 56px; max-height: 56px;">
+                                            <img 
+                                                src="{{ $document->translator->profile_picture }}" 
+                                                alt="{{ $document->translator->name }}" 
+                                                onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'w-14 h-14 rounded-2xl bg-gradient-to-br from-[#1E3A8A] to-slate-900 text-amber-400 flex items-center justify-center flex-shrink-0 border-2 border-amber-400/80 shadow-xs\'><i data-lucide=\'award\' class=\'w-8 h-8\'></i></div>'; lucide.createIcons();" 
+                                                class="rounded-full object-cover" 
+                                                style="width: 56px; height: 56px; max-width: 56px; max-height: 56px; object-fit: cover;"
+                                            />
+                                        </div>
+                                    @else
+                                        <!-- Prestigious Official Legal Seal Badge Frame -->
+                                        <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#1E3A8A] to-slate-900 text-amber-400 flex items-center justify-center flex-shrink-0 border-2 border-amber-400/80 shadow-xs">
+                                            <i data-lucide="award" class="w-8 h-8"></i>
+                                        </div>
+                                    @endif
+
                                     <div class="space-y-0.5">
                                         <h4 class="text-xs sm:text-sm font-extrabold text-slate-950 leading-snug notranslate" translate="no">{{ $document->translator->name }}</h4>
-                                        <p class="text-[11px] font-bold text-slate-700 font-mono leading-snug notranslate" translate="no" id="cert-value-member-no">No. Anggota : {{ $document->translator->sk_number }}</p>
-                                        <p class="text-[10px] font-semibold text-slate-600 leading-normal" id="cert-value-translator-service">Penerjemah Tersumpah Bahasa {{ $document->translator->language_services ?: $document->language_pair }}</p>
+                                        <p class="text-[10.5px] font-bold text-slate-700 leading-snug" id="cert-value-translator-service">Penerjemah Tersumpah Bahasa {{ $document->translator->language_services ?: $document->language_pair }}</p>
+                                        <p class="text-[10px] font-bold text-slate-600 font-mono leading-snug notranslate" translate="no" id="cert-value-member-no">No. Anggota IPPTI: {{ $document->translator->sk_number }}</p>
                                     </div>
                                 </div>
                                 <p class="text-[9.5px] text-slate-500 font-medium leading-normal border-t border-slate-100 pt-1.5" id="cert-value-decree">
-                                    Sesuai dengan SK Menteri Hukum dan HAM {{ $document->translator->no_sk_kemenkum ?: 'AHU-56 AH.03.07.2022' }} {{ $document->translator->tgl_sk ? 'tanggal ' . \Carbon\Carbon::parse($document->translator->tgl_sk)->translatedFormat('d F Y') : '' }}
+                                    SK Menteri Hukum dan HAM: {{ $document->translator->no_sk_kemenkum ?: 'AHU-56 AH.03.07.2022' }} {{ $document->translator->tgl_sk ? 'tanggal ' . \Carbon\Carbon::parse($document->translator->tgl_sk)->translatedFormat('d F Y') : '' }}
                                 </p>
                             </div>
 
-                            <!-- Right QR Code (1 column) -->
+                            <!-- Right QR Code Box -->
                             <div class="col-span-1 flex flex-col items-center justify-center text-center space-y-1">
-                                <span class="text-[8.5px] font-bold text-[#1E3A8A] uppercase tracking-wider block" id="cert-qr-title">QR VERIFICATION</span>
+                                <span class="text-[8px] font-black text-[#1E3A8A] uppercase tracking-wider block" id="cert-qr-title">VERIFIKASI KEASLIAN</span>
                                 <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data={{ urlencode(url('/verify/' . $document->document_id)) }}" alt="QR" class="w-20 h-20 bg-white p-0.5 rounded-lg border border-slate-300 shadow-xs" />
-                                <span class="text-[7.5px] text-slate-500 font-medium leading-tight max-w-[110px]" id="cert-qr-caption">Scan untuk verifikasi keaslian dokumen di sistem IPPTI</span>
+                                <span class="text-[7.5px] text-slate-500 font-medium leading-tight max-w-[110px]" id="cert-qr-caption">Scan QR untuk memeriksa keaslian sertifikat</span>
+                                <span class="text-[8px] font-bold font-mono text-slate-700 block mt-0.5">ID: {{ $document->document_id }}</span>
                             </div>
                         </div>
                     </div>
@@ -311,7 +303,7 @@
                                 <i data-lucide="shield-check" class="w-5 h-5"></i>
                             </div>
                             <div>
-                                <span class="text-[8px] font-bold text-slate-400 uppercase tracking-wider block" id="cert-label-digisig">DIGITAL SIGNATURE</span>
+                                <span class="text-[8px] font-bold text-slate-400 uppercase tracking-wider block" id="cert-label-digisig">TANDA TANGAN DIGITAL</span>
                                 <p class="text-[11px] font-bold text-slate-800 leading-snug" id="cert-val-digisig-title">Tanda Tangan Digital</p>
                                 <span class="text-[9.5px] font-extrabold text-[#16A34A] leading-snug block" id="cert-val-digisig-sub">Valid & Terverifikasi</span>
                             </div>
@@ -323,59 +315,51 @@
                                 <i data-lucide="clock" class="w-5 h-5"></i>
                             </div>
                             <div>
-                                <span class="text-[8px] font-bold text-slate-400 uppercase tracking-wider block" id="cert-label-ver-time">VERIFICATION TIME</span>
-                                <p class="text-[11px] font-black font-mono text-slate-900 leading-snug" id="cert-verify-time">{{ now()->translatedFormat('d M Y H:i') }} WIB</p>
+                                <span class="text-[8px] font-bold text-slate-400 uppercase tracking-wider block" id="cert-label-ver-time">WAKTU VERIFIKASI</span>
+                                <p class="text-[11px] font-black font-mono text-slate-900 leading-snug" id="cert-verify-time">{{ now()->translatedFormat('d F Y') }} • {{ now()->format('H:i') }} WIB</p>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Solid Green Status Banner Bar -->
-                    <div id="cert-status-banner-bar" class="bg-[#16A34A] text-white p-2.5 rounded-xl flex flex-row items-center justify-between gap-2 shadow-xs">
-                        <div class="flex items-center gap-2">
-                            <div class="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center">
-                                <i id="cert-banner-check-icon" data-lucide="check-circle-2" class="w-3.5 h-3.5 text-white"></i>
-                            </div>
-                            <span class="text-sm font-black tracking-widest uppercase" id="cert-banner-status-text">VERIFIED</span>
+                    <!-- Slim Green Bottom Status Bar -->
+                    <div id="cert-status-banner-bar" class="bg-[#16A34A] text-white p-2 rounded-lg flex flex-row items-center justify-between gap-2 shadow-xs">
+                        <div class="flex items-center gap-1.5">
+                            <i id="cert-banner-check-icon" data-lucide="check-circle-2" class="w-4 h-4 text-white"></i>
+                            <span class="text-xs font-black tracking-widest uppercase" id="cert-banner-status-text">VERIFIED</span>
                         </div>
-                        <p class="text-[10px] text-emerald-100 font-semibold tracking-wide text-right" id="cert-banner-status-desc">
+                        <p class="text-[9.5px] text-emerald-100 font-semibold tracking-wide text-right" id="cert-banner-status-desc">
                             This translated document has been officially verified by IPPTI Verification System.
                         </p>
                     </div>
 
                     <!-- Disclaimer Resmi Section -->
-                    <div class="space-y-0.5 relative pt-0.5">
-                        <h5 class="text-[10px] font-black text-slate-900 uppercase tracking-wider" id="cert-disclaimer-title">DISCLAIMER RESMI</h5>
-                        <p class="text-[9.5px] text-slate-600 leading-normal font-medium text-justify max-w-[620px]" id="cert-disclaimer-text">
+                    <div class="space-y-0.5 relative pt-1">
+                        <h5 class="text-[10.5px] font-black text-slate-900 uppercase tracking-wider" id="cert-disclaimer-title">DISCLAIMER RESMI</h5>
+                        <p class="text-[10px] text-slate-600 leading-relaxed font-medium text-justify max-w-[620px]" id="cert-disclaimer-text">
                             Sertifikat elektronik ini hanya menyatakan bahwa data dokumen terjemahan telah diverifikasi pada sistem IPPTI. Keabsahan hukum dokumen fisik tetap mengacu pada cap basah, tanda tangan penerjemah tersumpah, dan ketentuan peraturan perundang-undangan yang berlaku.
                         </p>
 
                         <!-- Hologram Stamp Watermark Bottom-Right -->
                         <div class="absolute right-0 bottom-0 opacity-85 pointer-events-none">
-                            <div class="w-14 h-14 rounded-full border-2 border-slate-300 bg-gradient-to-tr from-amber-100 via-emerald-100 to-blue-100 flex items-center justify-center shadow-xs">
+                            <div class="w-13 h-13 rounded-full border-2 border-slate-300 bg-gradient-to-tr from-amber-100 via-emerald-100 to-blue-100 flex items-center justify-center shadow-xs">
                                 <span class="text-[8.5px] font-black text-[#1E3A8A] tracking-wider">IPPTI</span>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Footer Bar -->
-                    <div class="pt-2.5 border-t-2 border-[#1E3A8A]/20 flex flex-row items-center justify-between gap-3 text-[9px] text-slate-600">
+                    <!-- Clean Single-Line Footer Bar -->
+                    <div class="pt-2 border-t-2 border-[#1E3A8A]/20 flex flex-row items-center justify-between gap-3 text-[9px] text-slate-600">
                         <div class="flex items-center gap-2">
-                            <img 
-                                src="/ippti-logo.jpg" 
-                                alt="IPPTI Logo" 
-                                style="height: 20px; max-height: 20px; width: auto;" 
-                                class="flex-shrink-0"
-                            />
                             <span class="font-extrabold text-[#1E3A8A] text-[9px] leading-tight" id="cert-footer-org-bottom">
-                                IPPTI – Ikatan Penerjemah dan Pengalih Bahasa Tersumpah di Indonesia
+                                IPPTI — Ikatan Penerjemah dan Pengalih Bahasa Tersumpah di Indonesia
                             </span>
                         </div>
                         <div class="flex items-center gap-2 font-semibold text-[9px] text-slate-600 flex-shrink-0 dir-ltr" dir="ltr">
-                            <span class="flex items-center gap-1"><i data-lucide="globe" class="w-3 h-3 text-[#1E3A8A]"></i> ippti.or.id</span>
+                            <span>ippti.or.id</span>
                             <span class="text-slate-300">•</span>
-                            <span class="flex items-center gap-1"><i data-lucide="mail" class="w-3 h-3 text-[#1E3A8A]"></i> info@ippti.or.id</span>
+                            <span>info@ippti.or.id</span>
                             <span class="text-slate-300">•</span>
-                            <span class="flex items-center gap-1"><i data-lucide="phone" class="w-3 h-3 text-[#1E3A8A]"></i> +62 811 8117 0118</span>
+                            <span>+62 811 8117 0118</span>
                         </div>
                     </div>
 
@@ -405,8 +389,8 @@
     <script>
         lucide.createIcons();
 
-        const dateId = "{{ $document ? $document->document_date->translatedFormat('d F Y') : '' }}";
-        const dateEn = "{{ $document ? $document->document_date->format('F d, Y') : '' }}";
+        const dateId = "{{ $document ? \Carbon\Carbon::parse($document->document_date)->translatedFormat('d F Y') : '' }}";
+        const dateEn = "{{ $document ? \Carbon\Carbon::parse($document->document_date)->format('F d, Y') : '' }}";
         const memberNo = "{{ $document ? $document->translator->sk_number : '' }}";
         const isArchived = {{ ($document && $document->trashed()) ? 'true' : 'false' }};
 
@@ -431,21 +415,21 @@
                 lang_pair: "Pasangan Bahasa",
                 masked_name: "NAMA DI DOKUMEN (DISAMARKAN)",
                 translator_title: "PENERJEMAH TERSUMPAH",
-                member_no: "No. Anggota : " + memberNo,
+                member_no: "No. Anggota IPPTI: " + memberNo,
                 translator_service: "Penerjemah Tersumpah Bahasa {{ $document ? ($document->translator->language_services ?: $document->language_pair) : '' }}",
-                decree_text: "Sesuai dengan SK Menteri Hukum dan HAM {{ $document ? ($document->translator->no_sk_kemenkum ?: 'AHU-56 AH.03.07.2022') : '' }} {{ $document && $document->translator->tgl_sk ? 'tanggal ' . \Carbon\Carbon::parse($document->translator->tgl_sk)->translatedFormat('d F Y') : '' }}",
-                qr_title: "QR VERIFICATION",
-                qr_caption: "Scan untuk verifikasi keaslian dokumen di sistem IPPTI",
-                digisig_label: "DIGITAL SIGNATURE",
+                decree_text: "SK Menteri Hukum dan HAM: {{ $document ? ($document->translator->no_sk_kemenkum ?: 'AHU-56 AH.03.07.2022') : '' }} {{ $document && $document->translator->tgl_sk ? 'tanggal ' . \Carbon\Carbon::parse($document->translator->tgl_sk)->translatedFormat('d F Y') : '' }}",
+                qr_title: "VERIFIKASI KEASLIAN",
+                qr_caption: "Scan QR untuk memeriksa keaslian sertifikat",
+                digisig_label: "TANDA TANGAN DIGITAL",
                 digisig_title: "Tanda Tangan Digital",
                 digisig_sub: "Valid & Terverifikasi",
-                ver_time_label: "VERIFICATION TIME",
-                verify_time: "{{ now()->translatedFormat('d M Y H:i') }} WIB",
+                ver_time_label: "WAKTU VERIFIKASI",
+                verify_time: "{{ now()->translatedFormat('d F Y') }} • {{ now()->format('H:i') }} WIB",
                 banner_desc: "This translated document has been officially verified by IPPTI Verification System.",
                 disclaimer_title: "DISCLAIMER RESMI",
                 disclaimer_text: "Sertifikat elektronik ini hanya menyatakan bahwa data dokumen terjemahan telah diverifikasi pada sistem IPPTI. Keabsahan hukum dokumen fisik tetap mengacu pada cap basah, tanda tangan penerjemah tersumpah, dan ketentuan peraturan perundang-undangan yang berlaku.",
                 footer_org: "IKATAN PENERJEMAH DAN PENGALIH BAHASA TERSUMPAH DI INDONESIA",
-                footer_org_bottom: "IPPTI – Ikatan Penerjemah dan Pengalih Bahasa Tersumpah di Indonesia",
+                footer_org_bottom: "IPPTI — Ikatan Penerjemah dan Pengalih Bahasa Tersumpah di Indonesia",
                 bottom_credit: isArchived ? "STATUS DOKUMEN: DIBATALKAN" : "DIVERIFIKASI SECARA ELEKTRONIK & KRIPTOGRAFIS",
                 sub_portal: "Portal Verifikasi Resmi Terjemahan Tersumpah",
             },
@@ -469,21 +453,21 @@
                 lang_pair: "Language Pair",
                 masked_name: "NAME ON DOCUMENT (MASKED)",
                 translator_title: "SWORN TRANSLATOR",
-                member_no: "Member ID : " + memberNo,
+                member_no: "IPPTI Member ID: " + memberNo,
                 translator_service: "Sworn Translator for {{ $document ? ($document->translator->language_services ?: $document->language_pair) : '' }}",
-                decree_text: "Pursuant to Decree of Minister of Law and Human Rights {{ $document ? ($document->translator->no_sk_kemenkum ?: 'AHU-56 AH.03.07.2022') : '' }}",
-                qr_title: "QR VERIFICATION",
-                qr_caption: "Scan to verify document authenticity on IPPTI system",
+                decree_text: "Ministry of Law and Human Rights Decree: {{ $document ? ($document->translator->no_sk_kemenkum ?: 'AHU-56 AH.03.07.2022') : '' }}",
+                qr_title: "AUTHENTICITY VERIFICATION",
+                qr_caption: "Scan QR to verify certificate authenticity",
                 digisig_label: "DIGITAL SIGNATURE",
                 digisig_title: "Digital Signature",
                 digisig_sub: "Valid & Verified",
                 ver_time_label: "VERIFICATION TIME",
-                verify_time: "{{ now()->format('d M Y H:i') }} UTC+7",
+                verify_time: "{{ now()->format('d F Y') }} • {{ now()->format('H:i') }} UTC+7",
                 banner_desc: "This translated document has been officially verified by IPPTI Verification System.",
                 disclaimer_title: "OFFICIAL DISCLAIMER",
                 disclaimer_text: "This e-certificate confirms that translation document data has been verified in the IPPTI system. Legal validity of physical documents relies on the wet stamp, sworn translator signature, and applicable laws.",
                 footer_org: "ASSOCIATION OF SWORN TRANSLATORS AND INTERPRETERS IN INDONESIA",
-                footer_org_bottom: "IPPTI – Association of Sworn Translators and Interpreters in Indonesia",
+                footer_org_bottom: "IPPTI — Association of Sworn Translators and Interpreters in Indonesia",
                 bottom_credit: isArchived ? "DOCUMENT STATUS: REVOKED" : "ELECTRONICALLY & CRYPTOGRAPHICALLY VERIFIED",
                 sub_portal: "Official Sworn Translation Verification Portal",
             },
@@ -507,21 +491,21 @@
                 lang_pair: "语言对",
                 masked_name: "文件姓名（已遮蔽）",
                 translator_title: "宣誓翻译员",
-                member_no: "成员编号 : " + memberNo,
+                member_no: "IPPTI 成员编号: " + memberNo,
                 translator_service: "宣誓翻译员 - 语言服务: {{ $document ? ($document->translator->language_services ?: $document->language_pair) : '' }}",
-                decree_text: "依据印尼法律与人权部长法令 {{ $document ? ($document->translator->no_sk_kemenkum ?: 'AHU-56 AH.03.07.2022') : '' }}",
-                qr_title: "QR VERIFICATION",
-                qr_caption: "扫描上方二维码在 IPPTI 系统上验证文件真实性",
-                digisig_label: "DIGITAL SIGNATURE",
+                decree_text: "印尼法律与人权部长法令: {{ $document ? ($document->translator->no_sk_kemenkum ?: 'AHU-56 AH.03.07.2022') : '' }}",
+                qr_title: "真实性验证",
+                qr_caption: "扫描二维码验证证书真实性",
+                digisig_label: "数字签名",
                 digisig_title: "数字签名",
                 digisig_sub: "有效并已验证",
-                ver_time_label: "VERIFICATION TIME",
-                verify_time: "{{ now()->format('Y-m-d H:i') }} UTC+7",
+                ver_time_label: "验证时间",
+                verify_time: "{{ now()->format('Y-m-d') }} • {{ now()->format('H:i') }} UTC+7",
                 banner_desc: "This translated document has been officially verified by IPPTI Verification System.",
                 disclaimer_title: "官方免责声明",
                 disclaimer_text: "此电子证书仅表明翻译文件数据已在 IPPTI 系统中验证。纸质文件的法律效力仍取决于宣誓翻译员的湿盖章、签名及适用法律法规。",
                 footer_org: "印度尼西亚宣誓翻译员与口译员协会",
-                footer_org_bottom: "IPPTI – 印度尼西亚宣誓翻译员与口译员协会",
+                footer_org_bottom: "IPPTI — 印度尼西亚宣誓翻译员与口译员协会",
                 bottom_credit: isArchived ? "文件状态：已撤销" : "经过电子与密码学验证",
                 sub_portal: "官方宣誓翻译验证门户",
             },
@@ -545,21 +529,21 @@
                 lang_pair: "زوج اللغات",
                 masked_name: "الاسم على المستند (مخفي)",
                 translator_title: "المترجم المحلف",
-                member_no: "رقم العضوية : " + memberNo,
+                member_no: "رقم عضوية IPPTI: " + memberNo,
                 translator_service: "مترجم محلف للغة {{ $document ? ($document->translator->language_services ?: $document->language_pair) : '' }}",
-                decree_text: "وفقاً لقرار وزير القانون وحقوق الإنسان {{ $document ? ($document->translator->no_sk_kemenkum ?: 'AHU-56 AH.03.07.2022') : '' }}",
-                qr_title: "QR VERIFICATION",
-                qr_caption: "امسح رمز QR للتحقق من صحة المستند في نظام IPPTI",
-                digisig_label: "DIGITAL SIGNATURE",
+                decree_text: "قرار وزير القانون وحقوق الإنسان: {{ $document ? ($document->translator->no_sk_kemenkum ?: 'AHU-56 AH.03.07.2022') : '' }}",
+                qr_title: "التحقق من الأصالة",
+                qr_caption: "امسح QR للتحقق من أصالة الشهادة",
+                digisig_label: "التوقيع الرقمي",
                 digisig_title: "التوقيع الرقمي",
                 digisig_sub: "صالح ومتحقق منه",
-                ver_time_label: "VERIFICATION TIME",
-                verify_time: "{{ now()->format('Y-m-d H:i') }} UTC+7",
+                ver_time_label: "وقت التحقق",
+                verify_time: "{{ now()->format('Y-m-d') }} • {{ now()->format('H:i') }} UTC+7",
                 banner_desc: "This translated document has been officially verified by IPPTI Verification System.",
                 disclaimer_title: "إخلاء مسؤولية رسمي",
                 disclaimer_text: "تؤكد هذه الشهادة الإلكترونية فقط أنه تم التحقق من بيانات المستند المترجم في نظام IPPTI. تعتمد الصلاحية القانونية للمستند المادي على الختم المائي وتوقيع المترجم المحلف والقوانين المعمول بها.",
                 footer_org: "جمعية المترجمين المحلفين والمترجمين الفوريين في إندونيسيا",
-                footer_org_bottom: "IPPTI – جمعية المترجمين المحلفين والمترجمين الفوريين في إندونيسيا",
+                footer_org_bottom: "IPPTI — جمعية المترجمين المحلفين والمترجمين الفوريين في إندونيسيا",
                 bottom_credit: isArchived ? "حالة المستند: ملغى" : "تم التحقق منه إلكترونياً وتشفيرياً",
                 sub_portal: "البوابة الرسمية للتحقق من الترجمة المحلفة",
             }
@@ -588,7 +572,6 @@
                 'cert-header-org': t.footer_org,
                 'cert-title': t.cert_title,
                 'cert-subtitle': t.cert_subtitle,
-                'cert-desc': t.cert_desc,
                 'cert-notice-title': t.notice_title,
                 'cert-notice-desc': t.notice_desc,
                 'cert-data-title': t.data_title,
@@ -638,12 +621,12 @@
 
             if (isArchived) {
                 if (badgeText) badgeText.innerText = t.badge_cancelled;
-                if (statusBadge) statusBadge.className = "w-11 h-11 bg-[#DC2626] text-white rounded-xl flex flex-col items-center justify-center flex-shrink-0 shadow-xs";
+                if (statusBadge) statusBadge.className = "w-9 h-9 bg-[#DC2626] text-white rounded-lg flex flex-col items-center justify-center flex-shrink-0 shadow-xs";
                 if (badgeIcon) badgeIcon.setAttribute('data-lucide', 'alert-triangle');
-                if (noticeBox) noticeBox.className = "flex items-center gap-3 p-2 text-left bg-rose-50/80 rounded-xl border border-rose-200";
-                if (noticeIconBg) noticeIconBg.className = "w-11 h-11 bg-[#DC2626] text-white rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm ring-2 ring-rose-500/20";
+                if (noticeBox) noticeBox.className = "flex items-center gap-3 p-2 px-3 text-left bg-rose-50/80 rounded-lg border border-rose-200";
+                if (noticeIconBg) noticeIconBg.className = "w-8 h-8 bg-[#DC2626] text-white rounded-lg flex items-center justify-center flex-shrink-0 shadow-xs";
                 if (certValStatus) certValStatus.className = "font-extrabold uppercase text-[11px] text-rose-600";
-                if (certBannerBar) certBannerBar.className = "bg-[#DC2626] text-white p-2.5 rounded-xl flex flex-row items-center justify-between gap-2 shadow-xs";
+                if (certBannerBar) certBannerBar.className = "bg-[#DC2626] text-white p-2 rounded-lg flex flex-row items-center justify-between gap-2 shadow-xs";
                 if (certBannerText) certBannerText.innerText = "REVOKED";
                 if (certStatusCheck) {
                     certStatusCheck.setAttribute('data-lucide', 'x-circle');
@@ -651,12 +634,12 @@
                 }
             } else {
                 if (badgeText) badgeText.innerText = t.badge_verified;
-                if (statusBadge) statusBadge.className = "w-11 h-11 bg-[#16A34A] text-white rounded-xl flex flex-col items-center justify-center flex-shrink-0 shadow-xs";
+                if (statusBadge) statusBadge.className = "w-9 h-9 bg-[#16A34A] text-white rounded-lg flex flex-col items-center justify-center flex-shrink-0 shadow-xs";
                 if (badgeIcon) badgeIcon.setAttribute('data-lucide', 'check-circle-2');
-                if (noticeBox) noticeBox.className = "flex items-center gap-3 p-2 text-left bg-emerald-50/70 rounded-xl border border-emerald-200/90";
-                if (noticeIconBg) noticeIconBg.className = "w-11 h-11 bg-[#16A34A] text-white rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm ring-2 ring-emerald-500/20";
+                if (noticeBox) noticeBox.className = "flex items-center gap-3 p-2 px-3 text-left bg-emerald-50/70 rounded-lg border border-emerald-200/90";
+                if (noticeIconBg) noticeIconBg.className = "w-8 h-8 bg-[#16A34A] text-white rounded-lg flex items-center justify-center flex-shrink-0 shadow-xs";
                 if (certValStatus) certValStatus.className = "font-extrabold uppercase text-[11px] text-[#16A34A]";
-                if (certBannerBar) certBannerBar.className = "bg-[#16A34A] text-white p-2.5 rounded-xl flex flex-row items-center justify-between gap-2 shadow-xs";
+                if (certBannerBar) certBannerBar.className = "bg-[#16A34A] text-white p-2 rounded-lg flex flex-row items-center justify-between gap-2 shadow-xs";
                 if (certBannerText) certBannerText.innerText = "VERIFIED";
                 if (certStatusCheck) {
                     certStatusCheck.setAttribute('data-lucide', 'check-circle-2');
