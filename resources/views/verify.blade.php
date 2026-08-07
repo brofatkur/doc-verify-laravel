@@ -10,8 +10,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- html2pdf.js for instant A4 PDF download -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <!-- html2canvas and jsPDF for 100% Guaranteed Single-Page A4 PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" crossorigin="anonymous"></script>
     <script>
         tailwind.config = {
             theme: {
@@ -276,7 +277,8 @@
                             <!-- Left Translator Info (2 columns) -->
                             <div class="col-span-2 space-y-1.5 border-r border-slate-200 pr-3">
                                 <div class="flex items-center gap-3">
-                                    <div class="w-13 h-13 rounded-full bg-slate-100 flex items-center justify-center flex-shrink-0 border-2 border-[#1E3A8A] shadow-xs overflow-hidden relative">
+                                    <!-- Explicit Fixed Sizing Container for Translator Photo -->
+                                    <div class="rounded-full bg-slate-100 flex items-center justify-center flex-shrink-0 border-2 border-[#1E3A8A] shadow-xs overflow-hidden relative" style="width: 56px; height: 56px; min-width: 56px; min-height: 56px; max-width: 56px; max-height: 56px;">
                                         @php
                                             $translatorPic = $document->translator->profile_picture;
                                             $avatarFallback = 'https://ui-avatars.com/api/?name=' . urlencode($document->translator->name) . '&background=1E3A8A&color=fff';
@@ -285,7 +287,8 @@
                                             src="{{ $translatorPic ?: $avatarFallback }}" 
                                             alt="{{ $document->translator->name }}" 
                                             onerror="this.onerror=null; this.src='{{ $avatarFallback }}';" 
-                                            class="w-full h-full object-cover" 
+                                            class="rounded-full object-cover" 
+                                            style="width: 56px; height: 56px; max-width: 56px; max-height: 56px; object-fit: cover;"
                                         />
                                     </div>
                                     <div class="space-y-0.5 overflow-hidden">
@@ -678,6 +681,10 @@
         // Initialize UI language
         updateUILanguage();
 
+        /**
+         * PNG-to-PDF Single Page Guarantee Generator (html2canvas + jsPDF)
+         * Converts DOM card to PNG image and fits mathematically onto 1 single A4 PDF page.
+         */
         async function downloadPDF() {
             const btn = document.getElementById('btn-download-pdf');
             const element = document.getElementById('pdf-card');
@@ -686,42 +693,74 @@
             const originalBtnHTML = btn ? btn.innerHTML : '';
             if (btn) {
                 btn.disabled = true;
-                btn.innerHTML = '<div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div><span>Menyiapkan E-Sertifikat PDF (A4)...</span>';
+                btn.innerHTML = '<div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div><span>Mengunduh E-Sertifikat A4...</span>';
             }
 
             const docId = "{{ $document ? $document->document_id : 'doc' }}";
             const filename = 'E-Sertifikat_Verifikasi_IPPTI_' + docId + '.pdf';
 
             try {
-                if (typeof html2pdf === 'undefined') {
-                    await new Promise((resolve, reject) => {
-                        const script = document.createElement('script');
-                        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
-                        script.crossOrigin = 'anonymous';
-                        script.onload = resolve;
-                        script.onerror = reject;
-                        document.head.appendChild(script);
+                // Ensure html2canvas & jsPDF script availability
+                if (typeof html2canvas === 'undefined') {
+                    await new Promise((res, rej) => {
+                        const s = document.createElement('script');
+                        s.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+                        s.onload = res;
+                        s.onerror = rej;
+                        document.head.appendChild(s);
+                    });
+                }
+                if (typeof jspdf === 'undefined' && typeof window.jspdf === 'undefined') {
+                    await new Promise((res, rej) => {
+                        const s = document.createElement('script');
+                        s.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+                        s.onload = res;
+                        s.onerror = rej;
+                        document.head.appendChild(s);
                     });
                 }
 
-                const opt = {
-                    margin:       [4, 4, 4, 4],
-                    filename:     filename,
-                    image:        { type: 'jpeg', quality: 0.98 },
-                    html2canvas:  { 
-                        scale: 2, 
-                        useCORS: true, 
-                        allowTaint: true,
-                        logging: false,
-                        windowWidth: 800
-                    },
-                    jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
-                    pagebreak:    { mode: ['avoid-all'] }
-                };
+                // Render DOM element to high-resolution PNG canvas
+                const canvas = await html2canvas(element, {
+                    scale: 2.5,
+                    useCORS: true,
+                    allowTaint: true,
+                    logging: false,
+                    backgroundColor: '#ffffff',
+                    windowWidth: 800
+                });
 
-                await html2pdf().set(opt).from(element).save();
+                const imgData = canvas.toDataURL('image/png');
+
+                // Initialize A4 PDF (Portrait: 210mm x 297mm)
+                const { jsPDF } = window.jspdf || jspdf;
+                const pdf = new jsPDF('p', 'mm', 'a4');
+
+                const pdfWidth = 210;
+                const pdfHeight = 297;
+                const margin = 5; // 5mm margin around page
+
+                const printableWidth = pdfWidth - (margin * 2);
+                const printableHeight = pdfHeight - (margin * 2);
+
+                // Calculate image height based on canvas aspect ratio
+                let imgWidth = printableWidth;
+                let imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+                // Scale down if height exceeds printable area to GUARANTEE EXACT 1 PAGE
+                if (imgHeight > printableHeight) {
+                    imgHeight = printableHeight;
+                    imgWidth = (canvas.width * imgHeight) / canvas.height;
+                }
+
+                // Center image on the single A4 page
+                const xPos = margin + (printableWidth - imgWidth) / 2;
+                const yPos = margin + (printableHeight - imgHeight) / 2;
+
+                pdf.addImage(imgData, 'PNG', xPos, yPos, imgWidth, imgHeight);
+                pdf.save(filename);
             } catch (err) {
-                console.error('Generasi PDF bermasalah:', err);
+                console.error('Generasi PDF bermasalah, mencetak secara langsung:', err);
                 window.print();
             } finally {
                 if (btn) {
