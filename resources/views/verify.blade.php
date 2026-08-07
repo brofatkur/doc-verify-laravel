@@ -43,24 +43,6 @@
             position: relative;
         }
 
-        /* Tab fieldset badge header */
-        .section-tab-badge {
-            position: absolute;
-            top: -11px;
-            left: 14px;
-            background-color: #1E3A8A;
-            color: #ffffff;
-            padding: 2px 10px;
-            border-radius: 5px;
-            font-size: 9px;
-            font-weight: 800;
-            letter-spacing: 0.05em;
-            text-transform: uppercase;
-            line-height: 1.2;
-            z-index: 10;
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-        }
-
         @media print {
             @page {
                 size: A4 portrait;
@@ -145,7 +127,7 @@
                     <img src="/ippti-logo.jpg" alt="Watermark" class="w-80 h-auto grayscale" />
                 </div>
 
-                <div class="relative z-10 space-y-3.5">
+                <div class="relative z-10 space-y-3">
 
                     <!-- Header Row: Logo Left, Title & Green Badge Right -->
                     <div class="flex flex-row justify-between items-center gap-3 border-b-2 border-[#1E3A8A]/20 pb-3">
@@ -200,11 +182,13 @@
                     </div>
 
                     <!-- DATA VERIFIKASI Section Box -->
-                    <div class="border border-slate-300 rounded-xl relative pt-4 pb-3 px-4 bg-white/90">
-                        <span class="section-tab-badge" id="cert-data-title">DATA VERIFIKASI</span>
+                    <div class="border border-slate-300 rounded-xl p-3.5 bg-white/90 space-y-2">
+                        <div class="inline-block bg-[#1E3A8A] text-white px-3 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider shadow-xs" id="cert-data-title">
+                            DATA VERIFIKASI
+                        </div>
 
-                        <div class="divide-y divide-slate-100 text-[11px]">
-                            <div class="py-2 flex items-center justify-between">
+                        <div class="divide-y divide-slate-100 text-[11px] pt-1">
+                            <div class="py-1.5 flex items-center justify-between">
                                 <div class="flex items-center gap-2 text-slate-600">
                                     <i data-lucide="file-text" class="w-3.5 h-3.5 text-slate-400"></i>
                                     <span class="font-semibold text-slate-600" id="cert-label-reg-no">Nomor Registrasi</span>
@@ -212,7 +196,7 @@
                                 <span class="font-black font-mono text-slate-900 text-xs notranslate leading-snug" translate="no">{{ $document->registration_number }}</span>
                             </div>
 
-                            <div class="py-2 flex items-center justify-between">
+                            <div class="py-1.5 flex items-center justify-between">
                                 <div class="flex items-center gap-2 text-slate-600">
                                     <i data-lucide="id-card" class="w-3.5 h-3.5 text-slate-400"></i>
                                     <span class="font-semibold text-slate-600" id="cert-label-doc-id">ID Dokumen</span>
@@ -220,7 +204,7 @@
                                 <span class="font-black font-mono text-slate-900 text-xs notranslate leading-snug" translate="no">{{ $document->document_id }}</span>
                             </div>
 
-                            <div class="py-2 flex items-center justify-between">
+                            <div class="py-1.5 flex items-center justify-between">
                                 <div class="flex items-center gap-2 text-slate-600">
                                     <i data-lucide="shield" class="w-3.5 h-3.5 text-slate-400"></i>
                                     <span class="font-semibold text-slate-600" id="cert-label-status">Status Verifikasi</span>
@@ -231,7 +215,7 @@
                                 </div>
                             </div>
 
-                            <div class="py-2 flex items-center justify-between">
+                            <div class="py-1.5 flex items-center justify-between">
                                 <div class="flex items-center gap-2 text-slate-600">
                                     <i data-lucide="calendar" class="w-3.5 h-3.5 text-slate-400"></i>
                                     <span class="font-semibold text-slate-600" id="cert-label-trans-date">Tanggal Terjemah</span>
@@ -239,16 +223,16 @@
                                 <span class="font-bold text-slate-900 notranslate leading-snug" translate="no" id="cert-value-trans-date"></span>
                             </div>
 
-                            <div class="py-2 flex items-center justify-between gap-4">
+                            <div class="py-1.5 flex items-center justify-between gap-4">
                                 <div class="flex items-center gap-2 text-slate-600 flex-shrink-0">
                                     <i data-lucide="file" class="w-3.5 h-3.5 text-slate-400"></i>
                                     <span class="font-semibold text-slate-600" id="cert-label-doc-type">Jenis Dokumen</span>
                                 </div>
                                 <!-- Clean Multi-Line Text without Truncation Clipping -->
-                                <span class="font-extrabold text-slate-900 text-right text-xs leading-snug max-w-[360px] inline-block py-0.5">{{ $document->document_type }}</span>
+                                <span class="font-extrabold text-slate-900 text-right text-xs leading-normal max-w-[380px] inline-block py-0.5">{{ $document->document_type }}</span>
                             </div>
 
-                            <div class="py-2 flex items-center justify-between">
+                            <div class="py-1.5 flex items-center justify-between">
                                 <div class="flex items-center gap-2 text-slate-600">
                                     <i data-lucide="languages" class="w-3.5 h-3.5 text-slate-400"></i>
                                     <span class="font-semibold text-slate-600" id="cert-label-lang-pair">Pasangan Bahasa</span>
@@ -259,8 +243,10 @@
                     </div>
 
                     <!-- NAMA DI DOKUMEN (DISAMARKAN) Section Box -->
-                    <div class="border border-slate-300 rounded-xl relative pt-4 pb-3 px-4 bg-slate-50/50">
-                        <span class="section-tab-badge" id="cert-label-masked-name">NAMA DI DOKUMEN (DISAMARKAN)</span>
+                    <div class="border border-slate-300 rounded-xl p-3.5 bg-slate-50/70 space-y-1.5">
+                        <div class="inline-block bg-[#1E3A8A] text-white px-3 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider shadow-xs" id="cert-label-masked-name">
+                            NAMA DI DOKUMEN (DISAMARKAN)
+                        </div>
                         @php
                             $masked = '';
                             if ($document->client_name) {
@@ -274,10 +260,12 @@
                     </div>
 
                     <!-- PENERJEMAH TERSUMPAH & QR CODE Section Box -->
-                    <div class="border border-slate-300 rounded-xl relative pt-4 pb-3 px-4 bg-white/90">
-                        <span class="section-tab-badge" id="cert-label-translator-title">PENERJEMAH TERSUMPAH</span>
+                    <div class="border border-slate-300 rounded-xl p-3.5 bg-white/90 space-y-2">
+                        <div class="inline-block bg-[#1E3A8A] text-white px-3 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider shadow-xs" id="cert-label-translator-title">
+                            PENERJEMAH TERSUMPAH
+                        </div>
 
-                        <div class="grid grid-cols-3 gap-3 items-center">
+                        <div class="grid grid-cols-3 gap-3 items-center pt-1">
                             <!-- Left Translator Info (2 columns) -->
                             <div class="col-span-2 space-y-2 border-r border-slate-200 pr-3">
                                 <div class="flex items-center gap-3">
@@ -295,13 +283,13 @@
                                             style="width: 56px; height: 56px; max-width: 56px; max-height: 56px; object-fit: cover;"
                                         />
                                     </div>
-                                    <div class="space-y-0.5 overflow-hidden">
+                                    <div class="space-y-0.5">
                                         <h4 class="text-xs sm:text-sm font-extrabold text-slate-950 leading-snug notranslate" translate="no">{{ $document->translator->name }}</h4>
                                         <p class="text-[11px] font-bold text-slate-700 font-mono leading-snug notranslate" translate="no" id="cert-value-member-no">No. Anggota : {{ $document->translator->sk_number }}</p>
-                                        <p class="text-[10px] font-semibold text-slate-600 leading-snug" id="cert-value-translator-service">Penerjemah Tersumpah Bahasa {{ $document->translator->language_services ?: $document->language_pair }}</p>
+                                        <p class="text-[10px] font-semibold text-slate-600 leading-normal" id="cert-value-translator-service">Penerjemah Tersumpah Bahasa {{ $document->translator->language_services ?: $document->language_pair }}</p>
                                     </div>
                                 </div>
-                                <p class="text-[9.5px] text-slate-500 font-medium leading-snug border-t border-slate-100 pt-1.5" id="cert-value-decree">
+                                <p class="text-[9.5px] text-slate-500 font-medium leading-normal border-t border-slate-100 pt-1.5" id="cert-value-decree">
                                     Sesuai dengan SK Menteri Hukum dan HAM {{ $document->translator->no_sk_kemenkum ?: 'AHU-56 AH.03.07.2022' }} {{ $document->translator->tgl_sk ? 'tanggal ' . \Carbon\Carbon::parse($document->translator->tgl_sk)->translatedFormat('d F Y') : '' }}
                                 </p>
                             </div>
@@ -370,21 +358,23 @@
                     </div>
 
                     <!-- Footer Bar -->
-                    <div class="pt-2 border-t-2 border-[#1E3A8A]/20 flex flex-row items-center justify-between gap-3 text-[9px] text-slate-600">
-                        <div class="flex items-center gap-2 overflow-hidden">
+                    <div class="pt-2.5 border-t-2 border-[#1E3A8A]/20 flex flex-row items-center justify-between gap-3 text-[9px] text-slate-600">
+                        <div class="flex items-center gap-2">
                             <img 
                                 src="/ippti-logo.jpg" 
                                 alt="IPPTI Logo" 
-                                class="h-5 w-auto object-contain flex-shrink-0" 
-                                style="height: 20px !important; max-height: 20px !important; width: auto !important;" 
+                                style="height: 20px; max-height: 20px; width: auto;" 
+                                class="flex-shrink-0"
                             />
-                            <span class="font-bold text-[#1E3A8A] text-[9px] leading-tight truncate" id="cert-footer-org-bottom">
+                            <span class="font-extrabold text-[#1E3A8A] text-[9px] leading-tight" id="cert-footer-org-bottom">
                                 IPPTI – Ikatan Penerjemah dan Pengalih Bahasa Tersumpah di Indonesia
                             </span>
                         </div>
-                        <div class="flex items-center gap-3 font-semibold dir-ltr flex-shrink-0 text-[9px]" dir="ltr">
+                        <div class="flex items-center gap-2 font-semibold text-[9px] text-slate-600 flex-shrink-0 dir-ltr" dir="ltr">
                             <span class="flex items-center gap-1"><i data-lucide="globe" class="w-3 h-3 text-[#1E3A8A]"></i> ippti.or.id</span>
+                            <span class="text-slate-300">•</span>
                             <span class="flex items-center gap-1"><i data-lucide="mail" class="w-3 h-3 text-[#1E3A8A]"></i> info@ippti.or.id</span>
+                            <span class="text-slate-300">•</span>
                             <span class="flex items-center gap-1"><i data-lucide="phone" class="w-3 h-3 text-[#1E3A8A]"></i> +62 811 8117 0118</span>
                         </div>
                     </div>
@@ -714,6 +704,11 @@
             const originalWidth = element.style.width;
 
             try {
+                // Ensure fonts are completely loaded before capturing canvas
+                if (document.fonts && document.fonts.ready) {
+                    await document.fonts.ready;
+                }
+
                 // Ensure html2canvas & jsPDF script availability
                 if (typeof html2canvas === 'undefined') {
                     await new Promise((res, rej) => {
@@ -744,7 +739,9 @@
                     allowTaint: true,
                     logging: false,
                     backgroundColor: '#ffffff',
-                    windowWidth: 800
+                    windowWidth: 800,
+                    scrollX: 0,
+                    scrollY: 0
                 });
 
                 const imgData = canvas.toDataURL('image/png');
