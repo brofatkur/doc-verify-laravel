@@ -366,15 +366,22 @@
                     </div>
 
                     <!-- Footer Bar -->
-                    <div class="pt-2 border-t-2 border-[#1E3A8A]/20 flex flex-row items-center justify-between gap-2 text-[8.5px] text-slate-600">
-                        <div class="flex items-center gap-1.5">
-                            <img src="/ippti-logo.jpg" alt="IPPTI Logo" class="h-4.5 w-auto" />
-                            <span class="font-bold text-[#1E3A8A]" id="cert-footer-org-bottom">IPPTI – Ikatan Penerjemah dan Pengalih Bahasa Tersumpah di Indonesia</span>
+                    <div class="pt-2 border-t-2 border-[#1E3A8A]/20 flex flex-row items-center justify-between gap-3 text-[9px] text-slate-600">
+                        <div class="flex items-center gap-2 overflow-hidden">
+                            <img 
+                                src="/ippti-logo.jpg" 
+                                alt="IPPTI Logo" 
+                                class="h-5 w-auto object-contain flex-shrink-0" 
+                                style="height: 22px; max-height: 22px; width: auto;" 
+                            />
+                            <span class="font-bold text-[#1E3A8A] text-[9px] leading-tight truncate" id="cert-footer-org-bottom">
+                                IPPTI – Ikatan Penerjemah dan Pengalih Bahasa Tersumpah di Indonesia
+                            </span>
                         </div>
-                        <div class="flex items-center gap-2.5 font-semibold dir-ltr" dir="ltr">
-                            <span class="flex items-center gap-0.5"><i data-lucide="globe" class="w-2.5 h-2.5 text-[#1E3A8A]"></i> ippti.or.id</span>
-                            <span class="flex items-center gap-0.5"><i data-lucide="mail" class="w-2.5 h-2.5 text-[#1E3A8A]"></i> info@ippti.or.id</span>
-                            <span class="flex items-center gap-0.5"><i data-lucide="phone" class="w-2.5 h-2.5 text-[#1E3A8A]"></i> +62 811 8117 0118</span>
+                        <div class="flex items-center gap-3 font-semibold dir-ltr flex-shrink-0 text-[9px]" dir="ltr">
+                            <span class="flex items-center gap-1"><i data-lucide="globe" class="w-3 h-3 text-[#1E3A8A]"></i> ippti.or.id</span>
+                            <span class="flex items-center gap-1"><i data-lucide="mail" class="w-3 h-3 text-[#1E3A8A]"></i> info@ippti.or.id</span>
+                            <span class="flex items-center gap-1"><i data-lucide="phone" class="w-3 h-3 text-[#1E3A8A]"></i> +62 811 8117 0118</span>
                         </div>
                     </div>
 
