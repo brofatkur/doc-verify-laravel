@@ -119,7 +119,7 @@
             <div class="pt-2 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4">
                 <div class="text-xs text-slate-500">
                     <p class="font-semibold text-slate-700">Metode Pembayaran Online Resmi:</p>
-                    <p>QRIS, Virtual Account BCA/Mandiri/BNI/BRI, E-Wallet & CC (via Xenith Pay Sandbox)</p>
+                    <p>QRIS, Virtual Account BCA/Mandiri/BNI/BRI, E-Wallet & Kartu Kredit (Pembayaran Instan)</p>
                 </div>
                 <button
                     type="button"
@@ -128,7 +128,7 @@
                     class="w-full sm:w-auto flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white px-8 py-3.5 rounded-2xl font-black text-sm transition shadow-md hover:shadow-lg active:scale-[0.98] cursor-pointer"
                 >
                     <i data-lucide="zap" class="w-4.5 h-4.5 fill-white"></i>
-                    <span>Bayar & Aktivasi Poin Now</span>
+                    <span>Bayar Sekarang / Pay Now</span>
                 </button>
             </div>
         </div>
@@ -191,7 +191,7 @@
         }
 
         btn.disabled = true;
-        btn.innerHTML = '<div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div> <span>Menyiapkan Tagihan Xenith Pay...</span>';
+        btn.innerHTML = '<div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div> <span>Menyiapkan Tagihan Pembayaran...</span>';
 
         try {
             const response = await fetch('/payment/xenith/create', {
@@ -211,14 +211,14 @@
                 errDiv.innerText = data.error || 'Gagal menyiapkan tagihan pembayaran.';
                 errDiv.classList.remove('hidden');
                 btn.disabled = false;
-                btn.innerHTML = '<i data-lucide="zap" class="w-4.5 h-4.5 fill-white"></i> <span>Bayar & Aktivasi Poin Now</span>';
+                btn.innerHTML = '<i data-lucide="zap" class="w-4.5 h-4.5 fill-white"></i> <span>Bayar Sekarang / Pay Now</span>';
                 lucide.createIcons();
             }
         } catch (err) {
             errDiv.innerText = 'Terjadi kesalahan koneksi jaringan: ' + err.message;
             errDiv.classList.remove('hidden');
             btn.disabled = false;
-            btn.innerHTML = '<i data-lucide="zap" class="w-4.5 h-4.5 fill-white"></i> <span>Bayar & Aktivasi Poin Now</span>';
+            btn.innerHTML = '<i data-lucide="zap" class="w-4.5 h-4.5 fill-white"></i> <span>Bayar Sekarang / Pay Now</span>';
             lucide.createIcons();
         }
     }

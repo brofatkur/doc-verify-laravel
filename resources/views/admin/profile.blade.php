@@ -192,7 +192,7 @@
     </div>
 
     @if(Auth::user()->role === 'SUPERADMIN' || Auth::user()->role === 'ADMIN')
-        <!-- iPaymu Payment Gateway Configuration Card -->
+        <!-- Payment Gateway Configuration Card -->
         <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
             <div class="p-6 space-y-6">
                 <div class="flex items-center gap-3 pb-4 border-b border-slate-100">
@@ -200,8 +200,8 @@
                         <i data-lucide="credit-card" class="w-6 h-6"></i>
                     </div>
                     <div>
-                        <h2 class="text-lg font-bold text-slate-900">Pengaturan Payment Gateway iPaymu</h2>
-                        <p class="text-xs text-slate-500">Konfigurasi Virtual Account & API Key iPaymu untuk menerima pembayaran Top-Up Poin penerjemah secara otomatis.</p>
+                        <h2 class="text-lg font-bold text-slate-900">Pengaturan Payment Gateway Online</h2>
+                        <p class="text-xs text-slate-500">Konfigurasi Access Key & Secret Key Payment Gateway untuk menerima pembayaran Top-Up Poin penerjemah secara otomatis.</p>
                     </div>
                 </div>
 
@@ -210,13 +210,13 @@
                     
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <label for="ipaymu_va" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Virtual Account (VA) iPaymu</label>
+                            <label for="ipaymu_va" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Access Key API</label>
                             <input
                                 type="text"
                                 id="ipaymu_va"
                                 name="ipaymu_va"
-                                value="{{ old('ipaymu_va', env('IPAYMU_VA', config('services.ipaymu.va'))) }}"
-                                placeholder="Contoh: 00000012345678"
+                                value="{{ old('ipaymu_va', env('XENITH_ACCESS_KEY', config('services.xenith.access_key'))) }}"
+                                placeholder="Masukkan Access Key API"
                                 class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-slate-800 text-sm font-semibold outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition font-mono"
                             />
                         </div>
@@ -228,23 +228,22 @@
                                 name="ipaymu_env"
                                 class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-slate-800 text-sm font-semibold outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition"
                             >
-                                <option value="sandbox" {{ old('ipaymu_env', env('IPAYMU_ENV', config('services.ipaymu.env'))) === 'sandbox' ? 'selected' : '' }}>Sandbox (Pengujian / Testing)</option>
-                                <option value="production" {{ old('ipaymu_env', env('IPAYMU_ENV', config('services.ipaymu.env'))) === 'production' ? 'selected' : '' }}>Production (Live / Transaksi Nyata)</option>
+                                <option value="sandbox" {{ old('ipaymu_env', env('XENITH_ENV', config('services.xenith.env'))) === 'sandbox' ? 'selected' : '' }}>Sandbox (Pengujian / Testing)</option>
+                                <option value="production" {{ old('ipaymu_env', env('XENITH_ENV', config('services.xenith.env'))) === 'production' ? 'selected' : '' }}>Production (Live / Transaksi Nyata)</option>
                             </select>
                         </div>
                     </div>
 
                     <div>
-                        <label for="ipaymu_api_key" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">API Key iPaymu</label>
+                        <label for="ipaymu_api_key" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Secret Key API</label>
                         <input
                             type="password"
                             id="ipaymu_api_key"
                             name="ipaymu_api_key"
-                            value="{{ old('ipaymu_api_key', env('IPAYMU_API_KEY', config('services.ipaymu.api_key'))) }}"
-                            placeholder="Masukkan iPaymu Secret API Key"
+                            value="{{ old('ipaymu_api_key', env('XENITH_SECRET_KEY', config('services.xenith.secret_key'))) }}"
+                            placeholder="Masukkan Secret Key API"
                             class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-slate-800 text-sm font-semibold outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition font-mono"
                         />
-                        <p class="text-[10px] text-slate-400 mt-1">Dapatkan Virtual Account & API Key dari dasbor resmi <a href="https://ipaymu.com" target="_blank" class="text-amber-600 underline hover:text-amber-700">iPaymu.com</a> (Menu Integrasi API v2).</p>
                     </div>
 
                     <div class="pt-3 flex justify-end">
@@ -253,7 +252,7 @@
                             class="flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white px-5 py-2.5 rounded-xl font-bold text-xs transition shadow-sm cursor-pointer"
                         >
                             <i data-lucide="save" class="w-4 h-4"></i>
-                            <span>Simpan Konfigurasi iPaymu</span>
+                            <span>Simpan Konfigurasi Payment Gateway</span>
                         </button>
                     </div>
                 </form>

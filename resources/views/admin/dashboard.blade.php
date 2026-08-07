@@ -688,10 +688,10 @@
 
             errDiv.classList.add('hidden');
             btn.disabled = true;
-            btn.innerHTML = '<div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div> <span>Menghubungi iPaymu...</span>';
+            btn.innerHTML = '<div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div> <span>Menyiapkan Tagihan...</span>';
 
             try {
-                const response = await fetch('/payment/ipaymu/create', {
+                const response = await fetch('/payment/xenith/create', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -705,31 +705,31 @@
                 if (data.success && data.payment_url) {
                     window.location.href = data.payment_url;
                 } else {
-                    errDiv.innerText = data.error || 'Gagal memproses pembayaran iPaymu.';
+                    errDiv.innerText = data.error || 'Gagal memproses pembayaran.';
                     errDiv.classList.remove('hidden');
                     btn.disabled = false;
-                    btn.innerHTML = '<i data-lucide="external-link" class="w-4 h-4"></i> <span>Bayar via iPaymu</span>';
+                    btn.innerHTML = '<i data-lucide="external-link" class="w-4 h-4"></i> <span>Bayar Sekarang / Pay Now</span>';
                     lucide.createIcons();
                 }
             } catch (err) {
                 errDiv.innerText = 'Terjadi kesalahan jaringan ke server: ' + err.message;
                 errDiv.classList.remove('hidden');
                 btn.disabled = false;
-                btn.innerHTML = '<i data-lucide="external-link" class="w-4 h-4"></i> <span>Bayar via iPaymu</span>';
+                btn.innerHTML = '<i data-lucide="external-link" class="w-4 h-4"></i> <span>Bayar Sekarang / Pay Now</span>';
                 lucide.createIcons();
             }
         }
     </script>
 
     <!-- ========================================== -->
-    <!--       IPAYMU TOP-UP MANDIRI MODAL          -->
+    <!--       TOP-UP SALDO POIN ONLINE MODAL       -->
     <!-- ========================================== -->
     <div id="modal-ipaymu-topup" class="hidden fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl max-w-md w-full shadow-2xl p-6 border border-slate-100 space-y-4">
             <div class="flex items-center justify-between pb-3 border-b border-slate-100">
                 <div class="flex items-center gap-2 text-amber-700 font-bold text-sm">
                     <i data-lucide="credit-card" class="w-5 h-5 text-amber-500"></i>
-                    <span>Top-Up Saldo Poin via iPaymu</span>
+                    <span>Top-Up Saldo Poin Online</span>
                 </div>
                 <button onclick="closeIpaymuModal()" class="p-1 text-slate-400 hover:text-slate-600 rounded-lg cursor-pointer">
                     <i data-lucide="x" class="w-5 h-5"></i>
@@ -737,7 +737,7 @@
             </div>
 
             <div class="bg-amber-50/70 border border-amber-100 p-3.5 rounded-xl space-y-1 text-xs">
-                <p class="text-slate-500">Metode Pembayaran Mandiri:</p>
+                <p class="text-slate-500">Metode Pembayaran Online Resmi:</p>
                 <p class="font-bold text-slate-900 text-sm">QRIS, VA (BCA, Mandiri, BNI, BRI), E-Wallet & CC</p>
                 <p class="text-slate-500 mt-1">Saldo Poin Saat Ini: <strong class="font-mono font-bold text-emerald-700">{{ number_format(Auth::user()->points ?? 0, 0, ',', '.') }} Poin</strong></p>
             </div>
@@ -745,21 +745,21 @@
             <div>
                 <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Pilih Paket Top-Up</label>
                 <div class="grid grid-cols-2 gap-2.5 mb-3">
-                    <button type="button" onclick="selectIpaymuPackage(50000)" class="pkg-btn border border-slate-200 p-3 rounded-xl hover:border-amber-500 hover:bg-amber-50/40 text-left transition cursor-pointer">
-                        <p class="text-xs text-slate-500 font-medium">Rp 50.000</p>
-                        <p class="text-sm font-black text-slate-800">50.000 Poin</p>
-                    </button>
                     <button type="button" onclick="selectIpaymuPackage(100000)" class="pkg-btn border-2 border-amber-500 bg-amber-50/50 p-3 rounded-xl text-left transition cursor-pointer">
-                        <p class="text-xs text-amber-700 font-bold">Rp 100.000 (Populer)</p>
+                        <p class="text-xs text-amber-700 font-bold">Rp 100.000 (Minimal PRO)</p>
                         <p class="text-sm font-black text-slate-900">100.000 Poin</p>
                     </button>
-                    <button type="button" onclick="selectIpaymuPackage(250000)" class="pkg-btn border border-slate-200 p-3 rounded-xl hover:border-amber-500 hover:bg-amber-50/40 text-left transition cursor-pointer">
-                        <p class="text-xs text-slate-500 font-medium">Rp 250.000</p>
-                        <p class="text-sm font-black text-slate-800">250.000 Poin</p>
+                    <button type="button" onclick="selectIpaymuPackage(200000)" class="pkg-btn border border-slate-200 p-3 rounded-xl hover:border-amber-500 hover:bg-amber-50/40 text-left transition cursor-pointer">
+                        <p class="text-xs text-slate-500 font-medium">Rp 200.000</p>
+                        <p class="text-sm font-black text-slate-800">200.000 Poin</p>
                     </button>
                     <button type="button" onclick="selectIpaymuPackage(500000)" class="pkg-btn border border-slate-200 p-3 rounded-xl hover:border-amber-500 hover:bg-amber-50/40 text-left transition cursor-pointer">
                         <p class="text-xs text-slate-500 font-medium">Rp 500.000</p>
                         <p class="text-sm font-black text-slate-800">500.000 Poin</p>
+                    </button>
+                    <button type="button" onclick="selectIpaymuPackage(1000000)" class="pkg-btn border border-slate-200 p-3 rounded-xl hover:border-amber-500 hover:bg-amber-50/40 text-left transition cursor-pointer">
+                        <p class="text-xs text-slate-500 font-medium">Rp 1.000.000</p>
+                        <p class="text-sm font-black text-slate-800">1.000.000 Poin</p>
                     </button>
                 </div>
 
@@ -767,8 +767,8 @@
                 <input
                     type="number"
                     id="custom-ipaymu-amount"
-                    min="10000"
-                    step="1000"
+                    min="100000"
+                    step="10000"
                     value="100000"
                     class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-slate-800 text-sm font-semibold outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition font-mono"
                 />
@@ -792,7 +792,7 @@
                     class="flex items-center gap-2 px-5 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-bold transition shadow-sm cursor-pointer"
                 >
                     <i data-lucide="external-link" class="w-4 h-4"></i>
-                    <span>Bayar via iPaymu</span>
+                    <span>Bayar Sekarang / Pay Now</span>
                 </button>
             </div>
         </div>
