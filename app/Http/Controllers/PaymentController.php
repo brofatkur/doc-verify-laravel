@@ -93,7 +93,7 @@ class PaymentController extends Controller
                 'success' => true,
                 'payment_url' => $simulatedUrl,
                 'is_simulated' => true,
-                'message' => 'Simulasi Pembayaran (Kredensial Xenith Pay belum dikonfigurasi di admin).',
+                'message' => 'Simulasi Pembayaran (Kredensial Xenith Pay belum dikonfigurasi).',
             ]);
         }
 
@@ -112,7 +112,6 @@ class PaymentController extends Controller
             'referenceCode' => $trxNo,
             'customerReference' => (string)$user->id,
             'customerName' => substr($user->name ?: 'Penerjemah IPPTI', 0, 50),
-            'customerPhoneNumber' => $user->whatsapp ?: '08123456789',
             'redirectUrl' => $redirectUrl,
             'paymentLinkCallbackUrl' => $callbackUrl,
             'payinCallbackUrl' => $callbackUrl,
@@ -155,6 +154,23 @@ class PaymentController extends Controller
                     'payment_url' => $paymentUrl,
                 ]);
             } else {
+                $code = $resData['code'] ?? '';
+                // If API returns UNKNOWN_IP_ADDRESS or running in sandbox mode without IP whitelist registered yet, fallback to simulation mode
+                if ($code === 'UNKNOWN_IP_ADDRESS' || !$isProduction) {
+                    $simulatedUrl = url('/xenith/return?trx_no=' . $trxNo . '&simulated=true');
+                    $transaction->update([
+                        'payment_url' => $simulatedUrl,
+                        'session_id' => 'SIMULATED-' . $trxNo,
+                    ]);
+
+                    return response()->json([
+                        'success' => true,
+                        'payment_url' => $simulatedUrl,
+                        'is_simulated' => true,
+                        'message' => 'Simulasi Pembayaran (IP Server belum didaftarkan di Xenith IP Whitelist).',
+                    ]);
+                }
+
                 $errMsg = $resData['message'] ?? ($resData['error']['message'] ?? 'Gagal membuat tautan pembayaran Xenith Pay.');
                 return response()->json([
                     'success' => false,
@@ -163,6 +179,21 @@ class PaymentController extends Controller
                 ], 400);
             }
         } catch (\Exception $e) {
+            if (!$isProduction) {
+                $simulatedUrl = url('/xenith/return?trx_no=' . $trxNo . '&simulated=true');
+                $transaction->update([
+                    'payment_url' => $simulatedUrl,
+                    'session_id' => 'SIMULATED-' . $trxNo,
+                ]);
+
+                return response()->json([
+                    'success' => true,
+                    'payment_url' => $simulatedUrl,
+                    'is_simulated' => true,
+                    'message' => 'Simulasi Pembayaran Testing.',
+                ]);
+            }
+
             return response()->json([
                 'success' => false,
                 'error' => 'Gagal menghubungkan ke Xenith Pay: ' . $e->getMessage(),
