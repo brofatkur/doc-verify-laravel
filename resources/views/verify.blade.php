@@ -10,6 +10,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- html2pdf.js for instant A4 PDF download -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <script>
         tailwind.config = {
             theme: {
@@ -167,12 +169,12 @@
             <div id="pdf-card" class="bg-white">
                 <!-- Header Banner -->
                 <div id="verified-banner" class="bg-gradient-to-br from-emerald-600 via-teal-700 to-emerald-800 p-8 text-center relative overflow-hidden">
-                    <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
+                    <div class="absolute inset-0 bg-gradient-to-r from-emerald-500/20 via-teal-500/10 to-transparent"></div>
                     <div class="absolute inset-0 bg-gradient-to-b from-white/10 to-transparent"></div>
                     
                     <!-- IPPTI Logo inside the certificate card (REV-05, Print Friendly) -->
                     <div class="absolute top-4 right-4 flex items-center gap-2 bg-white/10 backdrop-blur px-2.5 py-1 rounded-lg border border-white/20">
-                        <img src="/ippti-logo.jpg" alt="IPPTI Logo" class="h-6 w-auto rounded bg-white p-0.5 object-contain" />
+                        <img src="/ippti-logo.jpg" alt="IPPTI Logo" crossorigin="anonymous" class="h-6 w-auto rounded bg-white p-0.5 object-contain" />
                         <span class="text-[9px] font-black text-white tracking-widest">IPPTI</span>
                     </div>
                     
@@ -272,7 +274,7 @@
 
                             <!-- QR Code (spans 1 column) -->
                             <div class="bg-slate-50/60 border border-slate-100 rounded-2xl p-3 flex flex-col items-center justify-center gap-2">
-                                <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data={{ urlencode(url('/verify/' . $document->document_id)) }}" alt="QR" class="w-20 h-20 bg-white p-1 rounded-lg border border-slate-200 shadow-sm flex-shrink-0" />
+                                <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data={{ urlencode(url('/verify/' . $document->document_id)) }}" alt="QR" crossorigin="anonymous" class="w-20 h-20 bg-white p-1 rounded-lg border border-slate-200 shadow-sm flex-shrink-0" />
                                 <span class="text-[9px] font-bold text-emerald-700 font-mono tracking-wider notranslate" translate="no">{{ $document->document_id }}</span>
                             </div>
                         </div>
@@ -307,7 +309,7 @@
 
         <!-- Action Buttons (no-print) (REV-15, REV-21) -->
         <div class="flex flex-col sm:flex-row gap-4 w-full max-w-lg no-print mb-8">
-            <button onclick="downloadPDF()" class="flex-1 flex items-center justify-center gap-2 py-3 px-5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-sm font-bold transition shadow-sm cursor-pointer active:scale-[0.98]">
+            <button id="btn-download-pdf" onclick="downloadPDF()" class="flex-1 flex items-center justify-center gap-2 py-3 px-5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-sm font-bold transition shadow-sm cursor-pointer active:scale-[0.98]">
                 <i data-lucide="download" class="w-4.5 h-4.5 text-white"></i>
                 <span>Download PDF</span>
             </button>
@@ -541,30 +543,56 @@
         // Initialize UI
         updateUILanguage();
 
-        function downloadPDF() {
+        async function downloadPDF() {
+            const btn = document.getElementById('btn-download-pdf');
             const element = document.getElementById('pdf-card');
             if (!element) return;
 
-            const download = () => {
-                const opt = {
-                    margin:       10,
-                    filename:     'Verifikasi_Dokumen_' + '{{ $document ? $document->document_id : "doc" }}' + '.pdf',
-                    image:        { type: 'jpeg', quality: 0.98 },
-                    html2canvas:  { scale: 3, useCORS: true, logging: false },
-                    jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
-                };
-                html2pdf().set(opt).from(element).save();
-            };
+            const originalBtnHTML = btn ? btn.innerHTML : '';
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '<div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div><span>Mengunduh PDF...</span>';
+            }
 
-            if (window.html2pdf) {
-                download();
-            } else {
-                const script = document.createElement('script');
-                script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
-                script.integrity = 'sha512-GsLlZN/3F2ErC5IfS5Q/Go6XXnEQgp1Ckb9spipdI68x5rKxQcALzSZKCfyUlXOUMGq8MuvOdxTeRLgpRQGiKw==';
-                script.crossOrigin = 'anonymous';
-                script.onload = download;
-                document.body.appendChild(script);
+            const docId = "{{ $document ? $document->document_id : 'doc' }}";
+            const filename = 'Verifikasi_Dokumen_' + docId + '.pdf';
+
+            try {
+                if (typeof html2pdf === 'undefined') {
+                    await new Promise((resolve, reject) => {
+                        const script = document.createElement('script');
+                        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
+                        script.crossOrigin = 'anonymous';
+                        script.onload = resolve;
+                        script.onerror = reject;
+                        document.head.appendChild(script);
+                    });
+                }
+
+                const opt = {
+                    margin:       [6, 6, 6, 6],
+                    filename:     filename,
+                    image:        { type: 'jpeg', quality: 0.98 },
+                    html2canvas:  { 
+                        scale: 2, 
+                        useCORS: true, 
+                        allowTaint: true,
+                        logging: false 
+                    },
+                    jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
+                    pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }
+                };
+
+                await html2pdf().set(opt).from(element).save();
+            } catch (err) {
+                console.error('Generasi PDF bermasalah, mencetak secara langsung:', err);
+                window.print();
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = originalBtnHTML || '<i data-lucide="download" class="w-4.5 h-4.5 text-white"></i><span>Download PDF</span>';
+                    if (window.lucide) lucide.createIcons();
+                }
             }
         }
     </script>
