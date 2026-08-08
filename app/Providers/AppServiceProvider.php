@@ -39,9 +39,13 @@ class AppServiceProvider extends ServiceProvider
                     $table->boolean('is_unlimited_expiry')->default(true);
                     $table->dateTime('expires_at')->nullable();
                     $table->boolean('is_active')->default(true);
-                    $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
+                    $table->uuid('created_by')->nullable();
                     $table->timestamps();
                 });
+            } else {
+                try {
+                    \Illuminate\Support\Facades\DB::statement('ALTER TABLE vouchers MODIFY created_by VARCHAR(36) NULL');
+                } catch (\Throwable $ex) {}
             }
 
             if (\Illuminate\Support\Facades\Schema::hasTable('topup_orders') && !\Illuminate\Support\Facades\Schema::hasColumn('topup_orders', 'voucher_code')) {
@@ -68,9 +72,13 @@ class AppServiceProvider extends ServiceProvider
                     $table->enum('trigger_type', ['manual', 'auto_monthly', 'simulation'])->default('manual');
                     $table->text('raw_request')->nullable();
                     $table->text('raw_response')->nullable();
-                    $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
+                    $table->uuid('created_by')->nullable();
                     $table->timestamps();
                 });
+            } else {
+                try {
+                    \Illuminate\Support\Facades\DB::statement('ALTER TABLE payout_transactions MODIFY created_by VARCHAR(36) NULL');
+                } catch (\Throwable $ex) {}
             }
         } catch (\Throwable $e) {
             // Ignore during early installation

@@ -94,7 +94,7 @@ class VoucherController extends Controller
             'is_unlimited_expiry' => $isUnlimited,
             'expires_at' => $expiresAt,
             'is_active' => $request->has('is_active') ? true : false,
-            'created_by' => Auth::id(),
+            'created_by' => (string)Auth::id(),
         ]);
 
         AuditLog::log('CREATE_VOUCHER', Voucher::class, $voucher->id, [], $voucher->toArray());

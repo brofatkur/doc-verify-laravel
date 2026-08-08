@@ -52,9 +52,13 @@ class PayoutTransaction extends Model
                     $table->enum('trigger_type', ['manual', 'auto_monthly', 'simulation'])->default('manual');
                     $table->text('raw_request')->nullable();
                     $table->text('raw_response')->nullable();
-                    $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
+                    $table->uuid('created_by')->nullable();
                     $table->timestamps();
                 });
+            } else {
+                try {
+                    \Illuminate\Support\Facades\DB::statement('ALTER TABLE payout_transactions MODIFY created_by VARCHAR(36) NULL');
+                } catch (\Throwable $ex) {}
             }
         } catch (\Throwable $e) {
             // ignore

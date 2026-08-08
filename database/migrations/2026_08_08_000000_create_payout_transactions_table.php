@@ -26,7 +26,7 @@ return new class extends Migration
             $table->enum('trigger_type', ['manual', 'auto_monthly', 'simulation'])->default('manual');
             $table->text('raw_request')->nullable();
             $table->text('raw_response')->nullable();
-            $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->uuid('created_by')->nullable();
             $table->timestamps();
         });
     }

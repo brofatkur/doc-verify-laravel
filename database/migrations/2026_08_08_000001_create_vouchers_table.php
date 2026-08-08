@@ -25,7 +25,7 @@ return new class extends Migration
             $table->boolean('is_unlimited_expiry')->default(true);
             $table->dateTime('expires_at')->nullable();
             $table->boolean('is_active')->default(true);
-            $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->uuid('created_by')->nullable();
             $table->timestamps();
         });
 
