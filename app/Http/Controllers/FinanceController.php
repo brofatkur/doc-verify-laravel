@@ -24,8 +24,8 @@ class FinanceController extends Controller
      */
     public function index(Request $request)
     {
-        if (Auth::user()->role !== 'SUPERADMIN') {
-            abort(403, 'Akses Terbatas: Hanya Pengurus Super Admin IPPTI yang dapat mengakses Menu Keuangan.');
+        if (!in_array(Auth::user()->role, ['SUPERADMIN', 'ADMIN'])) {
+            abort(403, 'Akses Terbatas: Hanya Pengurus Admin IPPTI yang dapat mengakses Menu Keuangan.');
         }
 
         PayoutTransaction::ensureTableExists();
@@ -107,7 +107,7 @@ class FinanceController extends Controller
      */
     public function updateSettings(Request $request)
     {
-        if (Auth::user()->role !== 'SUPERADMIN') {
+        if (!in_array(Auth::user()->role, ['SUPERADMIN', 'ADMIN'])) {
             abort(403);
         }
 
@@ -148,7 +148,7 @@ class FinanceController extends Controller
      */
     public function triggerDisbursement(Request $request)
     {
-        if (Auth::user()->role !== 'SUPERADMIN') {
+        if (!in_array(Auth::user()->role, ['SUPERADMIN', 'ADMIN'])) {
             abort(403);
         }
 

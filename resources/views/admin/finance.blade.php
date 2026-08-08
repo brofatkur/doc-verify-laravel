@@ -13,10 +13,10 @@
             <div class="space-y-1">
                 <div class="flex items-center gap-2">
                     <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 tracking-wide uppercase">
-                        Super Admin Treasury
+                        Admin & Treasury IPPTI
                     </span>
                     <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-800 text-slate-300 border border-slate-700">
-                        Xenith Pay API v1 & v2
+                        Xenith Pay Gateway
                     </span>
                 </div>
                 <h1 class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">Manajemen Keuangan & Payout</h1>
