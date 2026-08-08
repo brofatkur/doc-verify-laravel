@@ -18,6 +18,8 @@ class VoucherController extends Controller
             abort(403, 'Akses Terbatas: Hanya Pengurus Admin IPPTI yang dapat mengelola Voucher Diskon.');
         }
 
+        Voucher::ensureTableExists();
+
         $query = Voucher::query()->with('user');
 
         if ($request->filled('q')) {
@@ -54,6 +56,8 @@ class VoucherController extends Controller
         if (!in_array(Auth::user()->role, ['SUPERADMIN', 'ADMIN'])) {
             abort(403);
         }
+
+        Voucher::ensureTableExists();
 
         $request->validate([
             'code' => 'required|string|max:50|unique:vouchers,code',
@@ -188,6 +192,8 @@ class VoucherController extends Controller
      */
     public function checkVoucher(Request $request)
     {
+        Voucher::ensureTableExists();
+
         $code = strtoupper(trim((string)$request->input('code', '')));
         $amount = (float)$request->input('amount', 0);
 

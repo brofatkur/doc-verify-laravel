@@ -111,4 +111,31 @@ class Voucher extends Model
     {
         $this->increment('used_count');
     }
+
+    public static function ensureTableExists(): void
+    {
+        try {
+            if (!\Illuminate\Support\Facades\Schema::hasTable('vouchers')) {
+                \Illuminate\Support\Facades\Schema::create('vouchers', function (\Illuminate\Database\Schema\Blueprint $table) {
+                    $table->id();
+                    $table->string('code')->unique()->index();
+                    $table->string('name')->nullable();
+                    $table->text('description')->nullable();
+                    $table->enum('discount_type', ['PERCENTAGE', 'FIXED'])->default('FIXED');
+                    $table->decimal('discount_value', 12, 2)->default(0);
+                    $table->decimal('min_order_amount', 15, 2)->default(0);
+                    $table->decimal('max_discount_amount', 15, 2)->nullable();
+                    $table->integer('usage_limit')->nullable();
+                    $table->integer('used_count')->default(0);
+                    $table->boolean('is_unlimited_expiry')->default(true);
+                    $table->dateTime('expires_at')->nullable();
+                    $table->boolean('is_active')->default(true);
+                    $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
+                    $table->timestamps();
+                });
+            }
+        } catch (\Throwable $e) {
+            // ignore
+        }
+    }
 }

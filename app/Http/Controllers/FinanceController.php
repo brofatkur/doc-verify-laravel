@@ -28,6 +28,8 @@ class FinanceController extends Controller
             abort(403, 'Akses Terbatas: Hanya Pengurus Super Admin IPPTI yang dapat mengakses Menu Keuangan.');
         }
 
+        PayoutTransaction::ensureTableExists();
+
         // Live Xenith Balances
         $balanceData = $this->xenithService->getBalances();
 
