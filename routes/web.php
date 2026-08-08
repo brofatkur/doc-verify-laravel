@@ -86,6 +86,11 @@ Route::middleware('auth')->group(function () {
     Route::get('/admin/transactions', [AdminController::class, 'transactions']);
     Route::post('/payment/pro-upgrade/create', [PaymentController::class, 'createProUpgradePayment']);
 
+    // Super Admin Finance & Payout Management
+    Route::get('/admin/finance', [\App\Http\Controllers\FinanceController::class, 'index']);
+    Route::post('/admin/finance/settings', [\App\Http\Controllers\FinanceController::class, 'updateSettings']);
+    Route::post('/admin/finance/payout', [\App\Http\Controllers\FinanceController::class, 'triggerDisbursement']);
+
     // Payment Gateway Checkout & Settings (Xenith Pay & Legacy iPaymu)
     Route::post('/admin/settings/ipaymu', [AdminController::class, 'updateIpaymuSettings']);
     Route::post('/payment/ipaymu/create', [PaymentController::class, 'createPayment']);
@@ -96,8 +101,11 @@ Route::middleware('auth')->group(function () {
 // Xenith Pay Webhook Callback & Return Page
 Route::post('/xenith/callback', [PaymentController::class, 'handleXenithCallback']);
 Route::get('/xenith/return', [PaymentController::class, 'handleXenithReturn']);
+Route::post('/xenith/payout-callback', [\App\Http\Controllers\FinanceController::class, 'handlePayoutCallback']);
+Route::post('/api/xenith/payout-callback', [\App\Http\Controllers\FinanceController::class, 'handlePayoutCallback']);
 
 // Legacy iPaymu Webhook Callback & Return Page (Backwards Compatibility)
 Route::post('/ipaymu/callback', [PaymentController::class, 'handleCallback']);
 Route::get('/ipaymu/return', [PaymentController::class, 'handleReturn']);
+
 

@@ -15,6 +15,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'ipaymu/callback',
             'xenith/callback',
             'api/xenith/callback',
+            'xenith/payout-callback',
+            'api/xenith/payout-callback',
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

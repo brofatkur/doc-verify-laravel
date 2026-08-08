@@ -85,6 +85,10 @@
                 @endif
 
                 @if(Auth::check() && Auth::user()->role === 'SUPERADMIN')
+                    <a href="/admin/finance" class="flex items-center gap-3 px-4 py-3 rounded-lg transition {{ request()->is('admin/finance*') ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-400 hover:bg-slate-800 hover:text-white' }}">
+                        <i data-lucide="wallet" class="w-5 h-5 {{ request()->is('admin/finance*') ? 'text-white' : 'text-slate-400' }}"></i>
+                        <span class="font-medium">Keuangan & Payout</span>
+                    </a>
                     <a href="/admin/audit-logs" class="flex items-center gap-3 px-4 py-3 rounded-lg transition {{ request()->is('admin/audit-logs*') ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-400 hover:bg-slate-800 hover:text-white' }}">
                         <i data-lucide="activity" class="w-5 h-5 {{ request()->is('admin/audit-logs*') ? 'text-white' : 'text-slate-400' }}"></i>
                         <span class="font-medium">Log Audit</span>
