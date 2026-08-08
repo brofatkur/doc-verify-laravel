@@ -79,7 +79,7 @@ class PaymentController extends Controller
      */
     private function processGatewayCheckout($user, $trxNo, $amount, $points, $productName, $orderType = 'topup', $voucherCode = null, $discountAmount = 0, $finalAmount = null)
     {
-        $payableAmount = $finalAmount !== null ? $finalAmount : $amount;
+        $payableAmount = $finalAmount !== null ? (float)$finalAmount : (float)$amount;
 
         // 1. Create topup order (Ledger Architecture)
         $topupOrder = TopupOrder::create([
@@ -105,7 +105,56 @@ class PaymentController extends Controller
             'status' => 'pending',
         ]);
 
-        // 3. Fetch Xenith Pay configuration
+        // 3. If 100% Free Discount Voucher (payableAmount == 0), activate points immediately without gateway redirect!
+        if ($payableAmount <= 0) {
+            $topupOrder->update([
+                'status' => 'success',
+                'final_amount' => 0,
+            ]);
+
+            $transaction->update([
+                'status' => 'success',
+                'amount' => 0,
+            ]);
+
+            // Add points directly to user
+            $user->increment('points', $points);
+
+            // Record point transaction in ledger
+            \App\Models\PointTransaction::create([
+                'user_id' => $user->id,
+                'type' => 'credit',
+                'amount' => $points,
+                'description' => "Top-Up Poin (Gratis Promo Voucher {$voucherCode})",
+                'reference_type' => 'topup_voucher_free',
+                'reference_id' => $trxNo,
+                'idempotency_key' => 'VOUCHER-FREE-' . $trxNo,
+            ]);
+
+            // Increment voucher usage
+            if (!empty($voucherCode)) {
+                $voucher = \App\Models\Voucher::where('code', $voucherCode)->first();
+                if ($voucher) {
+                    $voucher->incrementUsage();
+                }
+            }
+
+            AuditLog::log('TOPUP_VOUCHER_100_PERCENT_SUCCESS', TopupOrder::class, $topupOrder->id, [], [
+                'user_id' => $user->id,
+                'voucher_code' => $voucherCode,
+                'points' => $points,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'is_free' => true,
+                'points' => $points,
+                'message' => "Voucher diskon 100% ({$voucherCode}) berhasil digunakan! Saldo {$points} poin telah langsung ditambahkan ke akun Anda.",
+                'redirect_url' => url('/admin/dashboard'),
+            ]);
+        }
+
+        // 4. Fetch Xenith Pay configuration
         $accessKey = config('services.xenith.access_key') ?: env('XENITH_ACCESS_KEY', 'ak-9ec9d28a3464154019f281404d6393b814bb0f14ad2981533999ad7cd22e1b88');
         $secretKey = config('services.xenith.secret_key') ?: env('XENITH_SECRET_KEY', 'sk-f5d8181853248796c878203d8a276a5bbb4be3a91d422b087dc8e142d2bbe6e9b048e381afd4cd91f2cddad9b785a1ac5503cf98bf70cc1609ccb4af6870656e');
         $env = config('services.xenith.env') ?: env('XENITH_ENV', 'sandbox');
@@ -141,8 +190,9 @@ class PaymentController extends Controller
             $customerName = $customerName . ' IPPTI';
         }
 
+        // Bill the actual discounted final amount
         $payload = [
-            'amount' => (int)$amount,
+            'amount' => (int)$payableAmount,
             'currency' => 'IDR',
             'referenceCode' => $trxNo,
             'customerReference' => (string)$user->id,

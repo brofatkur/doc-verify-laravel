@@ -307,14 +307,21 @@
 
             const data = await response.json();
 
-            if (data.success && data.payment_url) {
+            if (data.success && data.is_free) {
+                btn.className = 'w-full py-3.5 bg-emerald-600 text-white font-black rounded-xl text-sm shadow-md flex items-center justify-center gap-2';
+                btn.innerHTML = '<i data-lucide="check-circle-2" class="w-4.5 h-4.5"></i> <span>Voucher Berhasil! Mengalihkan...</span>';
+                if (window.lucide) lucide.createIcons();
+                setTimeout(() => {
+                    window.location.href = data.redirect_url || '/admin/dashboard';
+                }, 500);
+            } else if (data.success && data.payment_url) {
                 window.location.href = data.payment_url;
             } else {
                 errDiv.innerText = data.error || 'Gagal menyiapkan tagihan pembayaran.';
                 errDiv.classList.remove('hidden');
                 btn.disabled = false;
                 btn.innerHTML = '<i data-lucide="zap" class="w-4.5 h-4.5 fill-white"></i> <span>Bayar Sekarang</span>';
-                lucide.createIcons();
+                if (window.lucide) lucide.createIcons();
             }
         } catch (err) {
             errDiv.innerText = 'Terjadi kesalahan koneksi jaringan: ' + err.message;

@@ -758,14 +758,21 @@
 
                 const data = await response.json();
 
-                if (data.success && data.payment_url) {
+                if (data.success && data.is_free) {
+                    btn.className = 'flex items-center gap-2 px-5 py-2 bg-emerald-600 text-white rounded-xl text-xs font-bold transition shadow-sm';
+                    btn.innerHTML = '<i data-lucide="check-circle-2" class="w-4 h-4"></i> <span>Voucher Berhasil!</span>';
+                    if (window.lucide) lucide.createIcons();
+                    setTimeout(() => {
+                        window.location.href = data.redirect_url || '/admin/dashboard';
+                    }, 500);
+                } else if (data.success && data.payment_url) {
                     window.location.href = data.payment_url;
                 } else {
                     errDiv.innerText = data.error || 'Gagal memproses pembayaran.';
                     errDiv.classList.remove('hidden');
                     btn.disabled = false;
                     btn.innerHTML = '<i data-lucide="external-link" class="w-4 h-4"></i> <span>Bayar Sekarang</span>';
-                    lucide.createIcons();
+                    if (window.lucide) lucide.createIcons();
                 }
             } catch (err) {
                 errDiv.innerText = 'Terjadi kesalahan jaringan ke server: ' + err.message;
