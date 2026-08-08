@@ -30,25 +30,55 @@ class FinanceController extends Controller
 
         PayoutTransaction::ensureTableExists();
 
-        // Live Xenith Balances
-        $balanceData = $this->xenithService->getBalances();
+        // Live Xenith Balances (safe call)
+        $balanceData = ['available_balance' => 0, 'pending_balance' => 0, 'currency' => 'IDR'];
+        try {
+            $balanceData = $this->xenithService->getBalances();
+        } catch (\Throwable $e) {
+            // fallback gracefully
+        }
 
         // Inflow (Top-Up Masuk)
-        $totalInflow = (float)TopupOrder::where('status', 'success')->sum('amount_idr');
-        $totalPointsIssued = (int)TopupOrder::where('status', 'success')->sum('points_issued');
-        $totalPayinCount = TopupOrder::where('status', 'success')->count();
-        $thisMonthInflow = (float)TopupOrder::where('status', 'success')
-            ->whereMonth('created_at', now()->month)
-            ->whereYear('created_at', now()->year)
-            ->sum('amount_idr');
+        $totalInflow = 0;
+        $totalPointsIssued = 0;
+        $totalPayinCount = 0;
+        $thisMonthInflow = 0;
+
+        try {
+            if (\Illuminate\Support\Facades\Schema::hasTable('topup_orders')) {
+                $totalInflow = (float)TopupOrder::where('status', 'success')->sum('amount_idr');
+                $totalPayinCount = TopupOrder::where('status', 'success')->count();
+                $thisMonthInflow = (float)TopupOrder::where('status', 'success')
+                    ->whereMonth('created_at', now()->month)
+                    ->whereYear('created_at', now()->year)
+                    ->sum('amount_idr');
+
+                if (\Illuminate\Support\Facades\Schema::hasColumn('topup_orders', 'points_issued')) {
+                    $totalPointsIssued = (int)TopupOrder::where('status', 'success')->sum('points_issued');
+                }
+            }
+        } catch (\Throwable $e) {
+            // fallback
+        }
 
         // Outflow (Pencairan / Payout)
-        $totalPayoutDisbursed = (float)PayoutTransaction::whereIn('status', ['success', 'simulated'])->sum('amount');
-        $totalPayoutIppti = (float)PayoutTransaction::where('recipient_type', 'IPPTI')
-            ->whereIn('status', ['success', 'simulated'])->sum('amount');
-        $totalPayoutBenlaris = (float)PayoutTransaction::where('recipient_type', 'BENLARIS')
-            ->whereIn('status', ['success', 'simulated'])->sum('amount');
-        $pendingPayoutCount = PayoutTransaction::whereIn('status', ['pending', 'processing'])->count();
+        $totalPayoutDisbursed = 0;
+        $totalPayoutIppti = 0;
+        $totalPayoutBenlaris = 0;
+        $pendingPayoutCount = 0;
+
+        try {
+            if (\Illuminate\Support\Facades\Schema::hasTable('payout_transactions')) {
+                $totalPayoutDisbursed = (float)PayoutTransaction::whereIn('status', ['success', 'simulated'])->sum('amount');
+                $totalPayoutIppti = (float)PayoutTransaction::where('recipient_type', 'IPPTI')
+                    ->whereIn('status', ['success', 'simulated'])->sum('amount');
+                $totalPayoutBenlaris = (float)PayoutTransaction::where('recipient_type', 'BENLARIS')
+                    ->whereIn('status', ['success', 'simulated'])->sum('amount');
+                $pendingPayoutCount = PayoutTransaction::whereIn('status', ['pending', 'processing'])->count();
+            }
+        } catch (\Throwable $e) {
+            // fallback
+        }
 
         // Available Balance to Disburse
         $systemAvailable = max(0, $totalInflow - $totalPayoutDisbursed);
@@ -75,13 +105,21 @@ class FinanceController extends Controller
         ];
 
         // Transactions History
-        $payinOrders = TopupOrder::with('user')
-            ->orderBy('id', 'desc')
-            ->paginate(10, ['*'], 'payin_page');
+        try {
+            $payinOrders = TopupOrder::with('user')
+                ->orderBy('id', 'desc')
+                ->paginate(15, ['*'], 'payin_page');
+        } catch (\Throwable $e) {
+            $payinOrders = new \Illuminate\Pagination\LengthAwarePaginator([], 0, 15);
+        }
 
-        $payoutTransactions = PayoutTransaction::with('user')
-            ->orderBy('id', 'desc')
-            ->paginate(10, ['*'], 'payout_page');
+        try {
+            $payoutTransactions = PayoutTransaction::with('user')
+                ->orderBy('id', 'desc')
+                ->paginate(15, ['*'], 'payout_page');
+        } catch (\Throwable $e) {
+            $payoutTransactions = new \Illuminate\Pagination\LengthAwarePaginator([], 0, 15);
+        }
 
         return view('admin.finance', compact(
             'balanceData',
