@@ -36,9 +36,34 @@ class PaymentController extends Controller
         $amount = (float)$request->amount;
         $points = (int)$amount;
 
+        $voucherCode = strtoupper(trim((string)$request->input('voucher_code', '')));
+        $discountAmount = 0;
+        $finalAmount = $amount;
+
+        if (!empty($voucherCode)) {
+            $voucher = \App\Models\Voucher::where('code', $voucherCode)->first();
+            if ($voucher) {
+                $validation = $voucher->isValidForAmount($amount);
+                if ($validation['valid']) {
+                    $discountAmount = (float)$validation['discount_amount'];
+                    $finalAmount = (float)$validation['final_amount'];
+                } else {
+                    return response()->json([
+                        'success' => false,
+                        'error' => $validation['message'],
+                    ], 422);
+                }
+            } else {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Kode voucher diskon "' . $voucherCode . '" tidak valid.',
+                ], 422);
+            }
+        }
+
         $trxNo = 'TOPUP-' . date('YmdHis') . '-' . strtoupper(substr(uniqid(), -4));
 
-        return $this->processGatewayCheckout($user, $trxNo, $amount, $points, 'Top-Up Poin Verifikasi Dokumen IPPTI');
+        return $this->processGatewayCheckout($user, $trxNo, $amount, $points, 'Top-Up Poin Verifikasi Dokumen IPPTI', 'topup', $voucherCode, $discountAmount, $finalAmount);
     }
 
     /**
@@ -52,25 +77,30 @@ class PaymentController extends Controller
     /**
      * Internal helper to build Xenith Pay payment link checkout request
      */
-    private function processGatewayCheckout($user, $trxNo, $amount, $points, $productName, $orderType = 'topup')
+    private function processGatewayCheckout($user, $trxNo, $amount, $points, $productName, $orderType = 'topup', $voucherCode = null, $discountAmount = 0, $finalAmount = null)
     {
+        $payableAmount = $finalAmount !== null ? $finalAmount : $amount;
+
         // 1. Create topup order (Ledger Architecture)
         $topupOrder = TopupOrder::create([
             'order_id' => $trxNo,
             'user_id' => $user->id,
             'amount_idr' => $amount,
+            'voucher_code' => $voucherCode ?: null,
+            'discount_amount' => $discountAmount,
+            'final_amount' => $payableAmount,
             'points_issued' => $points,
             'conversion_rate' => 1.00,
             'status' => 'pending',
             'payment_gateway' => 'xenith',
-            'metadata' => json_encode(['order_type' => $orderType]),
+            'metadata' => json_encode(['order_type' => $orderType, 'voucher_code' => $voucherCode, 'discount_amount' => $discountAmount]),
         ]);
 
         // 2. Create payment transaction for legacy compatibility
         $transaction = PaymentTransaction::create([
             'transaction_no' => $trxNo,
             'user_id' => $user->id,
-            'amount' => $amount,
+            'amount' => $payableAmount,
             'points' => $points,
             'status' => 'pending',
         ]);
@@ -235,6 +265,13 @@ class PaymentController extends Controller
                     'payment_channel' => $channel,
                     'payment_response_text' => $rawPayload,
                 ]);
+
+                if (!empty($topupOrder->voucher_code)) {
+                    $v = \App\Models\Voucher::where('code', $topupOrder->voucher_code)->first();
+                    if ($v) {
+                        $v->incrementUsage();
+                    }
+                }
             }
             if ($transaction) {
                 $transaction->update([

@@ -677,8 +677,61 @@
             document.getElementById('modal-ipaymu-topup').classList.add('hidden');
         }
 
+        let modalAppliedVoucher = '';
+        let modalDiscountAmount = 0;
+
         function selectIpaymuPackage(amount) {
             document.getElementById('custom-ipaymu-amount').value = amount;
+            modalAppliedVoucher = '';
+            modalDiscountAmount = 0;
+            const statusMsg = document.getElementById('modal-voucher-status');
+            if (statusMsg) statusMsg.classList.add('hidden');
+        }
+
+        async function applyModalVoucher() {
+            const codeInput = document.getElementById('modal-voucher-code');
+            const code = codeInput.value.trim().toUpperCase();
+            const amount = parseFloat(document.getElementById('custom-ipaymu-amount').value) || 100000;
+            const statusMsg = document.getElementById('modal-voucher-status');
+            const btn = document.getElementById('btn-modal-voucher');
+
+            if (!code) {
+                statusMsg.innerText = 'Masukkan kode voucher.';
+                statusMsg.className = 'text-[11px] font-bold text-rose-600 block';
+                return;
+            }
+
+            btn.disabled = true;
+
+            try {
+                const res = await fetch('/api/vouchers/check', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({ code: code, amount: amount })
+                });
+
+                const data = await res.json();
+
+                if (data.success) {
+                    modalAppliedVoucher = data.code;
+                    modalDiscountAmount = data.discount_amount;
+                    statusMsg.innerText = `✓ ${data.message}`;
+                    statusMsg.className = 'text-[11px] font-bold text-emerald-600 block';
+                } else {
+                    modalAppliedVoucher = '';
+                    modalDiscountAmount = 0;
+                    statusMsg.innerText = `✕ ${data.message || 'Voucher tidak valid.'}`;
+                    statusMsg.className = 'text-[11px] font-bold text-rose-600 block';
+                }
+            } catch (e) {
+                statusMsg.innerText = 'Gagal mengecek voucher: ' + e.message;
+                statusMsg.className = 'text-[11px] font-bold text-rose-600 block';
+            } finally {
+                btn.disabled = false;
+            }
         }
 
         async function processIpaymuPayment() {
@@ -697,7 +750,10 @@
                         'Content-Type': 'application/json',
                         'X-CSRF-TOKEN': '{{ csrf_token() }}'
                     },
-                    body: JSON.stringify({ amount: amount })
+                    body: JSON.stringify({
+                        amount: amount,
+                        voucher_code: modalAppliedVoucher
+                    })
                 });
 
                 const data = await response.json();
@@ -775,6 +831,28 @@
                 <p class="text-[10px] text-slate-400 mt-1">1 Rupiah = 1 Poin (Biaya registrasi: 1.000 Poin / dokumen).</p>
             </div>
 
+            <!-- Voucher Diskon Field in Modal -->
+            <div class="bg-emerald-50/70 p-3 rounded-xl border border-emerald-200 space-y-1.5">
+                <label class="block text-[11px] font-bold text-emerald-950 uppercase tracking-wider">Kode Voucher Diskon</label>
+                <div class="flex gap-2">
+                    <input
+                        type="text"
+                        id="modal-voucher-code"
+                        placeholder="Contoh: DISKON50"
+                        class="flex-1 px-3 py-1.5 text-xs font-mono font-bold uppercase rounded-lg border border-emerald-300 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    />
+                    <button
+                        type="button"
+                        id="btn-modal-voucher"
+                        onclick="applyModalVoucher()"
+                        class="px-3 py-1.5 bg-emerald-700 hover:bg-emerald-600 text-white rounded-lg text-xs font-bold transition cursor-pointer"
+                    >
+                        Terapkan
+                    </button>
+                </div>
+                <div id="modal-voucher-status" class="hidden text-[11px] font-bold"></div>
+            </div>
+
             <div id="ipaymu-error-msg" class="hidden bg-rose-50 border border-rose-200 text-rose-700 p-3 rounded-xl text-xs font-bold"></div>
 
             <div class="flex justify-end gap-3 pt-2 border-t border-slate-100">
@@ -795,6 +873,8 @@
                     <span>Bayar Sekarang</span>
                 </button>
             </div>
+        </div>
+    </div>
         </div>
     </div>
 @endif

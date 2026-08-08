@@ -94,11 +94,44 @@
                 </div>
             </div>
 
+            <!-- Voucher Diskon Input Field -->
+            <div class="p-4 bg-emerald-50/60 rounded-2xl border border-emerald-200/80 space-y-2">
+                <label class="block text-xs font-bold text-emerald-950 uppercase tracking-wider flex items-center justify-between">
+                    <span class="flex items-center gap-1.5">
+                        <i data-lucide="ticket" class="w-4 h-4 text-emerald-600"></i>
+                        <span>Punya Kode Voucher Diskon?</span>
+                    </span>
+                    <span class="text-[10px] text-emerald-700 font-semibold">Hemat biaya top-up</span>
+                </label>
+                <div class="flex gap-2">
+                    <input
+                        type="text"
+                        id="input_voucher_code"
+                        placeholder="Contoh: DISKON50"
+                        class="flex-1 px-3.5 py-2 text-xs font-mono font-black uppercase rounded-xl border border-emerald-300 bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none placeholder-slate-400"
+                    />
+                    <button
+                        type="button"
+                        onclick="applyVoucher()"
+                        id="btn-apply-voucher"
+                        class="px-4 py-2 bg-emerald-700 hover:bg-emerald-600 text-white font-bold rounded-xl text-xs transition cursor-pointer flex items-center gap-1"
+                    >
+                        <i data-lucide="check" class="w-3.5 h-3.5"></i>
+                        <span id="btn-apply-text">Terapkan</span>
+                    </button>
+                </div>
+                <div id="voucher-status-msg" class="hidden text-xs font-bold pt-1"></div>
+            </div>
+
             <!-- Summary Preview Box -->
             <div class="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white p-5 rounded-2xl space-y-3 shadow-md">
                 <div class="flex justify-between items-center text-xs text-slate-300">
                     <span>Total Saldo Poin Yang Diterima:</span>
                     <span id="summary-points" class="font-mono font-black text-emerald-400 text-sm">100.000 Poin</span>
+                </div>
+                <div id="wrapper-voucher-discount" class="hidden flex justify-between items-center text-xs text-emerald-300 border-t border-slate-700/60 pt-2 font-bold">
+                    <span id="label-voucher-name">Diskon Voucher:</span>
+                    <span id="summary-discount" class="font-mono text-emerald-300">- Rp 0</span>
                 </div>
                 <div class="flex justify-between items-center text-xs text-slate-300 border-t border-slate-700/60 pt-2">
                     <span>Status Level Akun Setelah Pembayaran:</span>
@@ -137,6 +170,8 @@
 
 <script>
     let selectedAmount = 100000;
+    let appliedVoucherCode = '';
+    let currentDiscountAmount = 0;
     const minAmount = {{ (int)$minTopup }};
 
     function selectNominal(amount) {
@@ -175,7 +210,71 @@
 
         const formatted = new Intl.NumberFormat('id-ID').format(selectedAmount > 0 ? selectedAmount : 0);
         document.getElementById('summary-points').innerText = `${formatted} Poin`;
-        document.getElementById('summary-total').innerText = `Rp ${formatted}`;
+
+        const finalAmount = Math.max(0, selectedAmount - currentDiscountAmount);
+        const formattedFinal = new Intl.NumberFormat('id-ID').format(finalAmount);
+        document.getElementById('summary-total').innerText = `Rp ${formattedFinal}`;
+
+        const wrapperDiscount = document.getElementById('wrapper-voucher-discount');
+        if (currentDiscountAmount > 0) {
+            wrapperDiscount.classList.remove('hidden');
+            document.getElementById('summary-discount').innerText = `- Rp ${new Intl.NumberFormat('id-ID').format(currentDiscountAmount)}`;
+        } else {
+            wrapperDiscount.classList.add('hidden');
+        }
+    }
+
+    async function applyVoucher() {
+        const codeInput = document.getElementById('input_voucher_code');
+        const code = codeInput.value.trim().toUpperCase();
+        const statusMsg = document.getElementById('voucher-status-msg');
+        const btn = document.getElementById('btn-apply-voucher');
+
+        if (!code) {
+            statusMsg.innerText = 'Silakan masukkan kode voucher terlebih dahulu.';
+            statusMsg.className = 'text-xs font-bold pt-1 text-rose-600 block';
+            return;
+        }
+
+        btn.disabled = true;
+        document.getElementById('btn-apply-text').innerText = 'Mengecek...';
+
+        try {
+            const res = await fetch('/api/vouchers/check', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({
+                    code: code,
+                    amount: selectedAmount
+                })
+            });
+
+            const data = await res.json();
+
+            if (data.success) {
+                appliedVoucherCode = data.code;
+                currentDiscountAmount = data.discount_amount;
+                statusMsg.innerText = `✓ ${data.message}`;
+                statusMsg.className = 'text-xs font-bold pt-1 text-emerald-600 block';
+                document.getElementById('label-voucher-name').innerText = `Diskon Voucher (${data.code}):`;
+                updateSummary();
+            } else {
+                appliedVoucherCode = '';
+                currentDiscountAmount = 0;
+                statusMsg.innerText = `✕ ${data.message || 'Voucher tidak valid.'}`;
+                statusMsg.className = 'text-xs font-bold pt-1 text-rose-600 block';
+                updateSummary();
+            }
+        } catch (e) {
+            statusMsg.innerText = 'Gagal memverifikasi voucher: ' + e.message;
+            statusMsg.className = 'text-xs font-bold pt-1 text-rose-600 block';
+        } finally {
+            btn.disabled = false;
+            document.getElementById('btn-apply-text').innerText = 'Terapkan';
+        }
     }
 
     async function processTopupCheckout() {
@@ -200,7 +299,10 @@
                     'Content-Type': 'application/json',
                     'X-CSRF-TOKEN': '{{ csrf_token() }}'
                 },
-                body: JSON.stringify({ amount: selectedAmount })
+                body: JSON.stringify({
+                    amount: selectedAmount,
+                    voucher_code: appliedVoucherCode
+                })
             });
 
             const data = await response.json();

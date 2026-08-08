@@ -64,6 +64,10 @@
                         <i data-lucide="languages" class="w-5 h-5 {{ request()->is('admin/language-directions*') ? 'text-white' : 'text-slate-400' }}"></i>
                         <span class="font-medium">Master Arah Bahasa</span>
                     </a>
+                    <a href="/admin/vouchers" class="flex items-center gap-3 px-4 py-3 rounded-lg transition {{ request()->is('admin/vouchers*') ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-400 hover:bg-slate-800 hover:text-white' }}">
+                        <i data-lucide="ticket" class="w-5 h-5 {{ request()->is('admin/vouchers*') ? 'text-white' : 'text-slate-400' }}"></i>
+                        <span class="font-medium">Voucher Diskon</span>
+                    </a>
                     <a href="/admin/settings" class="flex items-center gap-3 px-4 py-3 rounded-lg transition {{ request()->is('admin/settings*') ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-400 hover:bg-slate-800 hover:text-white' }}">
                         <i data-lucide="sliders" class="w-5 h-5 {{ request()->is('admin/settings*') ? 'text-white' : 'text-slate-400' }}"></i>
                         <span class="font-medium">Pengaturan Aplikasi</span>

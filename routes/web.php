@@ -91,6 +91,14 @@ Route::middleware('auth')->group(function () {
     Route::post('/admin/finance/settings', [\App\Http\Controllers\FinanceController::class, 'updateSettings']);
     Route::post('/admin/finance/payout', [\App\Http\Controllers\FinanceController::class, 'triggerDisbursement']);
 
+    // Discount Vouchers Management (Promo, Unlimited / Expired)
+    Route::get('/admin/vouchers', [\App\Http\Controllers\VoucherController::class, 'index']);
+    Route::post('/admin/vouchers', [\App\Http\Controllers\VoucherController::class, 'store']);
+    Route::post('/admin/vouchers/{id}/update', [\App\Http\Controllers\VoucherController::class, 'update']);
+    Route::post('/admin/vouchers/{id}/toggle', [\App\Http\Controllers\VoucherController::class, 'toggleActive']);
+    Route::post('/admin/vouchers/{id}/delete', [\App\Http\Controllers\VoucherController::class, 'destroy']);
+    Route::post('/api/vouchers/check', [\App\Http\Controllers\VoucherController::class, 'checkVoucher']);
+
     // Payment Gateway Checkout & Settings (Xenith Pay & Legacy iPaymu)
     Route::post('/admin/settings/ipaymu', [AdminController::class, 'updateIpaymuSettings']);
     Route::post('/payment/ipaymu/create', [PaymentController::class, 'createPayment']);
