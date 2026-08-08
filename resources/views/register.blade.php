@@ -66,7 +66,18 @@
             <form id="form-register" class="space-y-5" action="/register" method="POST" onsubmit="return validateForm()">
                 @csrf
                 
-                @if($errors->any())
+                @if(session('already_registered') || (isset($errors) && $errors->has('sk_number') && str_contains($errors->first('sk_number'), 'sudah terdaftar')))
+                    <div class="bg-amber-500/10 border border-amber-500/25 text-amber-300 p-4 rounded-xl text-xs text-center font-semibold leading-relaxed space-y-2">
+                        <p class="text-sm font-bold text-amber-200">Anda sudah terdaftar, silahkan login</p>
+                        <p class="text-slate-400 text-[11px]">Nomor anggota ini sudah memiliki akun aktif di DocVerify IPPTI.</p>
+                        <div class="pt-1">
+                            <a href="/login" class="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-bold text-xs transition shadow-sm">
+                                <i data-lucide="log-in" class="w-3.5 h-3.5"></i>
+                                <span>Masuk ke Akun (Login)</span>
+                            </a>
+                        </div>
+                    </div>
+                @elseif($errors->any())
                     <div class="bg-rose-500/10 border border-rose-500/20 text-rose-400 p-3.5 rounded-xl text-xs text-center font-semibold leading-relaxed">
                         {{ $errors->first() }}
                     </div>
@@ -262,6 +273,25 @@
                 const response = await fetch(`/api/check-member/${memberNo}`);
                 const data = await response.json();
 
+                if (data.already_registered) {
+                    errorDiv.innerHTML = `
+                        <div class="space-y-2 py-1">
+                            <p class="text-sm font-bold text-amber-200">Anda sudah terdaftar, silahkan login</p>
+                            <p class="text-slate-400 text-xs">Nomor anggota ini sudah memiliki akun aktif di DocVerify IPPTI.</p>
+                            <div class="pt-1">
+                                <a href="/login" class="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-bold text-xs transition shadow-sm">
+                                    <i data-lucide="log-in" class="w-3.5 h-3.5"></i>
+                                    <span>Masuk ke Akun (Login)</span>
+                                </a>
+                            </div>
+                        </div>
+                    `;
+                    errorDiv.className = "bg-amber-500/10 border border-amber-500/30 text-amber-300 p-4 rounded-xl text-xs text-center font-semibold leading-relaxed";
+                    errorDiv.classList.remove('hidden');
+                    lucide.createIcons();
+                    return;
+                }
+
                 if (data.success && data.translator) {
                     nameInput.value = data.translator.name;
                     nameInput.setAttribute('readonly', 'readonly');
@@ -274,6 +304,7 @@
                     successDiv.classList.remove('hidden');
                     submitText.innerText = 'Klaim & Daftar Akun';
                 } else {
+                    errorDiv.className = "bg-rose-500/10 border border-rose-500/20 text-rose-400 p-3.5 rounded-xl text-xs text-center font-semibold leading-relaxed";
                     errorDiv.innerText = data.error || 'Nomor Anggota tidak ditemukan dalam database pra-impor.';
                     errorDiv.classList.remove('hidden');
                     nameInput.removeAttribute('readonly');

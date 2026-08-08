@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use App\Models\User;
 use Illuminate\Support\Facades\Storage;
 
@@ -54,6 +55,13 @@ class AuthController extends Controller
 
         // Find if user already exists with the skNumber
         $existingBySk = User::where('sk_number', $skNumber)->where('role', 'TRANSLATOR')->first();
+
+        // If member already registered with real email, inform to login
+        if ($existingBySk && !str_ends_with($existingBySk->email, '@ippti.or.id')) {
+            return back()->withErrors([
+                'sk_number' => 'Anda sudah terdaftar, silahkan login.'
+            ])->with('already_registered', true)->withInput();
+        }
 
         // Validate email uniqueness except for the pre-imported user
         $emailRules = 'required|string|email|max:255';
@@ -128,6 +136,17 @@ class AuthController extends Controller
         $user = User::where('sk_number', $memberNo)->where('role', 'TRANSLATOR')->first();
 
         if ($user) {
+            $isAlreadyRegistered = !str_ends_with($user->email, '@ippti.or.id');
+            if ($isAlreadyRegistered) {
+                return response()->json([
+                    'success' => false,
+                    'already_registered' => true,
+                    'error' => 'Anda sudah terdaftar, silahkan login.',
+                    'message' => 'Anda sudah terdaftar, silahkan login.',
+                    'login_url' => '/login',
+                ]);
+            }
+
             return response()->json([
                 'success' => true,
                 'translator' => [
