@@ -35,7 +35,7 @@ class FinanceController extends Controller
 
         // Inflow (Top-Up Masuk)
         $totalInflow = (float)TopupOrder::where('status', 'success')->sum('amount_idr');
-        $totalPointsIssued = (int)TopupOrder::where('status', 'success')->sum('points');
+        $totalPointsIssued = (int)TopupOrder::where('status', 'success')->sum('points_issued');
         $totalPayinCount = TopupOrder::where('status', 'success')->count();
         $thisMonthInflow = (float)TopupOrder::where('status', 'success')
             ->whereMonth('created_at', now()->month)

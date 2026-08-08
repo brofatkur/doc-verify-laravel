@@ -417,7 +417,7 @@
                                     Rp {{ number_format($order->amount_idr, 0, ',', '.') }}
                                 </td>
                                 <td class="py-3.5 px-4 font-bold text-slate-900">
-                                    +{{ number_format($order->points, 0, ',', '.') }} Poin
+                                    +{{ number_format($order->points_issued ?? 0, 0, ',', '.') }} Poin
                                 </td>
                                 <td class="py-3.5 px-4">
                                     <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-800 uppercase">
