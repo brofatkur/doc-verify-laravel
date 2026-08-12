@@ -84,29 +84,32 @@ class FinanceController extends Controller
             // safe fallback
         }
 
-        // 3. Inflow (Top-Up Masuk)
-        $totalInflow = 0;
+        // 3. Inflow (Top-Up Masuk) - Bruto, Fee Gateway, & Netto
+        $totalInflowGross = 0;
+        $totalFeeGateway = 0;
+        $totalInflowNet = 0;
         $totalPointsIssued = 0;
         $totalPayinCount = 0;
         $thisMonthInflow = 0;
 
         try {
             if (\Illuminate\Support\Facades\Schema::hasTable('topup_orders')) {
-                $dbInflow = (float)TopupOrder::where('status', 'success')->sum('amount_idr');
-                $totalPayinCount = TopupOrder::where('status', 'success')->count();
-                $thisMonthInflow = (float)TopupOrder::where('status', 'success')
-                    ->whereMonth('created_at', now()->month)
-                    ->whereYear('created_at', now()->year)
-                    ->sum('amount_idr');
+                $orders = TopupOrder::where('status', 'success')->get();
+                $totalPayinCount = $orders->count();
+                $totalInflowGross = (float)$orders->sum('amount_idr');
+                $totalPointsIssued = (int)$orders->sum('points_issued');
 
-                if (\Illuminate\Support\Facades\Schema::hasColumn('topup_orders', 'points_issued')) {
-                    $totalPointsIssued = (int)TopupOrder::where('status', 'success')->sum('points_issued');
-                }
+                // Calculate total gateway fees
+                $totalFeeGateway = (float)$orders->sum(function($o) {
+                    return $o->effective_fee;
+                });
 
-                // If DB is empty but Xenith API returns live balance, use Xenith live balance as total inflow baseline
-                $liveTotal = (float)($balanceData['total_balance'] ?? 0);
-                $liveAvail = (float)($balanceData['available_balance'] ?? 0);
-                $totalInflow = max($dbInflow, $liveTotal, $liveAvail);
+                // Calculate total net after gateway fee
+                $totalInflowNet = (float)$orders->sum(function($o) {
+                    return $o->effective_net;
+                });
+
+                $thisMonthInflow = $totalInflowGross;
             }
         } catch (\Throwable $e) {
             // fallback
@@ -136,13 +139,24 @@ class FinanceController extends Controller
         $livePending = (float)($balanceData['pending_balance'] ?? 0);
         $liveTotal = (float)($balanceData['total_balance'] ?? ($liveAvailable + $livePending));
 
-        $readyToDisburse = $liveAvailable > 0 ? $liveAvailable : max(0, $totalInflow - $totalPayoutDisbursed);
+        // Use net inflow as real distributed funds
+        $effectiveNetInflow = $totalInflowNet > 0 ? $totalInflowNet : max(0, $totalInflowGross - $totalFeeGateway);
+        $readyToDisburse = $liveAvailable > 0 ? $liveAvailable : max(0, $effectiveNetInflow - $totalPayoutDisbursed);
 
-        $splitIppti = floor($totalInflow * 0.5);
-        $splitBenlaris = floor($totalInflow * 0.5);
+        // 50:50 revenue split
+        $splitIpptiGross = floor($totalInflowGross * 0.5);
+        $splitBenlarisGross = floor($totalInflowGross * 0.5);
+
+        $splitIpptiNet = floor($effectiveNetInflow * 0.5);
+        $splitBenlarisNet = floor($effectiveNetInflow * 0.5);
 
         $splitIpptiAvailable = floor($readyToDisburse * 0.5);
         $splitBenlarisAvailable = floor($readyToDisburse * 0.5);
+
+        // Compatibility variables
+        $totalInflow = $totalInflowGross;
+        $splitIppti = $splitIpptiNet;
+        $splitBenlaris = $splitBenlarisNet;
 
         // 6. Bank Accounts & Settings
         $bankSettings = [
@@ -180,6 +194,9 @@ class FinanceController extends Controller
         return view('admin.finance', compact(
             'balanceData',
             'totalInflow',
+            'totalInflowGross',
+            'totalFeeGateway',
+            'totalInflowNet',
             'totalPointsIssued',
             'totalPayinCount',
             'thisMonthInflow',
@@ -190,6 +207,10 @@ class FinanceController extends Controller
             'readyToDisburse',
             'splitIppti',
             'splitBenlaris',
+            'splitIpptiGross',
+            'splitBenlarisGross',
+            'splitIpptiNet',
+            'splitBenlarisNet',
             'splitIpptiAvailable',
             'splitBenlarisAvailable',
             'bankSettings',

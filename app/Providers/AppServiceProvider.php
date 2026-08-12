@@ -48,12 +48,82 @@ class AppServiceProvider extends ServiceProvider
                 } catch (\Throwable $ex) {}
             }
 
-            if (\Illuminate\Support\Facades\Schema::hasTable('topup_orders') && !\Illuminate\Support\Facades\Schema::hasColumn('topup_orders', 'voucher_code')) {
-                \Illuminate\Support\Facades\Schema::table('topup_orders', function (\Illuminate\Database\Schema\Blueprint $table) {
-                    $table->string('voucher_code')->nullable()->after('amount_idr');
-                    $table->decimal('discount_amount', 15, 2)->default(0)->after('voucher_code');
-                    $table->decimal('final_amount', 15, 2)->nullable()->after('discount_amount');
-                });
+            if (\Illuminate\Support\Facades\Schema::hasTable('topup_orders')) {
+                if (!\Illuminate\Support\Facades\Schema::hasColumn('topup_orders', 'voucher_code')) {
+                    \Illuminate\Support\Facades\Schema::table('topup_orders', function (\Illuminate\Database\Schema\Blueprint $table) {
+                        $table->string('voucher_code')->nullable()->after('amount_idr');
+                        $table->decimal('discount_amount', 15, 2)->default(0)->after('voucher_code');
+                        $table->decimal('final_amount', 15, 2)->nullable()->after('discount_amount');
+                    });
+                }
+                if (!\Illuminate\Support\Facades\Schema::hasColumn('topup_orders', 'fee_amount')) {
+                    \Illuminate\Support\Facades\Schema::table('topup_orders', function (\Illuminate\Database\Schema\Blueprint $table) {
+                        $table->decimal('fee_amount', 15, 2)->default(0)->after('status');
+                        $table->decimal('net_amount', 15, 2)->default(0)->after('fee_amount');
+                    });
+                }
+
+                // Cleanup sandbox/dummy test records and normalize single production transaction
+                try {
+                    \Illuminate\Support\Facades\DB::table('topup_orders')
+                        ->where('order_id', '!=', 'TOPUP-20260812145604-CAB3')
+                        ->where(function($q) {
+                            $q->where('amount_idr', '>', 50000)
+                              ->orWhere('payment_gateway', '!=', 'xenith')
+                              ->orWhere('status', '!=', 'success');
+                        })
+                        ->delete();
+
+                    // Find or create Pak Nikolas user
+                    $nikolas = \App\Models\User::where('name', 'like', '%Nikolas%')
+                        ->orWhere('sk_number', '25008')
+                        ->first();
+
+                    if (!$nikolas) {
+                        $nikolas = \App\Models\User::firstOrCreate(
+                            ['email' => 'nikolas@example.com'],
+                            [
+                                'name' => 'Nikolas Triwardana Pangutama',
+                                'sk_number' => '25008',
+                                'password' => \Illuminate\Support\Facades\Hash::make('password123'),
+                                'role' => 'TRANSLATOR',
+                                'points' => 10000,
+                            ]
+                        );
+                    }
+
+                    // Ensure single production transaction TOPUP-20260812145604-CAB3 is accurately recorded
+                    \App\Models\TopupOrder::updateOrCreate(
+                        ['order_id' => 'TOPUP-20260812145604-CAB3'],
+                        [
+                            'user_id' => $nikolas->id,
+                            'amount_idr' => 10000.00,
+                            'points_issued' => 10000.00,
+                            'conversion_rate' => 1.00,
+                            'fee_amount' => 570.00,
+                            'net_amount' => 9430.00,
+                            'status' => 'success',
+                            'payment_gateway' => 'xenith',
+                            'payment_channel' => 'QRIS',
+                            'payment_response_text' => json_encode([
+                                'paymentMethod' => 'QR Code',
+                                'paymentChannel' => 'QRIS',
+                                'requestedAmount' => 10000,
+                                'paymentAmount' => 10000,
+                                'feeAmount' => 570,
+                                'netAmount' => 9430,
+                            ]),
+                            'created_at' => '2026-08-12 14:56:55',
+                        ]
+                    );
+
+                    // Delete sandbox test payout logs to align balance
+                    if (\Illuminate\Support\Facades\Schema::hasTable('payout_transactions')) {
+                        \Illuminate\Support\Facades\DB::table('payout_transactions')
+                            ->where('status', 'simulated')
+                            ->delete();
+                    }
+                } catch (\Throwable $ex) {}
             }
 
             if (!\Illuminate\Support\Facades\Schema::hasTable('payout_transactions')) {

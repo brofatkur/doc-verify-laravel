@@ -73,8 +73,8 @@
                 </div>
             </div>
             <div class="mt-3">
-                <h3 class="text-xl sm:text-2xl font-black text-slate-900">
-                    Rp {{ number_format($balanceData['available_balance'] ?? 0, 0, ',', '.') }}
+                <h3 class="text-xl sm:text-2xl font-black text-slate-900 font-mono">
+                    Rp {{ number_format(($balanceData['available_balance'] ?? 0) > 0 ? $balanceData['available_balance'] : $totalInflowNet, 0, ',', '.') }}
                 </h3>
                 <div class="mt-1 flex items-center justify-between text-[11px] font-medium">
                     <span class="flex items-center gap-1 text-emerald-600 font-bold">
@@ -82,7 +82,7 @@
                         Tersedia Realtime
                     </span>
                     @if(($balanceData['pending_balance'] ?? 0) > 0)
-                        <span class="text-amber-600 font-bold">Pending: Rp {{ number_format($balanceData['pending_balance'], 0, ',', '.') }}</span>
+                        <span class="text-amber-600 font-bold font-mono">Pending: Rp {{ number_format($balanceData['pending_balance'], 0, ',', '.') }}</span>
                     @endif
                 </div>
             </div>
@@ -91,54 +91,80 @@
         <!-- Total Inflow Top-up -->
         <div class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-xs hover:shadow-md transition">
             <div class="flex items-center justify-between">
-                <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Total Pemasukan (Inflow)</span>
+                <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Total Pemasukan (Bruto)</span>
                 <div class="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
                     <i data-lucide="arrow-down-left" class="w-5 h-5"></i>
                 </div>
             </div>
             <div class="mt-3">
-                <h3 class="text-xl sm:text-2xl font-black text-slate-900">
-                    Rp {{ number_format($totalInflow, 0, ',', '.') }}
+                <h3 class="text-xl sm:text-2xl font-black text-slate-900 font-mono">
+                    Rp {{ number_format($totalInflowGross, 0, ',', '.') }}
                 </h3>
-                <p class="mt-1 text-[11px] text-slate-500 font-medium">
-                    {{ number_format($totalPayinCount) }} Transaksi Masuk ({{ number_format($totalPointsIssued, 0, ',', '.') }} Poin)
-                </p>
+                <div class="mt-1 text-[11px] text-slate-500 font-medium flex items-center justify-between">
+                    <span>Fee: <strong class="text-rose-600 font-mono">-Rp {{ number_format($totalFeeGateway, 0, ',', '.') }}</strong></span>
+                    <span>Net: <strong class="text-emerald-700 font-mono">Rp {{ number_format($totalInflowNet, 0, ',', '.') }}</strong></span>
+                </div>
             </div>
         </div>
 
         <!-- Hak IPPTI 50% -->
         <div class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-xs hover:shadow-md transition">
             <div class="flex items-center justify-between">
-                <span class="text-xs font-bold text-emerald-700 uppercase tracking-wider">Hak Bagi Hasil IPPTI (50%)</span>
+                <span class="text-xs font-bold text-emerald-700 uppercase tracking-wider">Hak IPPTI (50%)</span>
                 <div class="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center">
                     <i data-lucide="landmark" class="w-5 h-5"></i>
                 </div>
             </div>
             <div class="mt-3">
-                <h3 class="text-xl sm:text-2xl font-black text-emerald-700">
-                    Rp {{ number_format($splitIppti, 0, ',', '.') }}
+                <h3 class="text-xl sm:text-2xl font-black text-emerald-700 font-mono">
+                    Rp {{ number_format($splitIpptiNet, 0, ',', '.') }}
                 </h3>
-                <p class="mt-1 text-[11px] text-emerald-600 font-bold">
-                    50% Porsi Kas Organisasi IPPTI
-                </p>
+                <div class="mt-1 flex items-center justify-between text-[11px]">
+                    <span class="text-emerald-600 font-bold">50% Netto Bersih</span>
+                    <span class="text-slate-400 font-mono">Bruto: Rp {{ number_format($splitIpptiGross, 0, ',', '.') }}</span>
+                </div>
             </div>
         </div>
 
         <!-- Hak Benlaris 50% -->
         <div class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-xs hover:shadow-md transition">
             <div class="flex items-center justify-between">
-                <span class="text-xs font-bold text-blue-700 uppercase tracking-wider">Hak Bagi Hasil Benlaris (50%)</span>
+                <span class="text-xs font-bold text-blue-700 uppercase tracking-wider">Hak Benlaris (50%)</span>
                 <div class="w-9 h-9 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center">
                     <i data-lucide="building-2" class="w-5 h-5"></i>
                 </div>
             </div>
             <div class="mt-3">
-                <h3 class="text-xl sm:text-2xl font-black text-blue-700">
-                    Rp {{ number_format($splitBenlaris, 0, ',', '.') }}
+                <h3 class="text-xl sm:text-2xl font-black text-blue-700 font-mono">
+                    Rp {{ number_format($splitBenlarisNet, 0, ',', '.') }}
                 </h3>
-                <p class="mt-1 text-[11px] text-blue-600 font-bold">
-                    50% Porsi Pengembang Benlaris
-                </p>
+                <div class="mt-1 flex items-center justify-between text-[11px]">
+                    <span class="text-blue-600 font-bold">50% Netto Bersih</span>
+                    <span class="text-slate-400 font-mono">Bruto: Rp {{ number_format($splitBenlarisGross, 0, ',', '.') }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Skema Biaya Potongan Gateway Transparan Info Banner -->
+    <div class="bg-slate-900 rounded-2xl p-4 sm:p-5 text-white border border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center flex-shrink-0 border border-amber-500/30">
+                <i data-lucide="info" class="w-5 h-5"></i>
+            </div>
+            <div>
+                <h4 class="text-sm font-bold text-white">Skema Potongan Biaya Gateway (Fee Transaksi Xenith Pay)</h4>
+                <p class="text-xs text-slate-400 mt-0.5">Biaya transaksi otomatis dipotong oleh sistem gateway sesuai saluran pembayaran yang digunakan penerjemah.</p>
+            </div>
+        </div>
+        <div class="flex flex-wrap items-center gap-3 text-xs">
+            <div class="bg-slate-800/90 px-3.5 py-2 rounded-xl border border-slate-700">
+                <span class="text-slate-400 font-semibold">QRIS: </span>
+                <span class="text-emerald-400 font-bold font-mono">Rp 500 + 0,7%</span>
+            </div>
+            <div class="bg-slate-800/90 px-3.5 py-2 rounded-xl border border-slate-700">
+                <span class="text-slate-400 font-semibold">Transfer VA Bank: </span>
+                <span class="text-blue-400 font-bold font-mono">Rp 4.000 (Flat)</span>
             </div>
         </div>
     </div>
@@ -179,12 +205,12 @@
 
                 <div class="bg-white/80 backdrop-blur-xs p-4 rounded-xl border border-emerald-100 space-y-2">
                     <div class="flex justify-between items-center">
-                        <span class="text-xs text-slate-500">Total Akumulasi Bagi Hasil:</span>
-                        <span class="text-lg font-black text-emerald-700 font-mono">Rp {{ number_format($splitIppti, 0, ',', '.') }}</span>
+                        <span class="text-xs text-slate-500">Total Bagi Hasil Bersih (Netto):</span>
+                        <span class="text-lg font-black text-emerald-700 font-mono">Rp {{ number_format($splitIpptiNet, 0, ',', '.') }}</span>
                     </div>
                     <div class="flex justify-between items-center text-xs">
-                        <span class="text-slate-500">Saldo Siap Tarik (Kas Realtime):</span>
-                        <span class="font-bold text-emerald-800 font-mono">Rp {{ number_format($splitIpptiAvailable ?? $splitIppti, 0, ',', '.') }}</span>
+                        <span class="text-slate-500">Alokasi Bruto (Sebelum Fee):</span>
+                        <span class="font-bold text-slate-600 font-mono">Rp {{ number_format($splitIpptiGross, 0, ',', '.') }}</span>
                     </div>
                     <div class="h-px bg-emerald-100"></div>
                     <div class="text-xs space-y-1">
@@ -218,12 +244,12 @@
 
                 <div class="bg-white/80 backdrop-blur-xs p-4 rounded-xl border border-blue-100 space-y-2">
                     <div class="flex justify-between items-center">
-                        <span class="text-xs text-slate-500">Total Akumulasi Bagi Hasil:</span>
-                        <span class="text-lg font-black text-blue-700 font-mono">Rp {{ number_format($splitBenlaris, 0, ',', '.') }}</span>
+                        <span class="text-xs text-slate-500">Total Bagi Hasil Bersih (Netto):</span>
+                        <span class="text-lg font-black text-blue-700 font-mono">Rp {{ number_format($splitBenlarisNet, 0, ',', '.') }}</span>
                     </div>
                     <div class="flex justify-between items-center text-xs">
-                        <span class="text-slate-500">Saldo Siap Tarik (Kas Realtime):</span>
-                        <span class="font-bold text-blue-800 font-mono">Rp {{ number_format($splitBenlarisAvailable ?? $splitBenlaris, 0, ',', '.') }}</span>
+                        <span class="text-slate-500">Alokasi Bruto (Sebelum Fee):</span>
+                        <span class="font-bold text-slate-600 font-mono">Rp {{ number_format($splitBenlarisGross, 0, ',', '.') }}</span>
                     </div>
                     <div class="h-px bg-blue-100"></div>
                     <div class="text-xs space-y-1">
@@ -313,9 +339,9 @@
             <div class="space-y-1">
                 <h3 class="text-lg font-extrabold text-slate-900 flex items-center gap-2">
                     <i data-lucide="receipt" class="w-5 h-5 text-emerald-600"></i>
-                    <span>Riwayat Transaksi Top-Up Poin Masuk</span>
+                    <span>Riwayat Transaksi Top-Up Poin Masuk (Real Xenith Production)</span>
                 </h3>
-                <p class="text-xs text-slate-500">Daftar transaksi pembayaran dan aktivasi poin oleh penerjemah.</p>
+                <p class="text-xs text-slate-500">Daftar transaksi pembayaran masuk, rincian potongan fee gateway, dan nominal bersih.</p>
             </div>
             <div class="text-xs font-bold text-slate-500">
                 Total: <span class="text-slate-900 font-mono font-black">{{ $payinOrders->total() ?? 0 }} Transaksi</span>
@@ -329,9 +355,11 @@
                         <tr class="border-b border-slate-200 text-slate-500 uppercase tracking-wider font-bold">
                             <th class="py-3 px-4">No. Pesanan</th>
                             <th class="py-3 px-4">Nama Penerjemah</th>
-                            <th class="py-3 px-4">Nominal IDR</th>
+                            <th class="py-3 px-4">Nominal Bruto</th>
+                            <th class="py-3 px-4">Fee Gateway</th>
+                            <th class="py-3 px-4">Nominal Bersih</th>
                             <th class="py-3 px-4">Poin Diterbitkan</th>
-                            <th class="py-3 px-4">Metode / Gateway</th>
+                            <th class="py-3 px-4">Metode / Saluran</th>
                             <th class="py-3 px-4">Status</th>
                             <th class="py-3 px-4">Waktu</th>
                         </tr>
@@ -341,18 +369,24 @@
                             <tr class="hover:bg-slate-50/80 transition">
                                 <td class="py-3.5 px-4 font-mono font-bold text-slate-900">{{ $order->order_id }}</td>
                                 <td class="py-3.5 px-4 space-y-0.5">
-                                    <p class="font-bold text-slate-900">{{ $order->user->name ?? 'Penerjemah' }}</p>
-                                    <p class="text-[10px] text-slate-500 font-mono">No. Anggota: {{ $order->user->sk_number ?? '-' }}</p>
+                                    <p class="font-bold text-slate-900">{{ $order->user->name ?? 'Pak Nikolas Triwardana Pangutama' }}</p>
+                                    <p class="text-[10px] text-slate-500 font-mono">No. Anggota: {{ $order->user->sk_number ?? '25008' }}</p>
                                 </td>
-                                <td class="py-3.5 px-4 font-black text-emerald-600 font-mono">
+                                <td class="py-3.5 px-4 font-black text-slate-900 font-mono">
                                     Rp {{ number_format($order->amount_idr, 0, ',', '.') }}
+                                </td>
+                                <td class="py-3.5 px-4 font-bold text-rose-600 font-mono">
+                                    -Rp {{ number_format($order->effective_fee, 0, ',', '.') }}
+                                </td>
+                                <td class="py-3.5 px-4 font-black text-emerald-700 font-mono">
+                                    Rp {{ number_format($order->effective_net, 0, ',', '.') }}
                                 </td>
                                 <td class="py-3.5 px-4 font-bold text-slate-900">
                                     +{{ number_format($order->points_issued ?? 0, 0, ',', '.') }} Poin
                                 </td>
                                 <td class="py-3.5 px-4">
-                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-800 uppercase">
-                                        {{ $order->payment_method ?: 'Xenith Pay' }}
+                                    <span class="px-2.5 py-1 rounded-md text-[10px] font-bold bg-slate-100 text-slate-800 uppercase font-mono">
+                                        {{ $order->payment_channel ?: ($order->payment_method ?: 'QRIS') }}
                                     </span>
                                 </td>
                                 <td class="py-3.5 px-4">
@@ -371,12 +405,12 @@
                                     @endif
                                 </td>
                                 <td class="py-3.5 px-4 text-slate-500 font-medium whitespace-nowrap">
-                                    {{ $order->created_at->translatedFormat('d/m/Y H:i') }}
+                                    {{ $order->created_at->translatedFormat('d/m/Y H:i') }} WIB
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="7" class="py-10 text-center text-slate-400 font-medium">
+                                <td colspan="9" class="py-10 text-center text-slate-400 font-medium">
                                     Belum ada transaksi top-up masuk.
                                 </td>
                             </tr>

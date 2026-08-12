@@ -339,9 +339,14 @@ class PaymentController extends Controller
 
         if ($isSuccess) {
             if ($topupOrder) {
+                $feeAmount = (float)($data['feeAmount'] ?? TopupOrder::calculateGatewayFee((float)$topupOrder->amount_idr, $channel));
+                $netAmount = (float)($data['netAmount'] ?? max(0, (float)$topupOrder->amount_idr - $feeAmount));
+
                 $topupOrder->update([
                     'status' => 'success',
                     'payment_channel' => $channel,
+                    'fee_amount' => $feeAmount,
+                    'net_amount' => $netAmount,
                     'payment_response_text' => $rawPayload,
                 ]);
 
