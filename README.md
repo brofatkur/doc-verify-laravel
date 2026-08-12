@@ -1,66 +1,63 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# DocVerify IPPTI - Portal Sistem Verifikasi Dokumen Terjemahan Resmi
+**Platform Resmi Ikatan Penerjemah Indonesia (IPPTI) bekerjasama dengan PT Benlaris Sukses Indonesia**
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+---
 
-## About Laravel
+## 📖 Buku Panduan & Dokumentasi Lengkap
+Panduan lengkap untuk seluruh level pengguna telah tersedia pada berkas:
+👉 **[PANDUAN_LENGKAP_DOCVERIFY_IPPTI.md](PANDUAN_LENGKAP_DOCVERIFY_IPPTI.md)**
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+Daftar panduan mencakup:
+1. **User Publik (Masyarakat, Kedutaan, Notaris, Kementerian)**: Panduan scan QR code & pencarian keabsahan SK penerjemah.
+2. **Penerjemah Tersumpah (Translator Reguler & PRO)**: Input dokumen, impor Excel massal, unduh QR Code, top-up poin otomatis, klaim voucher promo, dan instalasi PWA di smartphone.
+3. **Pengurus IPPTI (Admin)**: Manajemen keanggotaan penerjemah, monitoring dokumen, laporan keuangan & bagi hasil 50:50, pembuatan voucher diskon, dan master data.
+4. **Super Admin & Auditor**: Portal audit nasional, audit log security trail, konfigurasi payment gateway Xenith Pay, dan pengaturan rekening payout.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+---
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## 🚀 Fitur Utama Sistem
+* **Verifikasi QR Code Realtime**: Validasi instan keaslian dokumen terjemahan resmi melalui pemindaian kamera HP.
+* **Integrasi Xenith Pay Live**: Pembayaran top-up poin otomatis dengan QRIS dan Virtual Account Bank.
+* **Skema Transparan Bagi Hasil 50:50**: Perhitungan proporsional otomatis antara kas organisasi IPPTI dan pengembang Benlaris berdasarkan saldo bersih real Xenith Pay.
+* **Progressive Web App (PWA)**: Dapat diinstall langsung di smartphone Android dan iOS (iPhone/iPad).
+* **Impor Berkas Excel Massal**: Kemudahan mendaftarkan puluhan hingga ratusan dokumen sekaligus dengan validasi All-or-Nothing.
 
-## Learning Laravel
+---
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## 🛠️ Persyaratan Sistem & Instalasi
+* **PHP**: `>= 8.2`
+* **Database**: MySQL / MariaDB / SQLite
+* **Ekstensi PHP**: `BCMath`, `Ctype`, `cURL`, `DOM`, `Fileinfo`, `JSON`, `Mbstring`, `OpenSSL`, `PDO`, `Tokenizer`, `XML`
+* **Composer**: `>= 2.0`
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+### Langkah Instalasi Cepat:
+```bash
+# 1. Clone repository
+git clone https://github.com/brofatkur/doc-verify-laravel.git
+cd doc-verify-laravel
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+# 2. Salin environment file
+cp .env.example .env
 
-## Laravel Sponsors
+# 3. Install dependensi
+composer install
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+# 4. Generate Application Key & Jalankan Migrasi
+php artisan key:generate
+php artisan migrate --seed
 
-### Premium Partners
+# 5. Jalankan server lokal
+php artisan serve
+```
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+---
 
-## Contributing
-
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
-
-## Code of Conduct
-
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
-
-## Security Vulnerabilities
-
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
-
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+## 🔒 Konfigurasi Payment Gateway Xenith Pay
+Tambahkan konfigurasi berikut pada file `.env`:
+```env
+XENITH_ENV=production
+XENITH_ACCESS_KEY=ak-xxxxxxxxxxxxxxx
+XENITH_SECRET_KEY=sk-xxxxxxxxxxxxxxx
+XENITH_WEBHOOK_SECRET=tqYxuHTdCIRApkXloJviGV0l5aBcMSMhf8K05nvgFXfEMs7-Xw0D1lV79V_PJt3Q
+```
+* **URL Callback / Webhook**: `https://domain-anda.com/api/payment/callback`
