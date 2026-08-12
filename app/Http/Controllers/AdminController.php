@@ -578,16 +578,21 @@ class AdminController extends Controller
         $request->validate([
             'ipaymu_va' => 'nullable|string|max:255',
             'ipaymu_api_key' => 'nullable|string|max:255',
+            'ipaymu_webhook_secret' => 'nullable|string|max:255',
             'ipaymu_env' => 'required|in:sandbox,production',
         ]);
 
         $va = trim((string)$request->ipaymu_va);
         $apiKey = trim((string)$request->ipaymu_api_key);
+        $webhookSecret = trim((string)$request->ipaymu_webhook_secret);
         $env = strtolower(trim((string)$request->ipaymu_env));
 
         // 1. Save directly into dynamic Setting table (persistent database storage)
         \App\Models\Setting::set('xenith_access_key', $va);
         \App\Models\Setting::set('xenith_secret_key', $apiKey);
+        if (!empty($webhookSecret)) {
+            \App\Models\Setting::set('xenith_webhook_secret', $webhookSecret);
+        }
         \App\Models\Setting::set('xenith_env', $env);
 
         \App\Models\Setting::set('ipaymu_va', $va);
@@ -603,6 +608,7 @@ class AdminController extends Controller
                 $keys = [
                     'XENITH_ACCESS_KEY' => $va,
                     'XENITH_SECRET_KEY' => $apiKey,
+                    'XENITH_WEBHOOK_SECRET' => $webhookSecret,
                     'XENITH_ENV' => $env,
                     'IPAYMU_VA' => $va,
                     'IPAYMU_API_KEY' => $apiKey,
@@ -610,6 +616,7 @@ class AdminController extends Controller
                 ];
 
                 foreach ($keys as $key => $value) {
+                    if (empty($value) && $key === 'XENITH_WEBHOOK_SECRET') continue;
                     if (preg_match("/^{$key}=.*/m", $envContent)) {
                         $envContent = preg_replace("/^{$key}=.*/m", "{$key}=\"{$value}\"", $envContent);
                     } else {
@@ -624,6 +631,7 @@ class AdminController extends Controller
         \App\Models\AuditLog::log('UPDATE_PAYMENT_GATEWAY_SETTINGS', User::class, $currentUser->id, [], [
             'env' => $env,
             'va_length' => strlen($va),
+            'has_webhook_secret' => !empty($webhookSecret),
         ]);
 
         $envLabel = $env === 'production' ? 'Production (Live)' : 'Sandbox (Testing)';

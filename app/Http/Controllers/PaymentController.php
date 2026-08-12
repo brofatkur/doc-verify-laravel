@@ -155,9 +155,9 @@ class PaymentController extends Controller
         }
 
         // 4. Fetch Xenith Pay configuration
-        $accessKey = Setting::get('xenith_access_key') ?: config('services.xenith.access_key') ?: env('XENITH_ACCESS_KEY', 'ak-9ec9d28a3464154019f281404d6393b814bb0f14ad2981533999ad7cd22e1b88');
-        $secretKey = Setting::get('xenith_secret_key') ?: config('services.xenith.secret_key') ?: env('XENITH_SECRET_KEY', 'sk-f5d8181853248796c878203d8a276a5bbb4be3a91d422b087dc8e142d2bbe6e9b048e381afd4cd91f2cddad9b785a1ac5503cf98bf70cc1609ccb4af6870656e');
-        $env = strtolower((string)(Setting::get('xenith_env') ?: config('services.xenith.env') ?: env('XENITH_ENV', 'sandbox')));
+        $accessKey = Setting::get('xenith_access_key') ?: config('services.xenith.access_key') ?: env('XENITH_ACCESS_KEY', 'ak-6b4c740dae79be46ee0189169e6636fd41917774f4365a4025529300c731bd2b');
+        $secretKey = Setting::get('xenith_secret_key') ?: config('services.xenith.secret_key') ?: env('XENITH_SECRET_KEY', 'sk-2cc25d1dd0b624c03650712be4749eea1686ce4fb30690a6316dee7ef96879896f9a19fc211c9e7fd429771f888a422099f01e9bc34c0fbeac4b07ab9d9f799e');
+        $env = strtolower((string)(Setting::get('xenith_env') ?: config('services.xenith.env') ?: env('XENITH_ENV', 'production')));
 
         // Check if Xenith credentials are configured
         if (empty($accessKey) || empty($secretKey)) {
@@ -286,6 +286,35 @@ class PaymentController extends Controller
      */
     public function handleXenithCallback(Request $request)
     {
+        // 1. Webhook Signature Verification according to Xenith Pay docs
+        $webhookSecret = Setting::get('xenith_webhook_secret') 
+            ?: config('services.xenith.webhook_secret') 
+            ?: env('XENITH_WEBHOOK_SECRET', 'tqYxuHTdCIRApkXloJviGV0l5aBcMSMhf8K05nvgFXfEMs7-Xw0D1lV79V_PJt3Q');
+
+        $receivedSignature = trim((string)($request->header('X-Xenith-Signature') ?? $request->header('x-xenith-signature') ?? ''));
+        $receivedTimestamp = trim((string)($request->header('X-Xenith-Timestamp') ?? $request->header('x-xenith-timestamp') ?? ''));
+
+        if (!empty($webhookSecret) && !empty($receivedSignature) && !empty($receivedTimestamp)) {
+            $method = strtoupper($request->method());
+            $path = '/' . ltrim($request->path(), '/');
+            $rawBody = $request->getContent();
+            
+            // Format: METHOD\nPATH\nBODY\nTIMESTAMP (literal \n as per Xenith docs)
+            $stringToSign = $method . '\n' . $path . '\n' . $rawBody . '\n' . $receivedTimestamp;
+            $computedSignature = base64_encode(hash_hmac('sha256', $stringToSign, $webhookSecret, true));
+
+            if (!hash_equals($computedSignature, $receivedSignature)) {
+                \Illuminate\Support\Facades\Log::warning('Xenith Webhook Signature Mismatch', [
+                    'computed' => $computedSignature,
+                    'received' => $receivedSignature,
+                    'path' => $path,
+                    'timestamp' => $receivedTimestamp,
+                ]);
+                return response()->json(['status' => false, 'message' => 'Invalid Webhook Signature'], 401);
+            }
+        }
+
+        // 2. Process payload
         $data = $request->input('data', []);
         $refCode = $data['referenceCode'] ?? $request->input('referenceCode') ?? $request->input('reference_id');
         $status = strtoupper((string)($data['status'] ?? $request->input('status', '')));

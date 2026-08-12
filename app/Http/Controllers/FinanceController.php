@@ -212,6 +212,34 @@ class FinanceController extends Controller
      */
     public function handlePayoutCallback(Request $request)
     {
+        // 1. Webhook Signature Verification
+        $webhookSecret = Setting::get('xenith_webhook_secret') 
+            ?: config('services.xenith.webhook_secret') 
+            ?: env('XENITH_WEBHOOK_SECRET', 'tqYxuHTdCIRApkXloJviGV0l5aBcMSMhf8K05nvgFXfEMs7-Xw0D1lV79V_PJt3Q');
+
+        $receivedSignature = trim((string)($request->header('X-Xenith-Signature') ?? $request->header('x-xenith-signature') ?? ''));
+        $receivedTimestamp = trim((string)($request->header('X-Xenith-Timestamp') ?? $request->header('x-xenith-timestamp') ?? ''));
+
+        if (!empty($webhookSecret) && !empty($receivedSignature) && !empty($receivedTimestamp)) {
+            $method = strtoupper($request->method());
+            $path = '/' . ltrim($request->path(), '/');
+            $rawBody = $request->getContent();
+            
+            $stringToSign = $method . '\n' . $path . '\n' . $rawBody . '\n' . $receivedTimestamp;
+            $computedSignature = base64_encode(hash_hmac('sha256', $stringToSign, $webhookSecret, true));
+
+            if (!hash_equals($computedSignature, $receivedSignature)) {
+                \Illuminate\Support\Facades\Log::warning('Xenith Payout Webhook Signature Mismatch', [
+                    'computed' => $computedSignature,
+                    'received' => $receivedSignature,
+                    'path' => $path,
+                    'timestamp' => $receivedTimestamp,
+                ]);
+                return response()->json(['status' => false, 'message' => 'Invalid Webhook Signature'], 401);
+            }
+        }
+
+        // 2. Process payload
         $data = $request->input('data', []);
         $payoutId = $data['id'] ?? $request->input('id');
         $referenceCode = $data['referenceCode'] ?? $request->input('referenceCode');

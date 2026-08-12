@@ -151,16 +151,30 @@
                 </div>
             </div>
 
-            <div>
-                <label for="settings_ipaymu_api_key" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Secret Key API (Xenith Pay)</label>
-                <input
-                    type="password"
-                    id="settings_ipaymu_api_key"
-                    name="ipaymu_api_key"
-                    value="{{ old('ipaymu_api_key', \App\Models\Setting::get('xenith_secret_key', env('XENITH_SECRET_KEY', config('services.xenith.secret_key')))) }}"
-                    placeholder="sk-..."
-                    class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-slate-800 text-sm font-semibold outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition font-mono bg-white"
-                />
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div>
+                    <label for="settings_ipaymu_api_key" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Secret Key API (Xenith Pay)</label>
+                    <input
+                        type="password"
+                        id="settings_ipaymu_api_key"
+                        name="ipaymu_api_key"
+                        value="{{ old('ipaymu_api_key', \App\Models\Setting::get('xenith_secret_key', env('XENITH_SECRET_KEY', config('services.xenith.secret_key')))) }}"
+                        placeholder="sk-..."
+                        class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-slate-800 text-sm font-semibold outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition font-mono bg-white"
+                    />
+                </div>
+
+                <div>
+                    <label for="settings_ipaymu_webhook_secret" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Webhook Signature Secret (Xenith)</label>
+                    <input
+                        type="password"
+                        id="settings_ipaymu_webhook_secret"
+                        name="ipaymu_webhook_secret"
+                        value="{{ old('ipaymu_webhook_secret', \App\Models\Setting::get('xenith_webhook_secret', env('XENITH_WEBHOOK_SECRET', config('services.xenith.webhook_secret')))) }}"
+                        placeholder="Masukkan Webhook Signature Secret"
+                        class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-slate-800 text-sm font-semibold outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition font-mono bg-white"
+                    />
+                </div>
             </div>
 
             <!-- Webhook & Callback URL Guide for Xenith Pay -->
