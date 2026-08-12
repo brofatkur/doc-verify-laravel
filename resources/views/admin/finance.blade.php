@@ -67,19 +67,19 @@
         <!-- Live Available Xenith Balance -->
         <div class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-xs hover:shadow-md transition">
             <div class="flex items-center justify-between">
-                <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Saldo Kas Gateway</span>
+                <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Saldo Kas Real Xenith</span>
                 <div class="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
                     <i data-lucide="wallet" class="w-5 h-5"></i>
                 </div>
             </div>
             <div class="mt-3">
                 <h3 class="text-xl sm:text-2xl font-black text-slate-900 font-mono">
-                    Rp {{ number_format(($balanceData['available_balance'] ?? 0) > 0 ? $balanceData['available_balance'] : $totalInflowNet, 0, ',', '.') }}
+                    Rp {{ number_format($realXenithBalance ?? $totalInflowNet, 0, ',', '.') }}
                 </h3>
                 <div class="mt-1 flex items-center justify-between text-[11px] font-medium">
                     <span class="flex items-center gap-1 text-emerald-600 font-bold">
                         <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                        Tersedia Realtime
+                        Saldo Realtime Gateway
                     </span>
                     @if(($balanceData['pending_balance'] ?? 0) > 0)
                         <span class="text-amber-600 font-bold font-mono">Pending: Rp {{ number_format($balanceData['pending_balance'], 0, ',', '.') }}</span>
@@ -88,59 +88,59 @@
             </div>
         </div>
 
-        <!-- Total Inflow Top-up -->
+        <!-- Total Inflow Top-up (Netto) -->
         <div class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-xs hover:shadow-md transition">
             <div class="flex items-center justify-between">
-                <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Total Pemasukan (Bruto)</span>
+                <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Total Pemasukan Bersih</span>
                 <div class="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
                     <i data-lucide="arrow-down-left" class="w-5 h-5"></i>
                 </div>
             </div>
             <div class="mt-3">
                 <h3 class="text-xl sm:text-2xl font-black text-slate-900 font-mono">
-                    Rp {{ number_format($totalInflowGross, 0, ',', '.') }}
+                    Rp {{ number_format($totalInflowNet, 0, ',', '.') }}
                 </h3>
                 <div class="mt-1 text-[11px] text-slate-500 font-medium flex items-center justify-between">
+                    <span>Bruto: <strong class="text-slate-700 font-mono">Rp {{ number_format($totalInflowGross, 0, ',', '.') }}</strong></span>
                     <span>Fee: <strong class="text-rose-600 font-mono">-Rp {{ number_format($totalFeeGateway, 0, ',', '.') }}</strong></span>
-                    <span>Net: <strong class="text-emerald-700 font-mono">Rp {{ number_format($totalInflowNet, 0, ',', '.') }}</strong></span>
                 </div>
             </div>
         </div>
 
-        <!-- Hak IPPTI 50% -->
+        <!-- Hak IPPTI 50% (Dari Saldo Real) -->
         <div class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-xs hover:shadow-md transition">
             <div class="flex items-center justify-between">
-                <span class="text-xs font-bold text-emerald-700 uppercase tracking-wider">Hak IPPTI (50%)</span>
+                <span class="text-xs font-bold text-emerald-700 uppercase tracking-wider">Hak Bagi Hasil IPPTI (50%)</span>
                 <div class="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center">
                     <i data-lucide="landmark" class="w-5 h-5"></i>
                 </div>
             </div>
             <div class="mt-3">
                 <h3 class="text-xl sm:text-2xl font-black text-emerald-700 font-mono">
-                    Rp {{ number_format($splitIpptiNet, 0, ',', '.') }}
+                    Rp {{ number_format($splitIppti, 0, ',', '.') }}
                 </h3>
                 <div class="mt-1 flex items-center justify-between text-[11px]">
-                    <span class="text-emerald-600 font-bold">50% Netto Bersih</span>
-                    <span class="text-slate-400 font-mono">Bruto: Rp {{ number_format($splitIpptiGross, 0, ',', '.') }}</span>
+                    <span class="text-emerald-600 font-bold">50% Saldo Real Xenith</span>
+                    <span class="text-slate-400 font-mono">1 Transaksi</span>
                 </div>
             </div>
         </div>
 
-        <!-- Hak Benlaris 50% -->
+        <!-- Hak Benlaris 50% (Dari Saldo Real) -->
         <div class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-xs hover:shadow-md transition">
             <div class="flex items-center justify-between">
-                <span class="text-xs font-bold text-blue-700 uppercase tracking-wider">Hak Benlaris (50%)</span>
+                <span class="text-xs font-bold text-blue-700 uppercase tracking-wider">Hak Bagi Hasil Benlaris (50%)</span>
                 <div class="w-9 h-9 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center">
                     <i data-lucide="building-2" class="w-5 h-5"></i>
                 </div>
             </div>
             <div class="mt-3">
                 <h3 class="text-xl sm:text-2xl font-black text-blue-700 font-mono">
-                    Rp {{ number_format($splitBenlarisNet, 0, ',', '.') }}
+                    Rp {{ number_format($splitBenlaris, 0, ',', '.') }}
                 </h3>
                 <div class="mt-1 flex items-center justify-between text-[11px]">
-                    <span class="text-blue-600 font-bold">50% Netto Bersih</span>
-                    <span class="text-slate-400 font-mono">Bruto: Rp {{ number_format($splitBenlarisGross, 0, ',', '.') }}</span>
+                    <span class="text-blue-600 font-bold">50% Saldo Real Xenith</span>
+                    <span class="text-slate-400 font-mono">1 Transaksi</span>
                 </div>
             </div>
         </div>
@@ -153,8 +153,8 @@
                 <i data-lucide="info" class="w-5 h-5"></i>
             </div>
             <div>
-                <h4 class="text-sm font-bold text-white">Skema Potongan Biaya Gateway (Fee Transaksi Xenith Pay)</h4>
-                <p class="text-xs text-slate-400 mt-0.5">Biaya transaksi otomatis dipotong oleh sistem gateway sesuai saluran pembayaran yang digunakan penerjemah.</p>
+                <h4 class="text-sm font-bold text-white">Skema Potongan Biaya Gateway & Dasar Bagi Hasil Realtime</h4>
+                <p class="text-xs text-slate-400 mt-0.5">Bagi hasil 50% IPPTI & 50% Benlaris dihitung murni dari saldo bersih real yang diterima di Xenith Pay setelah potongan fee.</p>
             </div>
         </div>
         <div class="flex flex-wrap items-center gap-3 text-xs">
@@ -177,7 +177,7 @@
                     <i data-lucide="pie-chart" class="w-5 h-5 text-emerald-600"></i>
                     <span>Rekapitulasi Pembagian Hasil (50% IPPTI & 50% Benlaris)</span>
                 </h2>
-                <p class="text-xs text-slate-500">Rincian alokasi bagi hasil dan data rekening bank resmi masing-masing pihak berdasarkan data transaksi live.</p>
+                <p class="text-xs text-slate-500">Dasar perhitungan: <strong>100% Saldo Bersih Real Xenith (Rp {{ number_format($realXenithBalance ?? $totalInflowNet, 0, ',', '.') }})</strong> dibagi 50:50 secara proporsional.</p>
             </div>
             <button
                 type="button"
@@ -205,12 +205,12 @@
 
                 <div class="bg-white/80 backdrop-blur-xs p-4 rounded-xl border border-emerald-100 space-y-2">
                     <div class="flex justify-between items-center">
-                        <span class="text-xs text-slate-500">Total Bagi Hasil Bersih (Netto):</span>
-                        <span class="text-lg font-black text-emerald-700 font-mono">Rp {{ number_format($splitIpptiNet, 0, ',', '.') }}</span>
+                        <span class="text-xs text-slate-500">Alokasi Hak Bagi Hasil:</span>
+                        <span class="text-xl font-black text-emerald-700 font-mono">Rp {{ number_format($splitIppti, 0, ',', '.') }}</span>
                     </div>
-                    <div class="flex justify-between items-center text-xs">
-                        <span class="text-slate-500">Alokasi Bruto (Sebelum Fee):</span>
-                        <span class="font-bold text-slate-600 font-mono">Rp {{ number_format($splitIpptiGross, 0, ',', '.') }}</span>
+                    <div class="flex justify-between items-center text-[11px]">
+                        <span class="text-slate-500">Persentase:</span>
+                        <span class="font-bold text-emerald-800 font-mono">50% dari Rp {{ number_format($realXenithBalance ?? $totalInflowNet, 0, ',', '.') }} (Saldo Real)</span>
                     </div>
                     <div class="h-px bg-emerald-100"></div>
                     <div class="text-xs space-y-1">
@@ -244,12 +244,12 @@
 
                 <div class="bg-white/80 backdrop-blur-xs p-4 rounded-xl border border-blue-100 space-y-2">
                     <div class="flex justify-between items-center">
-                        <span class="text-xs text-slate-500">Total Bagi Hasil Bersih (Netto):</span>
-                        <span class="text-lg font-black text-blue-700 font-mono">Rp {{ number_format($splitBenlarisNet, 0, ',', '.') }}</span>
+                        <span class="text-xs text-slate-500">Alokasi Hak Bagi Hasil:</span>
+                        <span class="text-xl font-black text-blue-700 font-mono">Rp {{ number_format($splitBenlaris, 0, ',', '.') }}</span>
                     </div>
-                    <div class="flex justify-between items-center text-xs">
-                        <span class="text-slate-500">Alokasi Bruto (Sebelum Fee):</span>
-                        <span class="font-bold text-slate-600 font-mono">Rp {{ number_format($splitBenlarisGross, 0, ',', '.') }}</span>
+                    <div class="flex justify-between items-center text-[11px]">
+                        <span class="text-slate-500">Persentase:</span>
+                        <span class="font-bold text-blue-800 font-mono">50% dari Rp {{ number_format($realXenithBalance ?? $totalInflowNet, 0, ',', '.') }} (Saldo Real)</span>
                     </div>
                     <div class="h-px bg-blue-100"></div>
                     <div class="text-xs space-y-1">

@@ -134,29 +134,32 @@ class FinanceController extends Controller
             // fallback
         }
 
-        // 5. Available Balances & Bagi Hasil (50% IPPTI & 50% Benlaris)
+        // 5. Available Balances & Bagi Hasil (50% IPPTI & 50% Benlaris) Strictly Based on Real Xenith Balance
         $liveAvailable = (float)($balanceData['available_balance'] ?? 0);
         $livePending = (float)($balanceData['pending_balance'] ?? 0);
         $liveTotal = (float)($balanceData['total_balance'] ?? ($liveAvailable + $livePending));
 
-        // Use net inflow as real distributed funds
+        // Real Net Balance received in Xenith
         $effectiveNetInflow = $totalInflowNet > 0 ? $totalInflowNet : max(0, $totalInflowGross - $totalFeeGateway);
-        $readyToDisburse = $liveAvailable > 0 ? $liveAvailable : max(0, $effectiveNetInflow - $totalPayoutDisbursed);
+        
+        // Base Saldo Real Xenith for Bagi Hasil
+        $realXenithBalance = $liveAvailable > 0 ? $liveAvailable : ($liveTotal > 0 ? $liveTotal : $effectiveNetInflow);
+        $readyToDisburse = max(0, $realXenithBalance - $totalPayoutDisbursed);
 
-        // 50:50 revenue split
+        // 50:50 revenue split calculated STRICTLY from Real Xenith Balance
+        $splitIppti = floor($realXenithBalance * 0.5);
+        $splitBenlaris = floor($realXenithBalance * 0.5);
+
+        $splitIpptiNet = $splitIppti;
+        $splitBenlarisNet = $splitBenlaris;
+
         $splitIpptiGross = floor($totalInflowGross * 0.5);
         $splitBenlarisGross = floor($totalInflowGross * 0.5);
-
-        $splitIpptiNet = floor($effectiveNetInflow * 0.5);
-        $splitBenlarisNet = floor($effectiveNetInflow * 0.5);
 
         $splitIpptiAvailable = floor($readyToDisburse * 0.5);
         $splitBenlarisAvailable = floor($readyToDisburse * 0.5);
 
-        // Compatibility variables
         $totalInflow = $totalInflowGross;
-        $splitIppti = $splitIpptiNet;
-        $splitBenlaris = $splitBenlarisNet;
 
         // 6. Bank Accounts & Settings
         $bankSettings = [
@@ -211,8 +214,7 @@ class FinanceController extends Controller
             'splitBenlarisGross',
             'splitIpptiNet',
             'splitBenlarisNet',
-            'splitIpptiAvailable',
-            'splitBenlarisAvailable',
+            'realXenithBalance',
             'bankSettings',
             'payinOrders',
             'payoutTransactions'
