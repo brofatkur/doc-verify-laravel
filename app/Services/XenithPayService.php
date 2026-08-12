@@ -54,6 +54,7 @@ class XenithPayService
             return [
                 'success' => false,
                 'available_balance' => 0,
+                'pending_balance' => 0,
                 'total_balance' => 0,
                 'currency' => 'IDR',
                 'is_simulated' => true,
@@ -77,12 +78,20 @@ class XenithPayService
 
             $resData = $response->json();
 
-            if ($response->successful() && isset($resData['data'][0])) {
-                $item = $resData['data'][0];
+            if ($response->successful() && !empty($resData['data'])) {
+                $item = is_array($resData['data']) && isset($resData['data'][0]) 
+                    ? $resData['data'][0] 
+                    : (is_array($resData['data']) ? $resData['data'] : []);
+                
+                $avail = (float)($item['availableBalance'] ?? $item['available_balance'] ?? $item['balance'] ?? 0);
+                $pending = (float)($item['pendingBalance'] ?? $item['pending_balance'] ?? 0);
+                $total = (float)($item['totalBalance'] ?? $item['total_balance'] ?? ($avail + $pending));
+
                 return [
                     'success' => true,
-                    'available_balance' => (float)($item['availableBalance'] ?? 0),
-                    'total_balance' => (float)($item['totalBalance'] ?? 0),
+                    'available_balance' => $avail,
+                    'pending_balance' => $pending,
+                    'total_balance' => $total,
                     'currency' => $item['currency'] ?? 'IDR',
                     'raw' => $resData,
                 ];
@@ -91,6 +100,7 @@ class XenithPayService
             return [
                 'success' => false,
                 'available_balance' => 0,
+                'pending_balance' => 0,
                 'total_balance' => 0,
                 'currency' => 'IDR',
                 'error' => $resData['message'] ?? 'Gagal memuat saldo dari Xenith Pay.',
@@ -100,10 +110,49 @@ class XenithPayService
             return [
                 'success' => false,
                 'available_balance' => 0,
+                'pending_balance' => 0,
                 'total_balance' => 0,
                 'currency' => 'IDR',
                 'error' => $e->getMessage(),
             ];
+        }
+    }
+
+    /**
+     * Get Pay-In List directly from Xenith Pay API (GET /v1/payins)
+     */
+    public function getPayInsList(int $page = 1, int $limit = 20): array
+    {
+        if (empty($this->accessKey) || empty($this->secretKey)) {
+            return ['success' => false, 'data' => []];
+        }
+
+        $endpoint = '/v1/payins';
+        $fullUrl = $this->baseUrl . $endpoint . '?page=' . $page . '&limit=' . $limit;
+        $timestamp = $this->generateTimestamp();
+        $signature = $this->generateSignature('GET', $endpoint, $timestamp, '');
+
+        try {
+            $response = Http::withHeaders([
+                'Accept' => 'application/json',
+                'Content-Type' => 'application/json',
+                'Xenith-Api-Key' => $this->accessKey,
+                'Xenith-Request-Timestamp' => $timestamp,
+                'Xenith-Request-Signature' => $signature,
+            ])->timeout(10)->get($fullUrl);
+
+            $resData = $response->json();
+            if ($response->successful()) {
+                return [
+                    'success' => true,
+                    'data' => $resData['data'] ?? [],
+                    'meta' => $resData['meta'] ?? $resData['pagination'] ?? [],
+                ];
+            }
+
+            return ['success' => false, 'error' => $resData['message'] ?? 'Failed to fetch payins', 'data' => []];
+        } catch (\Throwable $e) {
+            return ['success' => false, 'error' => $e->getMessage(), 'data' => []];
         }
     }
 

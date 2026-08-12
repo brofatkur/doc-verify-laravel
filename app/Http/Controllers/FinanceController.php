@@ -30,15 +30,61 @@ class FinanceController extends Controller
 
         PayoutTransaction::ensureTableExists();
 
-        // Live Xenith Balances (safe call)
-        $balanceData = ['available_balance' => 0, 'pending_balance' => 0, 'currency' => 'IDR'];
+        // 1. Live Xenith Balances (safe call to production API)
+        $balanceData = [
+            'available_balance' => 0,
+            'pending_balance' => 0,
+            'total_balance' => 0,
+            'currency' => 'IDR',
+            'success' => false,
+        ];
+        
         try {
             $balanceData = $this->xenithService->getBalances();
         } catch (\Throwable $e) {
             // fallback gracefully
         }
 
-        // Inflow (Top-Up Masuk)
+        // 2. Auto-sync remote payins from Xenith Production API if requested or on load
+        try {
+            $remotePayins = $this->xenithService->getPayInsList(1, 50);
+            if (!empty($remotePayins['data']) && is_array($remotePayins['data'])) {
+                foreach ($remotePayins['data'] as $payin) {
+                    $ref = $payin['referenceCode'] ?? $payin['reference_id'] ?? $payin['id'] ?? null;
+                    if (!$ref) continue;
+
+                    $rawStatus = strtoupper((string)($payin['status'] ?? 'PENDING'));
+                    $normStatus = in_array($rawStatus, ['COMPLETED', 'SUCCESS', 'PAID', 'SETTLED']) ? 'success' : (in_array($rawStatus, ['PENDING', 'PROCESSING']) ? 'pending' : 'failed');
+                    $amt = (float)($payin['amount'] ?? $payin['initiatedAmount'] ?? $payin['totalAmount'] ?? 0);
+                    $channel = $payin['paymentChannel'] ?? $payin['paymentMethod'] ?? 'Xenith Pay';
+
+                    $existing = TopupOrder::where('order_id', $ref)->first();
+                    if (!$existing && $amt > 0) {
+                        TopupOrder::create([
+                            'order_id' => $ref,
+                            'user_id' => Auth::id(),
+                            'amount_idr' => $amt,
+                            'points_issued' => $amt,
+                            'conversion_rate' => 1,
+                            'status' => $normStatus,
+                            'payment_gateway' => 'xenith',
+                            'payment_channel' => $channel,
+                            'payment_response_text' => json_encode($payin),
+                            'created_at' => isset($payin['createdAt']) ? \Carbon\Carbon::parse($payin['createdAt']) : now(),
+                        ]);
+                    } elseif ($existing && $existing->status !== $normStatus) {
+                        $existing->update([
+                            'status' => $normStatus,
+                            'payment_channel' => $channel,
+                        ]);
+                    }
+                }
+            }
+        } catch (\Throwable $e) {
+            // safe fallback
+        }
+
+        // 3. Inflow (Top-Up Masuk)
         $totalInflow = 0;
         $totalPointsIssued = 0;
         $totalPayinCount = 0;
@@ -46,7 +92,7 @@ class FinanceController extends Controller
 
         try {
             if (\Illuminate\Support\Facades\Schema::hasTable('topup_orders')) {
-                $totalInflow = (float)TopupOrder::where('status', 'success')->sum('amount_idr');
+                $dbInflow = (float)TopupOrder::where('status', 'success')->sum('amount_idr');
                 $totalPayinCount = TopupOrder::where('status', 'success')->count();
                 $thisMonthInflow = (float)TopupOrder::where('status', 'success')
                     ->whereMonth('created_at', now()->month)
@@ -56,12 +102,17 @@ class FinanceController extends Controller
                 if (\Illuminate\Support\Facades\Schema::hasColumn('topup_orders', 'points_issued')) {
                     $totalPointsIssued = (int)TopupOrder::where('status', 'success')->sum('points_issued');
                 }
+
+                // If DB is empty but Xenith API returns live balance, use Xenith live balance as total inflow baseline
+                $liveTotal = (float)($balanceData['total_balance'] ?? 0);
+                $liveAvail = (float)($balanceData['available_balance'] ?? 0);
+                $totalInflow = max($dbInflow, $liveTotal, $liveAvail);
             }
         } catch (\Throwable $e) {
             // fallback
         }
 
-        // Outflow (Pencairan / Payout)
+        // 4. Outflow (Pencairan / Payout)
         $totalPayoutDisbursed = 0;
         $totalPayoutIppti = 0;
         $totalPayoutBenlaris = 0;
@@ -80,15 +131,20 @@ class FinanceController extends Controller
             // fallback
         }
 
-        // Available Balance to Disburse
-        $systemAvailable = max(0, $totalInflow - $totalPayoutDisbursed);
+        // 5. Available Balances & Bagi Hasil (50% IPPTI & 50% Benlaris)
         $liveAvailable = (float)($balanceData['available_balance'] ?? 0);
-        $readyToDisburse = $liveAvailable > 0 ? $liveAvailable : $systemAvailable;
+        $livePending = (float)($balanceData['pending_balance'] ?? 0);
+        $liveTotal = (float)($balanceData['total_balance'] ?? ($liveAvailable + $livePending));
 
-        $splitIppti = floor($readyToDisburse / 2);
-        $splitBenlaris = floor($readyToDisburse / 2);
+        $readyToDisburse = $liveAvailable > 0 ? $liveAvailable : max(0, $totalInflow - $totalPayoutDisbursed);
 
-        // Bank Accounts & Settings
+        $splitIppti = floor($totalInflow * 0.5);
+        $splitBenlaris = floor($totalInflow * 0.5);
+
+        $splitIpptiAvailable = floor($readyToDisburse * 0.5);
+        $splitBenlarisAvailable = floor($readyToDisburse * 0.5);
+
+        // 6. Bank Accounts & Settings
         $bankSettings = [
             'bank_name_ippti' => Setting::get('bank_name_ippti', 'Bank BCA'),
             'bank_channel_ippti' => Setting::get('bank_channel_ippti', 'CENAIDJA'),
@@ -104,7 +160,7 @@ class FinanceController extends Controller
             'min_payout_threshold' => (float)Setting::get('min_payout_threshold', 100000),
         ];
 
-        // Transactions History
+        // 7. Transactions History
         try {
             $payinOrders = TopupOrder::with('user')
                 ->orderBy('id', 'desc')
@@ -134,10 +190,67 @@ class FinanceController extends Controller
             'readyToDisburse',
             'splitIppti',
             'splitBenlaris',
+            'splitIpptiAvailable',
+            'splitBenlarisAvailable',
             'bankSettings',
             'payinOrders',
             'payoutTransactions'
         ));
+    }
+
+    /**
+     * Manual Trigger to Sync Live Xenith Pay Data
+     */
+    public function syncLiveXenithData(Request $request)
+    {
+        if (!in_array(Auth::user()->role, ['SUPERADMIN', 'ADMIN'])) {
+            abort(403);
+        }
+
+        try {
+            $balance = $this->xenithService->getBalances();
+            $payins = $this->xenithService->getPayInsList(1, 100);
+
+            $syncedCount = 0;
+            if (!empty($payins['data']) && is_array($payins['data'])) {
+                foreach ($payins['data'] as $payin) {
+                    $ref = $payin['referenceCode'] ?? $payin['reference_id'] ?? $payin['id'] ?? null;
+                    if (!$ref) continue;
+
+                    $rawStatus = strtoupper((string)($payin['status'] ?? 'PENDING'));
+                    $normStatus = in_array($rawStatus, ['COMPLETED', 'SUCCESS', 'PAID', 'SETTLED']) ? 'success' : (in_array($rawStatus, ['PENDING', 'PROCESSING']) ? 'pending' : 'failed');
+                    $amt = (float)($payin['amount'] ?? $payin['initiatedAmount'] ?? $payin['totalAmount'] ?? 0);
+                    $channel = $payin['paymentChannel'] ?? $payin['paymentMethod'] ?? 'Xenith Pay';
+
+                    $existing = TopupOrder::where('order_id', $ref)->first();
+                    if (!$existing && $amt > 0) {
+                        TopupOrder::create([
+                            'order_id' => $ref,
+                            'user_id' => Auth::id(),
+                            'amount_idr' => $amt,
+                            'points_issued' => $amt,
+                            'conversion_rate' => 1,
+                            'status' => $normStatus,
+                            'payment_gateway' => 'xenith',
+                            'payment_channel' => $channel,
+                            'payment_response_text' => json_encode($payin),
+                            'created_at' => isset($payin['createdAt']) ? \Carbon\Carbon::parse($payin['createdAt']) : now(),
+                        ]);
+                        $syncedCount++;
+                    } elseif ($existing) {
+                        $existing->update([
+                            'status' => $normStatus,
+                            'payment_channel' => $channel,
+                        ]);
+                    }
+                }
+            }
+
+            $avail = number_format($balance['available_balance'] ?? 0, 0, ',', '.');
+            return back()->with('success', "Sinkronisasi berhasil! Saldo Realtime Xenith: Rp {$avail}. ({$syncedCount} transaksi baru diperbarui).");
+        } catch (\Throwable $e) {
+            return back()->with('error', 'Gagal menyinkronkan data Xenith: ' . $e->getMessage());
+        }
     }
 
     /**

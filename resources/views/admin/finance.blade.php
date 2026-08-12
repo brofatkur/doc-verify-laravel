@@ -9,25 +9,41 @@
         <div class="absolute -top-24 -right-24 w-72 h-72 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
         <div class="absolute -bottom-24 -left-24 w-72 h-72 bg-blue-500/10 rounded-full blur-3xl pointer-events-none"></div>
 
-        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 relative z-10">
-            <div class="space-y-1">
-                <div class="flex items-center gap-2">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-5 relative z-10">
+            <div class="space-y-1.5">
+                <div class="flex flex-wrap items-center gap-2">
                     <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 tracking-wide uppercase">
                         Admin Treasury IPPTI
                     </span>
-                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-800 text-slate-300 border border-slate-700">
-                        Xenith Pay Gateway
+                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-950/80 text-emerald-300 border border-emerald-800/80 flex items-center gap-1.5">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                        Xenith Pay Production (Live)
                     </span>
                 </div>
                 <h1 class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">Laporan Keuangan & Rekap Bagi Hasil</h1>
                 <p class="text-slate-400 text-xs sm:text-sm">
-                    Monitoring saldo kas realtime, ringkasan bagi hasil 50% IPPTI & 50% Benlaris, dan histori transaksi top-up masuk.
+                    Monitoring saldo kas realtime dari server Xenith Pay Production, ringkasan bagi hasil 50% IPPTI & 50% Benlaris, dan histori transaksi.
                 </p>
             </div>
 
-            <div class="flex items-center gap-2 bg-slate-800/80 px-4 py-2 rounded-xl border border-slate-700 text-xs text-slate-300">
-                <i data-lucide="clock" class="w-4 h-4 text-emerald-400"></i>
-                <span>Diperbarui: {{ now()->translatedFormat('d F Y, H:i') }} WIB</span>
+            <div class="flex flex-wrap items-center gap-2.5">
+                <!-- Sync Button -->
+                <form action="{{ url('/admin/finance/sync') }}" method="POST" class="inline">
+                    @csrf
+                    <button
+                        type="submit"
+                        class="flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold shadow-lg shadow-emerald-900/30 hover:shadow-emerald-900/50 transition cursor-pointer active:scale-95"
+                        title="Tarik data transaksi & saldo terbaru langsung dari server Xenith Pay"
+                    >
+                        <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+                        <span>Sinkronkan Data Realtime</span>
+                    </button>
+                </form>
+
+                <div class="flex items-center gap-2 bg-slate-800/90 px-3.5 py-2.5 rounded-xl border border-slate-700 text-xs text-slate-300">
+                    <i data-lucide="clock" class="w-4 h-4 text-emerald-400"></i>
+                    <span>{{ now()->translatedFormat('d M Y, H:i') }} WIB</span>
+                </div>
             </div>
         </div>
     </div>
@@ -60,9 +76,14 @@
                 <h3 class="text-xl sm:text-2xl font-black text-slate-900">
                     Rp {{ number_format($balanceData['available_balance'] ?? 0, 0, ',', '.') }}
                 </h3>
-                <div class="mt-1 flex items-center gap-1.5 text-[11px] font-medium text-emerald-600">
-                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                    <span>Tersedia Realtime di Gateway</span>
+                <div class="mt-1 flex items-center justify-between text-[11px] font-medium">
+                    <span class="flex items-center gap-1 text-emerald-600 font-bold">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                        Tersedia Realtime
+                    </span>
+                    @if(($balanceData['pending_balance'] ?? 0) > 0)
+                        <span class="text-amber-600 font-bold">Pending: Rp {{ number_format($balanceData['pending_balance'], 0, ',', '.') }}</span>
+                    @endif
                 </div>
             </div>
         </div>
@@ -80,7 +101,7 @@
                     Rp {{ number_format($totalInflow, 0, ',', '.') }}
                 </h3>
                 <p class="mt-1 text-[11px] text-slate-500 font-medium">
-                    {{ number_format($totalPayinCount) }} Transaksi ({{ number_format($totalPointsIssued, 0, ',', '.') }} Poin)
+                    {{ number_format($totalPayinCount) }} Transaksi Masuk ({{ number_format($totalPointsIssued, 0, ',', '.') }} Poin)
                 </p>
             </div>
         </div>
@@ -130,7 +151,7 @@
                     <i data-lucide="pie-chart" class="w-5 h-5 text-emerald-600"></i>
                     <span>Rekapitulasi Pembagian Hasil (50% IPPTI & 50% Benlaris)</span>
                 </h2>
-                <p class="text-xs text-slate-500">Rincian alokasi bagi hasil dan data rekening bank resmi masing-masing pihak.</p>
+                <p class="text-xs text-slate-500">Rincian alokasi bagi hasil dan data rekening bank resmi masing-masing pihak berdasarkan data transaksi live.</p>
             </div>
             <button
                 type="button"
@@ -158,8 +179,12 @@
 
                 <div class="bg-white/80 backdrop-blur-xs p-4 rounded-xl border border-emerald-100 space-y-2">
                     <div class="flex justify-between items-center">
-                        <span class="text-xs text-slate-500">Alokasi Dana:</span>
+                        <span class="text-xs text-slate-500">Total Akumulasi Bagi Hasil:</span>
                         <span class="text-lg font-black text-emerald-700 font-mono">Rp {{ number_format($splitIppti, 0, ',', '.') }}</span>
+                    </div>
+                    <div class="flex justify-between items-center text-xs">
+                        <span class="text-slate-500">Saldo Siap Tarik (Kas Realtime):</span>
+                        <span class="font-bold text-emerald-800 font-mono">Rp {{ number_format($splitIpptiAvailable ?? $splitIppti, 0, ',', '.') }}</span>
                     </div>
                     <div class="h-px bg-emerald-100"></div>
                     <div class="text-xs space-y-1">
@@ -193,8 +218,12 @@
 
                 <div class="bg-white/80 backdrop-blur-xs p-4 rounded-xl border border-blue-100 space-y-2">
                     <div class="flex justify-between items-center">
-                        <span class="text-xs text-slate-500">Alokasi Dana:</span>
+                        <span class="text-xs text-slate-500">Total Akumulasi Bagi Hasil:</span>
                         <span class="text-lg font-black text-blue-700 font-mono">Rp {{ number_format($splitBenlaris, 0, ',', '.') }}</span>
+                    </div>
+                    <div class="flex justify-between items-center text-xs">
+                        <span class="text-slate-500">Saldo Siap Tarik (Kas Realtime):</span>
+                        <span class="font-bold text-blue-800 font-mono">Rp {{ number_format($splitBenlarisAvailable ?? $splitBenlaris, 0, ',', '.') }}</span>
                     </div>
                     <div class="h-px bg-blue-100"></div>
                     <div class="text-xs space-y-1">

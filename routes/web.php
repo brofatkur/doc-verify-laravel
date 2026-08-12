@@ -88,6 +88,7 @@ Route::middleware('auth')->group(function () {
 
     // Super Admin Finance & Payout Management
     Route::get('/admin/finance', [\App\Http\Controllers\FinanceController::class, 'index']);
+    Route::post('/admin/finance/sync', [\App\Http\Controllers\FinanceController::class, 'syncLiveXenithData']);
     Route::post('/admin/finance/settings', [\App\Http\Controllers\FinanceController::class, 'updateSettings']);
     Route::post('/admin/finance/payout', [\App\Http\Controllers\FinanceController::class, 'triggerDisbursement']);
 
