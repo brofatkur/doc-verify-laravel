@@ -107,5 +107,90 @@
             </div>
         </form>
     </div>
+
+    <!-- Payment Gateway Configuration Box -->
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="p-6 border-b border-slate-100 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="p-2.5 bg-amber-50 text-amber-600 rounded-xl">
+                    <i data-lucide="credit-card" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <h2 class="text-lg font-bold text-slate-900">Pengaturan Payment Gateway (Xenith Pay)</h2>
+                    <p class="text-xs text-slate-500">Konfigurasi Access Key, Secret Key, dan Mode Environment (Sandbox / Production).</p>
+                </div>
+            </div>
+        </div>
+
+        <form action="/admin/settings/ipaymu" method="POST" class="p-6 space-y-5">
+            @csrf
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div>
+                    <label for="settings_ipaymu_va" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Access Key API (Xenith Pay)</label>
+                    <input
+                        type="text"
+                        id="settings_ipaymu_va"
+                        name="ipaymu_va"
+                        value="{{ old('ipaymu_va', \App\Models\Setting::get('xenith_access_key', env('XENITH_ACCESS_KEY', config('services.xenith.access_key')))) }}"
+                        placeholder="ak-..."
+                        class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-slate-800 text-sm font-semibold outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition font-mono bg-white"
+                    />
+                </div>
+
+                <div>
+                    <label for="settings_ipaymu_env" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Environment Mode</label>
+                    <select
+                        id="settings_ipaymu_env"
+                        name="ipaymu_env"
+                        class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-slate-800 text-sm font-semibold outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition bg-white"
+                    >
+                        <option value="sandbox" {{ old('ipaymu_env', \App\Models\Setting::get('xenith_env', env('XENITH_ENV', config('services.xenith.env', 'sandbox')))) === 'sandbox' ? 'selected' : '' }}>Sandbox (Pengujian / Testing)</option>
+                        <option value="production" {{ old('ipaymu_env', \App\Models\Setting::get('xenith_env', env('XENITH_ENV', config('services.xenith.env', 'sandbox')))) === 'production' ? 'selected' : '' }}>Production (Live / Transaksi Nyata)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div>
+                <label for="settings_ipaymu_api_key" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Secret Key API (Xenith Pay)</label>
+                <input
+                    type="password"
+                    id="settings_ipaymu_api_key"
+                    name="ipaymu_api_key"
+                    value="{{ old('ipaymu_api_key', \App\Models\Setting::get('xenith_secret_key', env('XENITH_SECRET_KEY', config('services.xenith.secret_key')))) }}"
+                    placeholder="sk-..."
+                    class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-slate-800 text-sm font-semibold outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition font-mono bg-white"
+                />
+            </div>
+
+            <!-- Webhook & Callback URL Guide for Xenith Pay -->
+            <div class="p-4 bg-slate-50 rounded-xl border border-slate-200/80 space-y-2.5">
+                <div class="flex items-center gap-2 text-xs font-bold text-slate-800">
+                    <i data-lucide="link" class="w-4 h-4 text-emerald-600"></i>
+                    <span>URL Webhook & Callback yang perlu diisi di Dashboard Xenith Pay:</span>
+                </div>
+                <div class="space-y-1.5 text-xs">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1 bg-white p-2.5 rounded-lg border border-slate-200">
+                        <span class="font-bold text-slate-600">Payin / Payment Callback URL:</span>
+                        <code class="font-mono text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded text-[11px] select-all">{{ url('/xenith/callback') }}</code>
+                    </div>
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1 bg-white p-2.5 rounded-lg border border-slate-200">
+                        <span class="font-bold text-slate-600">Redirect / Return URL:</span>
+                        <code class="font-mono text-blue-700 font-bold bg-blue-50 px-2 py-0.5 rounded text-[11px] select-all">{{ url('/xenith/return') }}</code>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pt-3 flex justify-end">
+                <button
+                    type="submit"
+                    class="flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white px-6 py-2.5 rounded-xl font-bold text-xs transition shadow-sm cursor-pointer"
+                >
+                    <i data-lucide="save" class="w-4 h-4"></i>
+                    <span>Simpan Pengaturan Gateway</span>
+                </button>
+            </div>
+        </form>
+    </div>
 </div>
 @endsection

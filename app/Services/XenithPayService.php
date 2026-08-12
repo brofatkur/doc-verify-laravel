@@ -17,9 +17,9 @@ class XenithPayService
 
     public function __construct()
     {
-        $this->accessKey = trim((string)(config('services.xenith.access_key') ?: env('XENITH_ACCESS_KEY', 'ak-9ec9d28a3464154019f281404d6393b814bb0f14ad2981533999ad7cd22e1b88')));
-        $this->secretKey = trim((string)(config('services.xenith.secret_key') ?: env('XENITH_SECRET_KEY', 'sk-f5d8181853248796c878203d8a276a5bbb4be3a91d422b087dc8e142d2bbe6e9b048e381afd4cd91f2cddad9b785a1ac5503cf98bf70cc1609ccb4af6870656e')));
-        $this->env = strtolower((string)(config('services.xenith.env') ?: env('XENITH_ENV', 'sandbox')));
+        $this->accessKey = trim((string)(Setting::get('xenith_access_key') ?: config('services.xenith.access_key') ?: env('XENITH_ACCESS_KEY', 'ak-9ec9d28a3464154019f281404d6393b814bb0f14ad2981533999ad7cd22e1b88')));
+        $this->secretKey = trim((string)(Setting::get('xenith_secret_key') ?: config('services.xenith.secret_key') ?: env('XENITH_SECRET_KEY', 'sk-f5d8181853248796c878203d8a276a5bbb4be3a91d422b087dc8e142d2bbe6e9b048e381afd4cd91f2cddad9b785a1ac5503cf98bf70cc1609ccb4af6870656e')));
+        $this->env = strtolower((string)(Setting::get('xenith_env') ?: config('services.xenith.env') ?: env('XENITH_ENV', 'sandbox')));
         $this->isProduction = $this->env === 'production';
         $this->baseUrl = $this->isProduction ? 'https://openapi.xenithpay.com' : 'https://openapi.sandbox.xenithpay.com';
     }

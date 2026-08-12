@@ -583,32 +583,51 @@ class AdminController extends Controller
 
         $va = trim((string)$request->ipaymu_va);
         $apiKey = trim((string)$request->ipaymu_api_key);
-        $env = trim((string)$request->ipaymu_env);
+        $env = strtolower(trim((string)$request->ipaymu_env));
 
-        $envPath = base_path('.env');
-        if (file_exists($envPath)) {
-            $envContent = file_get_contents($envPath);
-            
-            $keys = [
-                'IPAYMU_VA' => $va,
-                'IPAYMU_API_KEY' => $apiKey,
-                'IPAYMU_ENV' => $env,
-            ];
+        // 1. Save directly into dynamic Setting table (persistent database storage)
+        \App\Models\Setting::set('xenith_access_key', $va);
+        \App\Models\Setting::set('xenith_secret_key', $apiKey);
+        \App\Models\Setting::set('xenith_env', $env);
 
-            foreach ($keys as $key => $value) {
-                if (preg_match("/^{$key}=.*/m", $envContent)) {
-                    $envContent = preg_replace("/^{$key}=.*/m", "{$key}=\"{$value}\"", $envContent);
-                } else {
-                    $envContent .= "\n{$key}=\"{$value}\"";
+        \App\Models\Setting::set('ipaymu_va', $va);
+        \App\Models\Setting::set('ipaymu_api_key', $apiKey);
+        \App\Models\Setting::set('ipaymu_env', $env);
+
+        // 2. Also attempt to update .env if writable
+        try {
+            $envPath = base_path('.env');
+            if (file_exists($envPath) && is_writable($envPath)) {
+                $envContent = file_get_contents($envPath);
+                
+                $keys = [
+                    'XENITH_ACCESS_KEY' => $va,
+                    'XENITH_SECRET_KEY' => $apiKey,
+                    'XENITH_ENV' => $env,
+                    'IPAYMU_VA' => $va,
+                    'IPAYMU_API_KEY' => $apiKey,
+                    'IPAYMU_ENV' => $env,
+                ];
+
+                foreach ($keys as $key => $value) {
+                    if (preg_match("/^{$key}=.*/m", $envContent)) {
+                        $envContent = preg_replace("/^{$key}=.*/m", "{$key}=\"{$value}\"", $envContent);
+                    } else {
+                        $envContent .= "\n{$key}=\"{$value}\"";
+                    }
                 }
+
+                file_put_contents($envPath, $envContent);
             }
+        } catch (\Throwable $e) {}
 
-            file_put_contents($envPath, $envContent);
-        }
+        \App\Models\AuditLog::log('UPDATE_PAYMENT_GATEWAY_SETTINGS', User::class, $currentUser->id, [], [
+            'env' => $env,
+            'va_length' => strlen($va),
+        ]);
 
-        \App\Models\AuditLog::log('UPDATE_IPAYMU_SETTINGS', User::class, $currentUser->id, [], ['env' => $env, 'va_length' => strlen($va)]);
-
-        return redirect('/admin/profile')->with('success', 'Pengaturan Payment Gateway iPaymu berhasil disimpan!');
+        $envLabel = $env === 'production' ? 'Production (Live)' : 'Sandbox (Testing)';
+        return back()->with('success', "Pengaturan Payment Gateway Xenith Pay ({$envLabel}) berhasil disimpan dan aktif!");
     }
 
     public function settings()
