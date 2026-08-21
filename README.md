@@ -3,11 +3,12 @@
 
 ---
 
-## 📖 Buku Panduan & Dokumentasi Lengkap
-Panduan lengkap untuk seluruh level pengguna telah tersedia pada berkas:
-👉 **[PANDUAN_LENGKAP_DOCVERIFY_IPPTI.md](PANDUAN_LENGKAP_DOCVERIFY_IPPTI.md)**
+## 📖 Buku Panduan, PRD & Dokumentasi Lengkap
+Panduan lengkap dan spesifikasi kebutuhan produk (*Product Requirement Document*) telah tersedia pada berkas:
+👉 **[PANDUAN_LENGKAP_DOCVERIFY_IPPTI.md](PANDUAN_LENGKAP_DOCVERIFY_IPPTI.md)** (Buku Panduan Penggunaan 4 Peran User)
+👉 **[PRD_DOCVERIFY_IPPTI.md](PRD_DOCVERIFY_IPPTI.md)** (Dokumen Kebutuhan Produk / Product Requirement Document)
 
-Daftar panduan mencakup:
+Daftar panduan & PRD mencakup:
 1. **User Publik (Masyarakat, Kedutaan, Notaris, Kementerian)**: Panduan scan QR code & pencarian keabsahan SK penerjemah.
 2. **Penerjemah Tersumpah (Translator Reguler & PRO)**: Input dokumen, impor Excel massal, unduh QR Code, top-up poin otomatis, klaim voucher promo, dan instalasi PWA di smartphone.
 3. **Pengurus IPPTI (Admin)**: Manajemen keanggotaan penerjemah, monitoring dokumen, laporan keuangan & bagi hasil 50:50, pembuatan voucher diskon, dan master data.
