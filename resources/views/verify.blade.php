@@ -43,6 +43,13 @@
             position: relative;
         }
 
+        .is-exporting-pdf .mobile-cert-header {
+            display: none !important;
+        }
+        .is-exporting-pdf .desktop-cert-header {
+            display: flex !important;
+        }
+
         @media print {
             @page {
                 size: A4 portrait;
@@ -67,6 +74,12 @@
                 max-width: 100% !important;
                 margin: 0 !important;
                 box-shadow: none !important;
+            }
+            .mobile-cert-header {
+                display: none !important;
+            }
+            .desktop-cert-header {
+                display: flex !important;
             }
         }
     </style>
@@ -129,8 +142,36 @@
 
                 <div class="relative z-10 space-y-3">
 
-                    <!-- Header Row: 1 Logo Left + Organization Name (No redundant IPPTI text), Title & Certificate ID Right -->
-                    <div class="flex flex-row justify-between items-center gap-4 border-b-2 border-[#1E3A8A]/20 pb-3">
+                    <!-- Mobile Header Layout (< 640px): Simpler layout with large centered green checkmark icon when valid -->
+                    <div class="sm:hidden border-b-2 border-[#1E3A8A]/20 pb-4 text-center space-y-3 mobile-cert-header">
+                        <!-- Top Organization Header -->
+                        <div class="flex items-center justify-center gap-2">
+                            <img src="/ippti-logo.jpg" alt="IPPTI Logo" class="h-10 w-auto object-contain flex-shrink-0" />
+                            <p class="text-[9px] font-extrabold text-[#1E3A8A] uppercase tracking-wide max-w-[210px] leading-tight text-left" id="cert-header-org-mobile">
+                                IKATAN PENERJEMAH DAN PENGALIH BAHASA TERSUMPAH DI INDONESIA
+                            </p>
+                        </div>
+
+                        <!-- Center Section with Large Centered Green Checkmark Icon -->
+                        <div class="flex flex-col items-center justify-center space-y-2 pt-1">
+                            <!-- Large Green Centered Checkmark Badge -->
+                            <div id="cert-status-badge-mobile" class="w-16 h-16 bg-[#16A34A] text-white rounded-full flex items-center justify-center shadow-md ring-4 ring-emerald-100 flex-shrink-0">
+                                <i id="cert-badge-icon-mobile" data-lucide="check-circle-2" class="w-10 h-10 stroke-[2.5]"></i>
+                            </div>
+
+                            <!-- Centered Certificate Title & Certificate ID -->
+                            <div class="space-y-0.5">
+                                <h1 class="text-lg font-black text-[#1E3A8A] tracking-tight leading-none" id="cert-title-mobile">E-CERTIFICATE</h1>
+                                <p class="text-xs font-black text-[#F59E0B] tracking-wider uppercase mt-0.5" id="cert-subtitle-mobile">HASIL VERIFIKASI</p>
+                                <div class="inline-flex items-center gap-1 bg-slate-100 border border-slate-200 px-3 py-1 rounded-full mt-1.5">
+                                    <span class="text-[10px] font-bold font-mono text-slate-600 notranslate" translate="no">Certificate ID: <strong class="text-slate-900 font-extrabold">{{ $document->document_id }}</strong></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Desktop Header Layout (>= 640px): Exact 2-Column Certificate Header -->
+                    <div class="hidden sm:flex flex-row justify-between items-center gap-4 border-b-2 border-[#1E3A8A]/20 pb-3 desktop-cert-header">
                         <!-- Left Single Logo & Organization Name -->
                         <div class="flex items-center gap-3 text-left">
                             <img src="/ippti-logo.jpg" alt="IPPTI Logo" class="h-14 w-auto object-contain flex-shrink-0" style="height: 54px; max-height: 54px; width: auto;" />
@@ -530,8 +571,11 @@
             // Set translated texts
             const elMap = {
                 'cert-header-org': t.footer_org,
+                'cert-header-org-mobile': t.footer_org,
                 'cert-title': t.cert_title,
+                'cert-title-mobile': t.cert_title,
                 'cert-subtitle': t.cert_subtitle,
+                'cert-subtitle-mobile': t.cert_subtitle,
                 'cert-notice-title': t.notice_title,
                 'cert-notice-desc': t.notice_desc,
                 'cert-data-title': t.data_title,
@@ -567,8 +611,10 @@
 
             // Status Badge & Notice Banner Styling
             const statusBadge = document.getElementById('cert-status-badge');
+            const statusBadgeMobile = document.getElementById('cert-status-badge-mobile');
             const badgeText = document.getElementById('cert-badge-text');
             const badgeIcon = document.getElementById('cert-badge-icon');
+            const badgeIconMobile = document.getElementById('cert-badge-icon-mobile');
             const noticeBox = document.getElementById('cert-notice-box');
             const noticeIconBg = document.getElementById('cert-notice-icon-bg');
             const certValStatus = document.getElementById('cert-value-status');
@@ -579,7 +625,9 @@
             if (isArchived) {
                 if (badgeText) badgeText.innerText = t.badge_cancelled;
                 if (statusBadge) statusBadge.className = "w-9 h-9 bg-[#DC2626] text-white rounded-lg flex flex-col items-center justify-center flex-shrink-0 shadow-xs";
+                if (statusBadgeMobile) statusBadgeMobile.className = "w-16 h-16 bg-[#DC2626] text-white rounded-full flex items-center justify-center shadow-md ring-4 ring-rose-100 flex-shrink-0";
                 if (badgeIcon) badgeIcon.setAttribute('data-lucide', 'alert-triangle');
+                if (badgeIconMobile) badgeIconMobile.setAttribute('data-lucide', 'alert-triangle');
                 if (noticeBox) noticeBox.className = "flex items-center gap-3 p-2 px-3 text-left bg-rose-50/80 rounded-lg border border-rose-200";
                 if (noticeIconBg) noticeIconBg.className = "w-8 h-8 bg-[#DC2626] text-white rounded-lg flex items-center justify-center flex-shrink-0 shadow-xs";
                 if (certValStatus) certValStatus.className = "font-extrabold uppercase text-[11px] text-rose-600";
@@ -592,7 +640,9 @@
             } else {
                 if (badgeText) badgeText.innerText = t.badge_verified;
                 if (statusBadge) statusBadge.className = "w-9 h-9 bg-[#16A34A] text-white rounded-lg flex flex-col items-center justify-center flex-shrink-0 shadow-xs";
+                if (statusBadgeMobile) statusBadgeMobile.className = "w-16 h-16 bg-[#16A34A] text-white rounded-full flex items-center justify-center shadow-md ring-4 ring-emerald-100 flex-shrink-0";
                 if (badgeIcon) badgeIcon.setAttribute('data-lucide', 'check-circle-2');
+                if (badgeIconMobile) badgeIconMobile.setAttribute('data-lucide', 'check-circle-2');
                 if (noticeBox) noticeBox.className = "flex items-center gap-3 p-2 px-3 text-left bg-emerald-50/70 rounded-lg border border-emerald-200/90";
                 if (noticeIconBg) noticeIconBg.className = "w-8 h-8 bg-[#16A34A] text-white rounded-lg flex items-center justify-center flex-shrink-0 shadow-xs";
                 if (certValStatus) certValStatus.className = "font-extrabold uppercase text-[11px] text-[#16A34A]";
@@ -640,8 +690,9 @@
             const docId = "{{ $document ? $document->document_id : 'doc' }}";
             const filename = 'E-Sertifikat_Verifikasi_IPPTI_' + docId + '.pdf';
 
-            // Save original styling
+            // Save original styling & add PDF export class to force desktop 2-column header
             const originalWidth = element.style.width;
+            element.classList.add('is-exporting-pdf');
 
             try {
                 // Ensure fonts are completely loaded before capturing canvas
@@ -717,6 +768,7 @@
                 console.error('Generasi PDF bermasalah, mencetak secara langsung:', err);
                 window.print();
             } finally {
+                element.classList.remove('is-exporting-pdf');
                 element.style.width = originalWidth;
                 if (btn) {
                     btn.disabled = false;
