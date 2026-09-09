@@ -235,7 +235,7 @@
                     />
                 </div>
                 <div>
-                    <label for="modal-no-sk-kemenkum" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Nomor SK Kemenkumham</label>
+                    <label for="modal-no-sk-kemenkum" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Nomor SK Menteri Hukum Republik Indonesia</label>
                     <input
                         id="modal-no-sk-kemenkum"
                         name="no_sk_kemenkum"
@@ -245,7 +245,7 @@
                     />
                 </div>
                 <div>
-                    <label for="modal-tgl-sk" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Tanggal SK Kemenkumham</label>
+                    <label for="modal-tgl-sk" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Tanggal SK Menteri Hukum Republik Indonesia</label>
                     <input
                         id="modal-tgl-sk"
                         name="tgl_sk"

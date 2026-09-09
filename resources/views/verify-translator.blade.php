@@ -159,11 +159,11 @@
                 lang_services: "Arah Bahasa",
                 validity: "Masa Aktif Registrasi",
                 sk_desc: "Keterangan SK Lengkap",
-                statement: `Benar bahwa penerjemah tersumpah atas nama <strong class="text-white font-bold">${name}</strong> terdaftar resmi sebagai anggota IPPTI dan merupakan penerjemah tersumpah di bawah <strong class="text-white font-bold">Kementerian Hukum dan HAM</strong> sesuai SK nomor <strong class="text-white font-bold">${noSkKemenkum}</strong> yang ditetapkan pada tanggal <strong class="text-white font-bold">${tglSk}</strong>.`,
-                footer_kemenkumham: `Kementerian Hukum dan Hak Asasi Manusia Republik Indonesia &copy; Copyright ${currentYear}`,
+                statement: `Benar bahwa penerjemah tersumpah atas nama <strong class="text-white font-bold">${name}</strong> terdaftar resmi sebagai anggota IPPTI dan merupakan penerjemah tersumpah di bawah <strong class="text-white font-bold">Kementerian Hukum Republik Indonesia</strong> sesuai SK nomor <strong class="text-white font-bold">${noSkKemenkum}</strong> yang ditetapkan pada tanggal <strong class="text-white font-bold">${tglSk}</strong>.`,
+                footer_kemenkumham: `Kementerian Hukum Republik Indonesia &copy; Copyright ${currentYear}`,
                 official_photo: "Foto Resmi",
                 back_home: "Kembali ke Beranda",
-                footer_copy: `Ikatan Penerjemah Pemerintah Indonesia (IPPTI) & Kementerian Hukum dan HAM RI.`
+                footer_copy: `Ikatan Penerjemah Pemerintah Indonesia (IPPTI) & Kementerian Hukum Republik Indonesia.`
             },
             en: {
                 card_title: "IPPTI Official Registry Card",
@@ -173,11 +173,11 @@
                 lang_services: "Language Pairing",
                 validity: "Registration Validity",
                 sk_desc: "Decree Full Statement",
-                statement: `It is verified that the sworn translator named <strong class="text-white font-bold">${name}</strong> is officially registered as a member of IPPTI and is a sworn translator certified under the <strong class="text-white font-bold">Ministry of Law and Human Rights</strong> of the Republic of Indonesia pursuant to decree number <strong class="text-white font-bold">${noSkKemenkum}</strong> issued on <strong class="text-white font-bold">${tglSk}</strong>.`,
-                footer_kemenkumham: `Ministry of Law and Human Rights of the Republic of Indonesia &copy; Copyright ${currentYear}`,
+                statement: `It is verified that the sworn translator named <strong class="text-white font-bold">${name}</strong> is officially registered as a member of IPPTI and is a sworn translator certified under the <strong class="text-white font-bold">Ministry of Law of the Republic of Indonesia</strong> pursuant to decree number <strong class="text-white font-bold">${noSkKemenkum}</strong> issued on <strong class="text-white font-bold">${tglSk}</strong>.`,
+                footer_kemenkumham: `Ministry of Law of the Republic of Indonesia &copy; Copyright ${currentYear}`,
                 official_photo: "Official Photo",
                 back_home: "Back to Home",
-                footer_copy: `Association of Indonesian Government Translators (IPPTI) & Ministry of Law and Human Rights RI.`
+                footer_copy: `Association of Indonesian Government Translators (IPPTI) & Ministry of Law RI.`
             },
             zh: {
                 card_title: "IPPTI 官方注册卡",
@@ -187,11 +187,11 @@
                 lang_services: "翻译语言对",
                 validity: "注册有效期",
                 sk_desc: "法令完整声明",
-                statement: `确认以下名下的宣誓翻译员 <strong class="text-white font-bold">${name}</strong> 已正式注册为 IPPTI 成员，并根据 <strong class="text-white font-bold">${tglSk}</strong> 颁布的第 <strong class="text-white font-bold">${noSkKemenkum}</strong> 号法令获得印尼共和国<strong class="text-white font-bold">司法与人权部</strong>认证。`,
-                footer_kemenkumham: `印度尼西亚共和国司法与人权部 &copy; Copyright ${currentYear}`,
+                statement: `确认以下名下的宣誓翻译员 <strong class="text-white font-bold">${name}</strong> 已正式注册为 IPPTI 成员，并根据 <strong class="text-white font-bold">${tglSk}</strong> 颁布的第 <strong class="text-white font-bold">${noSkKemenkum}</strong> 号法令获得<strong class="text-white font-bold">印度尼西亚共和国法律部</strong>认证。`,
+                footer_kemenkumham: `印度尼西亚共和国法律部 &copy; Copyright ${currentYear}`,
                 official_photo: "官方照片",
                 back_home: "返回首页",
-                footer_copy: `印尼政府翻译员协会 (IPPTI) 和印尼共和国司法与人权部。`
+                footer_copy: `印尼政府翻译员协会 (IPPTI) 和印度尼西亚共和国法律部。`
             },
             ar: {
                 card_title: "بطاقة التسجيل الرسمية لـ IPPTI",
@@ -201,11 +201,11 @@
                 lang_services: "زوج اللغات للترجمة",
                 validity: "صلاحية التسجيل",
                 sk_desc: "البيان الكامل للمرسوم",
-                statement: `يؤكد أن المترجم المحلف باسم <strong class="text-white font-bold">${name}</strong> مسجل رسمياً كعضو في IPPTI ومترجم محلف معتمد من قبل <strong class="text-white font-bold">وزارة القانون وحقوق الإنسان</strong> في جمهورية إندونيسيا بموجب المرسوم رقم <strong class="text-white font-bold">${noSkKemenkum}</strong> الصادر في <strong class="text-white font-bold">${tglSk}</strong>.`,
-                footer_kemenkumham: `وزارة القانون وحقوق الإنسان في جمهورية إندونيسيا &copy; Copyright ${currentYear}`,
+                statement: `يؤكد أن المترجم المحلف باسم <strong class="text-white font-bold">${name}</strong> مسجل رسمياً كعضو في IPPTI ومترجم محلف معتمد من قبل <strong class="text-white font-bold">وزارة القانون في جمهورية إندونيسيا</strong> بموجب المرسوم رقم <strong class="text-white font-bold">${noSkKemenkum}</strong> الصادر في <strong class="text-white font-bold">${tglSk}</strong>.`,
+                footer_kemenkumham: `وزارة القانون في جمهورية إندونيسيا &copy; Copyright ${currentYear}`,
                 official_photo: "الصورة الرسمية",
                 back_home: "العودة إلى الصفحة الرئيسية",
-                footer_copy: `جمعية المترجمين الحكوميين الإندونيسيين (IPPTI) ووزارة القانون وحقوق الإنسان في جمهورية إندونيسيا.`
+                footer_copy: `جمعية المترجمين الحكوميين الإندونيسيين (IPPTI) ووزارة القانون في جمهورية إندونيسيا.`
             }
         };
 

@@ -110,7 +110,7 @@
                 <form onsubmit="searchTranslators(event)" class="space-y-4">
                     <div>
                         <label id="label-trans" for="translator-input" class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2.5 text-left">
-                            Nama, Nomor Anggota, atau No SK Kemenkumham
+                            Nama, Nomor Anggota, atau No SK Menteri Hukum RI
                         </label>
                         <div class="relative">
                             <input
@@ -130,7 +130,7 @@
                         </div>
                     </div>
                     <p id="desc-trans" class="text-xs text-slate-500 leading-relaxed text-left">
-                        Cari penerjemah tersumpah terdaftar berdasarkan Nama, Nomor SK Kemenkumham, Nomor Anggota, atau Arah Bahasa.
+                        Cari penerjemah tersumpah terdaftar berdasarkan Nama, Nomor SK Menteri Hukum RI, Nomor Anggota, atau Arah Bahasa.
                     </p>
                 </form>
             </div>
@@ -157,9 +157,9 @@
                 hero_title: `Temukan Penerjemah <br/><span class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-teal-300 to-blue-400">Tersumpah Resmi.</span>`,
                 hero_desc: "Cari dan validasi sertifikasi resmi serta keanggotaan penerjemah tersumpah Indonesia.",
                 tab_search_trans: "Cari Penerjemah",
-                label_trans: "Nama, Nomor Anggota, atau No SK Kemenkumham",
+                label_trans: "Nama, Nomor Anggota, atau No SK Menteri Hukum RI",
                 placeholder_trans: "Cari nama penerjemah, bahasa, atau nomor anggota...",
-                desc_trans: "Cari penerjemah tersumpah terdaftar berdasarkan Nama, Nomor SK Kemenkumham, Nomor Anggota, atau Arah Bahasa.",
+                desc_trans: "Cari penerjemah tersumpah terdaftar berdasarkan Nama, Nomor SK Menteri Hukum RI, Nomor Anggota, atau Arah Bahasa.",
                 not_found_trans: "Penerjemah tidak ditemukan.",
                 nav_verify_doc: "Verifikasi Dokumen",
                 footer: "DocVerify IPPTI. Keamanan Terjemahan Tersumpah Resmi.",
@@ -172,7 +172,7 @@
                 hero_title: `Find Official <br/><span class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-teal-300 to-blue-400">Sworn Translators.</span>`,
                 hero_desc: "Search and validate official certification and membership of Indonesian sworn translators.",
                 tab_search_trans: "Search Translator",
-                label_trans: "Name, Member ID, or Kemenkumham Decree Number",
+                label_trans: "Name, Member ID, or Ministry of Law Decree Number",
                 placeholder_trans: "Search translator's name, language, or member ID...",
                 desc_trans: "Search registered sworn translators by Name, Decree Number, Member ID, or Language Pairing.",
                 not_found_trans: "Translator not found.",
