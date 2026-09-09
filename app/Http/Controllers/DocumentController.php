@@ -445,6 +445,8 @@ class DocumentController extends Controller
                         "id",
                         "name",
                         "sk_number",
+                        "no_sk_kemenkum",
+                        "tgl_sk",
                         "bio",
                         "language_services",
                         "profile_picture",

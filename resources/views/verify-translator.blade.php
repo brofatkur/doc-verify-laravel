@@ -143,8 +143,8 @@
 
         const name = "{{ $translator->name }}";
         const skNumber = "{{ $translator->sk_number }}";
-        const noSkKemenkum = "{{ $translator->no_sk_kemenkum ?: 'AHU-55 AH.03.07.2022' }}";
-        const tglSk = "{{ $translator->tgl_sk ?: '5 Oktober 2022' }}";
+        const noSkKemenkum = "{{ $translator->no_sk_kemenkum ?: $translator->sk_number }}";
+        const tglSk = "{{ $translator->tgl_sk ?: '' }}";
         const languages = "{{ $translator->language_services ?? 'Indonesia - Inggris, Inggris - Indonesia' }}";
         const masaAktif = "{{ $translator->masa_aktif ?: 'Seumur Hidup' }}";
         const skLengkap = "{{ $translator->sk_lengkap ?: '' }}";

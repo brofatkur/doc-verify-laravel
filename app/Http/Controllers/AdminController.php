@@ -129,6 +129,8 @@ class AdminController extends Controller
             'name' => $request->name,
             'email' => $request->email,
             'sk_number' => $skNumber,
+            'no_sk_kemenkum' => $request->no_sk_kemenkum ? trim($request->no_sk_kemenkum) : null,
+            'tgl_sk' => $request->tgl_sk ? trim($request->tgl_sk) : null,
             'password' => Hash::make($request->password),
         ]);
 
@@ -210,6 +212,8 @@ class AdminController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email,' . $id,
             'sk_number' => 'nullable|string|max:255',
+            'no_sk_kemenkum' => 'nullable|string|max:255',
+            'tgl_sk' => 'nullable|string|max:255',
             'password' => 'nullable|string|min:6',
         ]);
 
@@ -235,6 +239,8 @@ class AdminController extends Controller
             'name' => $request->name,
             'email' => $request->email,
             'sk_number' => $skNumber,
+            'no_sk_kemenkum' => $request->no_sk_kemenkum ? trim($request->no_sk_kemenkum) : null,
+            'tgl_sk' => $request->tgl_sk ? trim($request->tgl_sk) : null,
         ];
 
         if ($request->filled('password')) {

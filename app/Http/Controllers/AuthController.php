@@ -221,6 +221,8 @@ class AuthController extends Controller
         $updateData = [
             'email' => trim($request->email),
             'whatsapp' => $request->whatsapp ? trim($request->whatsapp) : null,
+            'no_sk_kemenkum' => $request->no_sk_kemenkum ? trim($request->no_sk_kemenkum) : null,
+            'tgl_sk' => $request->tgl_sk ? trim($request->tgl_sk) : null,
             'bio' => $request->bio,
         ];
 

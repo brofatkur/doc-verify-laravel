@@ -130,6 +130,31 @@
                             class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl bg-slate-100 text-slate-500 text-sm font-mono cursor-not-allowed"
                         />
                     </div>
+
+                    <div>
+                        <label for="no_sk_kemenkum" class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Nomor SK Kemenkumham</label>
+                        <input
+                            type="text"
+                            id="no_sk_kemenkum"
+                            name="no_sk_kemenkum"
+                            value="{{ old('no_sk_kemenkum', $user->no_sk_kemenkum) }}"
+                            class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-slate-800 text-sm font-semibold outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition"
+                            placeholder="Contoh: AHU-75.AH.03.07.2022"
+                        />
+                        <p class="text-[10px] text-slate-400 mt-1">Nomor SK Penetapan Kemenkumham resmi yang tampil pada hasil verifikasi QR Code.</p>
+                    </div>
+
+                    <div>
+                        <label for="tgl_sk" class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Tanggal SK Kemenkumham</label>
+                        <input
+                            type="text"
+                            id="tgl_sk"
+                            name="tgl_sk"
+                            value="{{ old('tgl_sk', $user->tgl_sk) }}"
+                            class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-slate-800 text-sm font-semibold outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition"
+                            placeholder="Contoh: 5 Oktober 2022"
+                        />
+                    </div>
                 </div>
             </div>
 

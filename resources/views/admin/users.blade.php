@@ -139,7 +139,7 @@
                                         <i data-lucide="coins" class="w-4 h-4"></i>
                                     </button>
                                     <button
-                                        onclick="openUserModal('edit', { id: '{{ $t->id }}', name: '{{ $t->name }}', email: '{{ $t->email }}', role: '{{ $t->role }}', sk_number: '{{ $t->sk_number }}' })"
+                                        onclick="openUserModal('edit', { id: '{{ $t->id }}', name: '{{ $t->name }}', email: '{{ $t->email }}', role: '{{ $t->role }}', sk_number: '{{ $t->sk_number }}', no_sk_kemenkum: '{{ $t->no_sk_kemenkum }}', tgl_sk: '{{ $t->tgl_sk }}' })"
                                         class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer"
                                         title="Edit Profil"
                                     >
@@ -223,15 +223,37 @@
                 />
             </div>
 
-            <div id="field-sk">
-                <label for="modal-sk" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Nomor Anggota</label>
-                <input
-                    id="modal-sk"
-                    name="sk_number"
-                    type="text"
-                    placeholder="Contoh: 25004"
-                    class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-sm font-semibold text-slate-850 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
-                />
+            <div id="field-sk" class="space-y-4">
+                <div>
+                    <label for="modal-sk" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Nomor Anggota IPPTI</label>
+                    <input
+                        id="modal-sk"
+                        name="sk_number"
+                        type="text"
+                        placeholder="Contoh: 25004"
+                        class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-sm font-semibold text-slate-850 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
+                    />
+                </div>
+                <div>
+                    <label for="modal-no-sk-kemenkum" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Nomor SK Kemenkumham</label>
+                    <input
+                        id="modal-no-sk-kemenkum"
+                        name="no_sk_kemenkum"
+                        type="text"
+                        placeholder="Contoh: AHU-75.AH.03.07.2022"
+                        class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-sm font-semibold text-slate-850 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
+                    />
+                </div>
+                <div>
+                    <label for="modal-tgl-sk" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Tanggal SK Kemenkumham</label>
+                    <input
+                        id="modal-tgl-sk"
+                        name="tgl_sk"
+                        type="text"
+                        placeholder="Contoh: 5 Oktober 2022"
+                        class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-sm font-semibold text-slate-850 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
+                    />
+                </div>
             </div>
 
             <div>
@@ -416,6 +438,8 @@
         document.getElementById('modal-name').value = '';
         document.getElementById('modal-email').value = '';
         document.getElementById('modal-sk').value = '';
+        if (document.getElementById('modal-no-sk-kemenkum')) document.getElementById('modal-no-sk-kemenkum').value = '';
+        if (document.getElementById('modal-tgl-sk')) document.getElementById('modal-tgl-sk').value = '';
         document.getElementById('modal-password').value = '';
         document.getElementById('modal-role').value = 'TRANSLATOR';
 
@@ -432,6 +456,8 @@
             document.getElementById('modal-name').value = data.name;
             document.getElementById('modal-email').value = data.email;
             document.getElementById('modal-sk').value = data.sk_number || '';
+            if (document.getElementById('modal-no-sk-kemenkum')) document.getElementById('modal-no-sk-kemenkum').value = data.no_sk_kemenkum || '';
+            if (document.getElementById('modal-tgl-sk')) document.getElementById('modal-tgl-sk').value = data.tgl_sk || '';
             document.getElementById('modal-role').value = data.role;
             
             passLabel.innerText = 'Ganti Password (Kosongkan jika tidak diubah)';
