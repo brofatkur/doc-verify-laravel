@@ -1,4 +1,26 @@
 <!DOCTYPE html>
+@php
+    $tglSkId = '';
+    $tglSkEn = '';
+    $tglSkZh = '';
+    $tglSkAr = '';
+    if (isset($document) && $document && isset($document->translator) && $document->translator && !empty($document->translator->tgl_sk)) {
+        $rawTgl = trim($document->translator->tgl_sk);
+        try {
+            if (preg_match('/^\d{4}-\d{2}-\d{2}/', $rawTgl)) {
+                $carbonDate = \Carbon\Carbon::parse($rawTgl);
+                $tglSkId = $carbonDate->translatedFormat('d F Y');
+                $tglSkEn = $carbonDate->format('F d, Y');
+                $tglSkZh = $carbonDate->format('Y-m-d');
+                $tglSkAr = $carbonDate->format('Y-m-d');
+            } else {
+                $tglSkId = $tglSkEn = $tglSkZh = $tglSkAr = $rawTgl;
+            }
+        } catch (\Throwable $e) {
+            $tglSkId = $tglSkEn = $tglSkZh = $tglSkAr = $rawTgl;
+        }
+    }
+@endphp
 <html lang="id">
 <head>
     <meta charset="UTF-8">
@@ -309,7 +331,7 @@
                                     </div>
                                 </div>
                                 <p class="text-[9.5px] text-slate-500 font-medium leading-normal border-t border-slate-100 pt-1.5" id="cert-value-decree">
-                                    SK Menteri Hukum Republik Indonesia: {{ $document->translator->no_sk_kemenkum ?: $document->translator->sk_number }} {{ $document->translator->tgl_sk ? 'tanggal ' . \Carbon\Carbon::parse($document->translator->tgl_sk)->translatedFormat('d F Y') : '' }}
+                                    SK Menteri Hukum Republik Indonesia: {{ $document->translator->no_sk_kemenkum ?: $document->translator->sk_number }} {{ $tglSkId ? 'tanggal ' . $tglSkId : '' }}
                                 </p>
                             </div>
 
@@ -430,7 +452,7 @@
                 translator_title: "PENERJEMAH TERSUMPAH",
                 member_no: "No. Anggota IPPTI: " + memberNo,
                 translator_service: "Penerjemah Tersumpah Bahasa {{ $document ? ($document->translator->language_services ?: $document->language_pair) : '' }}",
-                decree_text: "SK Menteri Hukum Republik Indonesia: {{ $document ? ($document->translator->no_sk_kemenkum ?: $document->translator->sk_number) : '' }} {{ $document && $document->translator->tgl_sk ? 'tanggal ' . \Carbon\Carbon::parse($document->translator->tgl_sk)->translatedFormat('d F Y') : '' }}",
+                decree_text: "SK Menteri Hukum Republik Indonesia: {{ $document ? ($document->translator->no_sk_kemenkum ?: $document->translator->sk_number) : '' }} {{ $tglSkId ? 'tanggal ' . $tglSkId : '' }}",
                 qr_title: "VERIFIKASI KEASLIAN",
                 qr_caption: "Scan QR untuk memeriksa keaslian sertifikat",
                 ver_time_label: "WAKTU VERIFIKASI:",
@@ -465,7 +487,7 @@
                 translator_title: "SWORN TRANSLATOR",
                 member_no: "IPPTI Member ID: " + memberNo,
                 translator_service: "Sworn Translator for {{ $document ? ($document->translator->language_services ?: $document->language_pair) : '' }}",
-                decree_text: "Ministry of Law of the Republic of Indonesia Decree: {{ $document ? ($document->translator->no_sk_kemenkum ?: $document->translator->sk_number) : '' }} {{ $document && $document->translator->tgl_sk ? 'dated ' . \Carbon\Carbon::parse($document->translator->tgl_sk)->format('F d, Y') : '' }}",
+                decree_text: "Ministry of Law of the Republic of Indonesia Decree: {{ $document ? ($document->translator->no_sk_kemenkum ?: $document->translator->sk_number) : '' }} {{ $tglSkEn ? 'dated ' . $tglSkEn : '' }}",
                 qr_title: "AUTHENTICITY VERIFICATION",
                 qr_caption: "Scan QR to verify certificate authenticity",
                 ver_time_label: "VERIFICATION TIME:",
@@ -500,7 +522,7 @@
                 translator_title: "宣誓翻译员",
                 member_no: "IPPTI 成员编号: " + memberNo,
                 translator_service: "宣誓翻译员 - 语言服务: {{ $document ? ($document->translator->language_services ?: $document->language_pair) : '' }}",
-                decree_text: "印度尼西亚共和国法律部长法令: {{ $document ? ($document->translator->no_sk_kemenkum ?: $document->translator->sk_number) : '' }} {{ $document && $document->translator->tgl_sk ? '日期 ' . \Carbon\Carbon::parse($document->translator->tgl_sk)->format('Y-m-d') : '' }}",
+                decree_text: "印度尼西亚共和国法律部长法令: {{ $document ? ($document->translator->no_sk_kemenkum ?: $document->translator->sk_number) : '' }} {{ $tglSkZh ? '日期 ' . $tglSkZh : '' }}",
                 qr_title: "真实性验证",
                 qr_caption: "扫描二维码验证证书真实性",
                 ver_time_label: "验证时间:",
@@ -535,7 +557,7 @@
                 translator_title: "المترجم المحلف",
                 member_no: "رقم عضوية IPPTI: " + memberNo,
                 translator_service: "مترجم محلف للغة {{ $document ? ($document->translator->language_services ?: $document->language_pair) : '' }}",
-                decree_text: "قرار وزير القانون في جمهورية إندونيسيا: {{ $document ? ($document->translator->no_sk_kemenkum ?: $document->translator->sk_number) : '' }} {{ $document && $document->translator->tgl_sk ? 'بتاريخ ' . \Carbon\Carbon::parse($document->translator->tgl_sk)->format('Y-m-d') : '' }}",
+                decree_text: "قرار وزير القانون في جمهورية إندونيسيا: {{ $document ? ($document->translator->no_sk_kemenkum ?: $document->translator->sk_number) : '' }} {{ $tglSkAr ? 'بتاريخ ' . $tglSkAr : '' }}",
                 qr_title: "التحقق من الأصالة",
                 qr_caption: "امسح QR للتحقق من أصالة الشهادة",
                 ver_time_label: "وقت التحقق:",
