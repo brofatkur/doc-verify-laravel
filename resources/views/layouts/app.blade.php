@@ -118,6 +118,11 @@
                     <i data-lucide="settings" class="w-5 h-5 {{ request()->is('admin/profile*') ? 'text-white' : 'text-slate-400' }}"></i>
                     <span class="font-medium">Profil & Layanan</span>
                 </a>
+
+                <a href="/PANDUAN_LENGKAP_DOCVERIFY_IPPTI.pdf" target="_blank" class="flex items-center gap-3 px-4 py-2.5 rounded-lg transition text-slate-400 hover:bg-slate-800 hover:text-white mt-3 border border-slate-800">
+                    <i data-lucide="file-text" class="w-5 h-5 text-amber-400"></i>
+                    <span class="font-medium text-xs">Buku Panduan (.PDF)</span>
+                </a>
             </nav>
 
             @auth
@@ -331,6 +336,11 @@
                 <a href="/admin/profile" onclick="toggleMobileDrawer()" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition text-sm font-semibold {{ request()->is('admin/profile*') ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-300 hover:bg-slate-800' }}">
                     <i data-lucide="settings" class="w-4 h-4 {{ request()->is('admin/profile*') ? 'text-white' : 'text-slate-400' }}"></i>
                     <span>Profil & Layanan</span>
+                </a>
+
+                <a href="/PANDUAN_LENGKAP_DOCVERIFY_IPPTI.pdf" target="_blank" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition text-sm font-semibold text-slate-300 hover:bg-slate-800 border border-slate-800/80 mt-2">
+                    <i data-lucide="file-text" class="w-4 h-4 text-amber-400"></i>
+                    <span>Buku Panduan (.PDF)</span>
                 </a>
             </nav>
 

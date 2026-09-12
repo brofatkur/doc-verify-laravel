@@ -63,6 +63,11 @@
                 Verifikasi Penerjemah
             </a>
 
+            <a href="/PANDUAN_LENGKAP_DOCVERIFY_IPPTI.pdf" target="_blank" id="nav-guide-pdf" class="hidden sm:inline-flex items-center gap-1.5 text-sm font-semibold text-blue-900 hover:text-blue-950 hover:underline transition-all duration-200">
+                <i data-lucide="file-text" class="w-4 h-4 text-amber-500"></i>
+                <span>Panduan (PDF)</span>
+            </a>
+
             <!-- Language Switcher -->
             <div class="flex bg-slate-200/60 p-0.5 rounded-lg border border-slate-200 dir-ltr" dir="ltr">
                 <button onclick="changeLanguage('id')" id="lang-id" class="px-2 py-1 rounded text-[10px] font-extrabold tracking-wider transition cursor-pointer text-slate-500 hover:text-slate-800">ID</button>
