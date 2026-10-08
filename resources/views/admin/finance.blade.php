@@ -367,13 +367,13 @@
                     <tbody class="divide-y divide-slate-100 text-slate-700">
                         @forelse($payinOrders as $order)
                             <tr class="hover:bg-slate-50/80 transition">
-                                <td class="py-3.5 px-4 font-mono font-bold text-slate-900">{{ $order->order_id }}</td>
+                                <td class="py-3.5 px-4 font-mono font-bold text-slate-900">{{ $order->transaction_no ?? $order->order_id }}</td>
                                 <td class="py-3.5 px-4 space-y-0.5">
                                     <p class="font-bold text-slate-900">{{ $order->user->name ?? 'Pak Nikolas Triwardana Pangutama' }}</p>
                                     <p class="text-[10px] text-slate-500 font-mono">No. Anggota: {{ $order->user->sk_number ?? '25008' }}</p>
                                 </td>
                                 <td class="py-3.5 px-4 font-black text-slate-900 font-mono">
-                                    Rp {{ number_format($order->amount_idr, 0, ',', '.') }}
+                                    Rp {{ number_format($order->amount ?? $order->amount_idr, 0, ',', '.') }}
                                 </td>
                                 <td class="py-3.5 px-4 font-bold text-rose-600 font-mono">
                                     -Rp {{ number_format($order->effective_fee, 0, ',', '.') }}
@@ -382,30 +382,30 @@
                                     Rp {{ number_format($order->effective_net, 0, ',', '.') }}
                                 </td>
                                 <td class="py-3.5 px-4 font-bold text-slate-900">
-                                    +{{ number_format($order->points_issued ?? 0, 0, ',', '.') }} Poin
+                                    +{{ number_format($order->points ?? ($order->points_issued ?? 0), 0, ',', '.') }} Poin
                                 </td>
                                 <td class="py-3.5 px-4">
                                     <span class="px-2.5 py-1 rounded-md text-[10px] font-bold bg-slate-100 text-slate-800 uppercase font-mono">
-                                        {{ $order->payment_channel ?: ($order->payment_method ?: 'QRIS') }}
+                                        {{ $order->payment_method ?: ($order->payment_channel ?: 'QRIS') }}
                                     </span>
                                 </td>
                                 <td class="py-3.5 px-4">
-                                    @if($order->status === 'success')
+                                    @if(in_array(strtolower($order->status), ['success', 'paid', 'completed', 'settled']))
                                         <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700">
                                             <i data-lucide="check" class="w-3 h-3"></i> Lunas
                                         </span>
-                                    @elseif($order->status === 'pending')
+                                    @elseif(in_array(strtolower($order->status), ['pending', 'processing']))
                                         <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-100 text-amber-700">
                                             <i data-lucide="clock" class="w-3 h-3"></i> Menunggu
                                         </span>
                                     @else
                                         <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-rose-100 text-rose-700">
-                                            <i data-lucide="x" class="w-3 h-3"></i> Batal
+                                            <i data-lucide="x" class="w-3 h-3"></i> {{ in_array(strtolower($order->status), ['failed', 'batal']) ? 'Batal' : ucfirst($order->status) }}
                                         </span>
                                     @endif
                                 </td>
                                 <td class="py-3.5 px-4 text-slate-500 font-medium whitespace-nowrap">
-                                    {{ $order->created_at->translatedFormat('d/m/Y H:i') }} WIB
+                                    {{ $order->created_at ? $order->created_at->translatedFormat('d/m/Y H:i') . ' WIB' : '-' }}
                                 </td>
                             </tr>
                         @empty

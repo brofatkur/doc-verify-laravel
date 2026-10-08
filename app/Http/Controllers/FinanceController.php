@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\TopupOrder;
+use App\Models\PaymentTransaction;
 use App\Models\PayoutTransaction;
 use App\Models\Setting;
 use App\Models\AuditLog;
@@ -54,27 +55,50 @@ class FinanceController extends Controller
                     if (!$ref) continue;
 
                     $rawStatus = strtoupper((string)($payin['status'] ?? 'PENDING'));
-                    $normStatus = in_array($rawStatus, ['COMPLETED', 'SUCCESS', 'PAID', 'SETTLED']) ? 'success' : (in_array($rawStatus, ['PENDING', 'PROCESSING']) ? 'pending' : 'failed');
+                    $isSuccess = in_array($rawStatus, ['COMPLETED', 'SUCCESS', 'PAID', 'SETTLED']);
+                    $trxStatus = $isSuccess ? 'paid' : (in_array($rawStatus, ['PENDING', 'PROCESSING']) ? 'pending' : 'failed');
+                    $topupStatus = $isSuccess ? 'success' : (in_array($rawStatus, ['PENDING', 'PROCESSING']) ? 'pending' : 'failed');
                     $amt = (float)($payin['amount'] ?? $payin['initiatedAmount'] ?? $payin['totalAmount'] ?? 0);
                     $channel = $payin['paymentChannel'] ?? $payin['paymentMethod'] ?? 'Xenith Pay';
+                    $createdAt = isset($payin['createdAt']) ? \Carbon\Carbon::parse($payin['createdAt']) : now();
 
+                    // Sync into PaymentTransaction (primary ledger)
+                    $existingTrx = PaymentTransaction::where('transaction_no', $ref)->first();
+                    if (!$existingTrx && $amt > 0) {
+                        PaymentTransaction::create([
+                            'transaction_no' => $ref,
+                            'user_id' => Auth::id() ?: 1,
+                            'amount' => $amt,
+                            'points' => (int)$amt,
+                            'payment_method' => $channel,
+                            'status' => $trxStatus,
+                            'created_at' => $createdAt,
+                        ]);
+                    } elseif ($existingTrx && $existingTrx->status !== $trxStatus) {
+                        $existingTrx->update([
+                            'status' => $trxStatus,
+                            'payment_method' => $channel,
+                        ]);
+                    }
+
+                    // Keep TopupOrder in sync
                     $existing = TopupOrder::where('order_id', $ref)->first();
                     if (!$existing && $amt > 0) {
                         TopupOrder::create([
                             'order_id' => $ref,
-                            'user_id' => Auth::id(),
+                            'user_id' => Auth::id() ?: 1,
                             'amount_idr' => $amt,
                             'points_issued' => $amt,
                             'conversion_rate' => 1,
-                            'status' => $normStatus,
+                            'status' => $topupStatus,
                             'payment_gateway' => 'xenith',
                             'payment_channel' => $channel,
                             'payment_response_text' => json_encode($payin),
-                            'created_at' => isset($payin['createdAt']) ? \Carbon\Carbon::parse($payin['createdAt']) : now(),
+                            'created_at' => $createdAt,
                         ]);
-                    } elseif ($existing && $existing->status !== $normStatus) {
+                    } elseif ($existing && $existing->status !== $topupStatus) {
                         $existing->update([
-                            'status' => $normStatus,
+                            'status' => $topupStatus,
                             'payment_channel' => $channel,
                         ]);
                     }
@@ -84,7 +108,7 @@ class FinanceController extends Controller
             // safe fallback
         }
 
-        // 3. Inflow (Top-Up Masuk) - Bruto, Fee Gateway, & Netto
+        // 3. Inflow (Top-Up Masuk) - Bruto, Fee Gateway, & Netto dari payment_transactions
         $totalInflowGross = 0;
         $totalFeeGateway = 0;
         $totalInflowNet = 0;
@@ -93,24 +117,42 @@ class FinanceController extends Controller
         $thisMonthInflow = 0;
 
         try {
-            if (\Illuminate\Support\Facades\Schema::hasTable('topup_orders')) {
-                $orders = TopupOrder::where('status', 'success')->get();
+            $paidTransactions = collect();
+            if (\Illuminate\Support\Facades\Schema::hasTable('payment_transactions')) {
+                $paidTransactions = PaymentTransaction::whereIn('status', ['paid', 'success', 'completed', 'settled'])->get();
+            }
+
+            if ($paidTransactions->isNotEmpty()) {
+                $totalPayinCount = $paidTransactions->count();
+                $totalInflowGross = (float)$paidTransactions->sum('amount');
+                $totalPointsIssued = (int)$paidTransactions->sum('points');
+
+                // Calculate total gateway fees
+                $totalFeeGateway = (float)$paidTransactions->sum(function($t) {
+                    return $t->effective_fee;
+                });
+
+                // Calculate total net after gateway fee
+                $totalInflowNet = (float)$paidTransactions->sum(function($t) {
+                    return $t->effective_net;
+                });
+            } elseif (\Illuminate\Support\Facades\Schema::hasTable('topup_orders')) {
+                // Fallback to topup_orders if payment_transactions has not yet been populated
+                $orders = TopupOrder::whereIn('status', ['success', 'paid', 'completed', 'settled'])->get();
                 $totalPayinCount = $orders->count();
                 $totalInflowGross = (float)$orders->sum('amount_idr');
                 $totalPointsIssued = (int)$orders->sum('points_issued');
 
-                // Calculate total gateway fees
                 $totalFeeGateway = (float)$orders->sum(function($o) {
                     return $o->effective_fee;
                 });
 
-                // Calculate total net after gateway fee
                 $totalInflowNet = (float)$orders->sum(function($o) {
                     return $o->effective_net;
                 });
-
-                $thisMonthInflow = $totalInflowGross;
             }
+
+            $thisMonthInflow = $totalInflowGross;
         } catch (\Throwable $e) {
             // fallback
         }
@@ -177,10 +219,27 @@ class FinanceController extends Controller
             'min_payout_threshold' => (float)Setting::get('min_payout_threshold', 100000),
         ];
 
-        // 7. Transactions History
+        // 7. Transactions History (Source: payment_transactions)
         try {
-            $payinOrders = TopupOrder::with('user')
-                ->orderBy('id', 'desc')
+            // Safe auto-seed from legacy topup_orders if payment_transactions is empty
+            if (PaymentTransaction::count() === 0 && TopupOrder::count() > 0) {
+                foreach (TopupOrder::all() as $to) {
+                    PaymentTransaction::firstOrCreate(
+                        ['transaction_no' => $to->order_id],
+                        [
+                            'user_id' => $to->user_id,
+                            'amount' => $to->final_amount ?? $to->amount_idr,
+                            'points' => (int)$to->points_issued,
+                            'payment_method' => $to->payment_channel,
+                            'status' => in_array(strtolower((string)$to->status), ['success', 'completed', 'paid']) ? 'paid' : $to->status,
+                            'created_at' => $to->created_at,
+                        ]
+                    );
+                }
+            }
+
+            $payinOrders = PaymentTransaction::with('user')
+                ->orderBy('created_at', 'desc')
                 ->paginate(15, ['*'], 'payin_page');
         } catch (\Throwable $e) {
             $payinOrders = new \Illuminate\Pagination\LengthAwarePaginator([], 0, 15);
@@ -241,28 +300,51 @@ class FinanceController extends Controller
                     if (!$ref) continue;
 
                     $rawStatus = strtoupper((string)($payin['status'] ?? 'PENDING'));
-                    $normStatus = in_array($rawStatus, ['COMPLETED', 'SUCCESS', 'PAID', 'SETTLED']) ? 'success' : (in_array($rawStatus, ['PENDING', 'PROCESSING']) ? 'pending' : 'failed');
+                    $isSuccess = in_array($rawStatus, ['COMPLETED', 'SUCCESS', 'PAID', 'SETTLED']);
+                    $trxStatus = $isSuccess ? 'paid' : (in_array($rawStatus, ['PENDING', 'PROCESSING']) ? 'pending' : 'failed');
+                    $topupStatus = $isSuccess ? 'success' : (in_array($rawStatus, ['PENDING', 'PROCESSING']) ? 'pending' : 'failed');
                     $amt = (float)($payin['amount'] ?? $payin['initiatedAmount'] ?? $payin['totalAmount'] ?? 0);
                     $channel = $payin['paymentChannel'] ?? $payin['paymentMethod'] ?? 'Xenith Pay';
+                    $createdAt = isset($payin['createdAt']) ? \Carbon\Carbon::parse($payin['createdAt']) : now();
 
+                    // Sync into PaymentTransaction (primary ledger)
+                    $existingTrx = PaymentTransaction::where('transaction_no', $ref)->first();
+                    if (!$existingTrx && $amt > 0) {
+                        PaymentTransaction::create([
+                            'transaction_no' => $ref,
+                            'user_id' => Auth::id() ?: 1,
+                            'amount' => $amt,
+                            'points' => (int)$amt,
+                            'payment_method' => $channel,
+                            'status' => $trxStatus,
+                            'created_at' => $createdAt,
+                        ]);
+                        $syncedCount++;
+                    } elseif ($existingTrx && $existingTrx->status !== $trxStatus) {
+                        $existingTrx->update([
+                            'status' => $trxStatus,
+                            'payment_method' => $channel,
+                        ]);
+                    }
+
+                    // Keep TopupOrder in sync
                     $existing = TopupOrder::where('order_id', $ref)->first();
                     if (!$existing && $amt > 0) {
                         TopupOrder::create([
                             'order_id' => $ref,
-                            'user_id' => Auth::id(),
+                            'user_id' => Auth::id() ?: 1,
                             'amount_idr' => $amt,
                             'points_issued' => $amt,
                             'conversion_rate' => 1,
-                            'status' => $normStatus,
+                            'status' => $topupStatus,
                             'payment_gateway' => 'xenith',
                             'payment_channel' => $channel,
                             'payment_response_text' => json_encode($payin),
-                            'created_at' => isset($payin['createdAt']) ? \Carbon\Carbon::parse($payin['createdAt']) : now(),
+                            'created_at' => $createdAt,
                         ]);
-                        $syncedCount++;
-                    } elseif ($existing) {
+                    } elseif ($existing && $existing->status !== $topupStatus) {
                         $existing->update([
-                            'status' => $normStatus,
+                            'status' => $topupStatus,
                             'payment_channel' => $channel,
                         ]);
                     }

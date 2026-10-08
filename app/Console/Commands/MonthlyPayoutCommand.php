@@ -43,7 +43,13 @@ class MonthlyPayoutCommand extends Command
         $minThreshold = (float)Setting::get('min_payout_threshold', 100000);
 
         // Calculate available earnings from payin topups minus already disbursed payouts
-        $totalInflow = (float)TopupOrder::where('status', 'success')->sum('amount_idr');
+        $totalInflow = 0;
+        if (\Illuminate\Support\Facades\Schema::hasTable('payment_transactions')) {
+            $totalInflow = (float)\App\Models\PaymentTransaction::whereIn('status', ['paid', 'success', 'completed', 'settled'])->sum('amount');
+        }
+        if ($totalInflow <= 0 && \Illuminate\Support\Facades\Schema::hasTable('topup_orders')) {
+            $totalInflow = (float)TopupOrder::where('status', 'success')->sum('amount_idr');
+        }
         $totalOutflow = (float)PayoutTransaction::whereIn('status', ['success', 'processing', 'simulated'])->sum('amount');
         $availableCalculated = max(0, $totalInflow - $totalOutflow);
 

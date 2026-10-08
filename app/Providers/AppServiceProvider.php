@@ -117,6 +117,21 @@ class AppServiceProvider extends ServiceProvider
                         ]
                     );
 
+                    // Ensure production transaction is also in payment_transactions table
+                    if (\Illuminate\Support\Facades\Schema::hasTable('payment_transactions')) {
+                        \App\Models\PaymentTransaction::updateOrCreate(
+                            ['transaction_no' => 'TOPUP-20260812145604-CAB3'],
+                            [
+                                'user_id' => $nikolas->id,
+                                'amount' => 10000.00,
+                                'points' => 10000,
+                                'payment_method' => 'QRIS',
+                                'status' => 'paid',
+                                'created_at' => '2026-08-12 14:56:55',
+                            ]
+                        );
+                    }
+
                     // Delete sandbox test payout logs to align balance
                     if (\Illuminate\Support\Facades\Schema::hasTable('payout_transactions')) {
                         \Illuminate\Support\Facades\DB::table('payout_transactions')
