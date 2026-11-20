@@ -108,7 +108,7 @@
 
                     <!-- Kementerian Footer -->
                     <div id="statement-footer" class="border-t border-slate-800/80 pt-4 text-[10px] font-bold text-slate-500 font-mono tracking-wider text-left">
-                        Kementerian Hukum dan Hak Asasi Manusia Republik Indonesia &copy; Copyright {{ date('Y') }}
+                        Kementerian Hukum Republik Indonesia &copy; Copyright {{ date('Y') }}
                     </div>
                 </div>
 
@@ -135,7 +135,7 @@
 
     <!-- Footer -->
     <footer id="footer-text" class="max-w-4xl w-full mx-auto text-center text-[10px] text-slate-650 pt-8 border-t border-slate-900 mt-12">
-        &copy; {{ date('Y') }} Ikatan Penerjemah Pemerintah Indonesia (IPPTI) & Kementerian Hukum dan HAM RI.
+        &copy; {{ date('Y') }} Ikatan Penerjemah Pemerintah Indonesia (IPPTI) & Kementerian Hukum Republik Indonesia.
     </footer>
 
     <script>
@@ -143,11 +143,11 @@
 
         const name = "{{ $translator->name }}";
         const skNumber = "{{ $translator->sk_number }}";
-        const noSkKemenkum = "{{ $translator->no_sk_kemenkum ?: $translator->sk_number }}";
-        const tglSk = "{{ $translator->tgl_sk ?: '' }}";
+        const noSkKemenkum = "{{ $translator->effective_no_sk }}";
+        const tglSk = "{{ $translator->effective_tgl_sk }}";
         const languages = "{{ $translator->language_services ?? 'Indonesia - Inggris, Inggris - Indonesia' }}";
         const masaAktif = "{{ $translator->masa_aktif ?: 'Seumur Hidup' }}";
-        const skLengkap = "{{ $translator->sk_lengkap ?: '' }}";
+        const skLengkap = "{{ $translator->effective_sk_lengkap }}";
         const currentYear = "{{ date('Y') }}";
 
         const translations = {

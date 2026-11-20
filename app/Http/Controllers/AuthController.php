@@ -218,11 +218,18 @@ class AuthController extends Controller
             error_log($alertContent);
         }
 
+        $noSkKemenkum = $request->no_sk_kemenkum ? trim($request->no_sk_kemenkum) : null;
+        $tglSk = $request->tgl_sk ? trim($request->tgl_sk) : null;
+        $skLengkap = $request->filled('sk_lengkap')
+            ? trim($request->sk_lengkap)
+            : ($noSkKemenkum ? trim($noSkKemenkum . ($tglSk ? ' tanggal ' . $tglSk : '')) : $user->sk_lengkap);
+
         $updateData = [
             'email' => trim($request->email),
             'whatsapp' => $request->whatsapp ? trim($request->whatsapp) : null,
-            'no_sk_kemenkum' => $request->no_sk_kemenkum ? trim($request->no_sk_kemenkum) : null,
-            'tgl_sk' => $request->tgl_sk ? trim($request->tgl_sk) : null,
+            'no_sk_kemenkum' => $noSkKemenkum,
+            'tgl_sk' => $tglSk,
+            'sk_lengkap' => $skLengkap,
             'bio' => $request->bio,
         ];
 
@@ -241,14 +248,14 @@ class AuthController extends Controller
         }
 
         $before = $user->toArray();
-        User::where('id', $user->id)->update($updateData);
+        $user->update($updateData);
         
         $updatedUser = User::find($user->id);
         $after = $updatedUser->toArray();
 
         \App\Models\AuditLog::log('UPDATE_PROFILE', User::class, $user->id, $before, $after);
 
-        return back()->with('success', 'Profil Anda berhasil diperbarui!');
+        return back()->with('success', 'Profil Anda berhasil diperbarui dan disinkronkan ke halaman verifikasi!');
     }
 
     public function forgotPasswordView()
@@ -375,6 +382,7 @@ class AuthController extends Controller
     {
         $translator = User::where('id', $translatorId)
             ->orWhere('sk_number', $translatorId)
+            ->orderBy('updated_at', 'desc')
             ->firstOrFail();
 
         if ($translator->role !== 'TRANSLATOR') {

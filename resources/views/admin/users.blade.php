@@ -87,7 +87,7 @@
                         <th class="px-6 py-3.5 text-xs font-bold text-slate-500 uppercase tracking-wider">Nama Lengkap</th>
                         <th class="px-6 py-3.5 text-xs font-bold text-slate-500 uppercase tracking-wider">Alamat Email</th>
                         <th class="px-6 py-3.5 text-xs font-bold text-slate-500 uppercase tracking-wider">Peran</th>
-                        <th class="px-6 py-3.5 text-xs font-bold text-slate-500 uppercase tracking-wider">Nomor Anggota</th>
+                        <th class="px-6 py-3.5 text-xs font-bold text-slate-500 uppercase tracking-wider">No. Anggota & SK Kemenkum</th>
                         <th class="px-6 py-3.5 text-xs font-bold text-slate-500 uppercase tracking-wider text-center">Saldo Poin</th>
                         <th class="px-6 py-3.5 text-xs font-bold text-slate-500 uppercase tracking-wider text-center">Dokumen</th>
                         <th class="px-6 py-3.5 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Aksi</th>
@@ -96,7 +96,12 @@
                 <tbody class="divide-y divide-slate-100">
                     @foreach($translators as $t)
                         <tr class="hover:bg-slate-50/40 transition-colors duration-150 item-row">
-                            <td class="px-6 py-4 font-bold text-slate-900 target-name">{{ $t->name }}</td>
+                            <td class="px-6 py-4">
+                                <p class="font-bold text-slate-900 target-name">{{ $t->name }}</p>
+                                @if($t->role === 'TRANSLATOR' && $t->language_services)
+                                    <p class="text-[11px] text-slate-500 font-medium mt-0.5">{{ $t->language_services }}</p>
+                                @endif
+                            </td>
                             <td class="px-6 py-4 text-slate-600 font-medium target-email">{{ $t->email }}</td>
                             <td class="px-6 py-4">
                                 @if($t->role === 'SUPERADMIN')
@@ -115,7 +120,14 @@
                                     </span>
                                 @endif
                             </td>
-                            <td class="px-6 py-4 text-slate-500 font-mono text-xs target-sk">{{ $t->sk_number ?: '-' }}</td>
+                            <td class="px-6 py-4 text-slate-600 font-mono text-xs target-sk">
+                                <span class="font-bold text-slate-800">{{ $t->sk_number ?: '-' }}</span>
+                                @if($t->role === 'TRANSLATOR')
+                                    <p class="text-[10px] text-slate-500 mt-0.5">
+                                        SK: {{ $t->effective_no_sk ?: '-' }}{{ $t->effective_tgl_sk ? ' (' . $t->effective_tgl_sk . ')' : '' }}
+                                    </p>
+                                @endif
+                            </td>
                             <td class="px-6 py-4 text-center">
                                 @if($t->role === 'TRANSLATOR')
                                     <span class="inline-flex items-center gap-1 font-mono font-bold text-xs {{ ($t->points ?? 0) <= 10000 ? 'text-amber-600' : 'text-emerald-700' }} bg-slate-50 border border-slate-200/80 px-2.5 py-1 rounded-full">
@@ -132,14 +144,26 @@
                             <td class="px-6 py-4 text-right">
                                 <div class="flex items-center justify-end gap-1.5">
                                     <button
-                                        onclick="openTopupModal({ id: '{{ $t->id }}', name: '{{ $t->name }}', points: {{ $t->points ?? 0 }} })"
+                                        onclick="openTopupModal({ id: '{{ $t->id }}', name: @js($t->name), points: {{ $t->points ?? 0 }} })"
                                         class="p-2 text-amber-600 hover:bg-amber-50 rounded-lg transition-colors cursor-pointer"
                                         title="Top-Up Saldo Poin"
                                     >
                                         <i data-lucide="coins" class="w-4 h-4"></i>
                                     </button>
                                     <button
-                                        onclick="openUserModal('edit', { id: '{{ $t->id }}', name: '{{ $t->name }}', email: '{{ $t->email }}', role: '{{ $t->role }}', sk_number: '{{ $t->sk_number }}', no_sk_kemenkum: '{{ $t->no_sk_kemenkum }}', tgl_sk: '{{ $t->tgl_sk }}' })"
+                                        onclick='openUserModal("edit", @json([
+                                            "id" => $t->id,
+                                            "name" => $t->name,
+                                            "email" => $t->email,
+                                            "whatsapp" => $t->whatsapp,
+                                            "role" => $t->role,
+                                            "sk_number" => $t->sk_number,
+                                            "no_sk_kemenkum" => $t->effective_no_sk !== $t->sk_number ? $t->effective_no_sk : ($t->no_sk_kemenkum ?? ""),
+                                            "tgl_sk" => $t->effective_tgl_sk,
+                                            "language_services" => $t->language_services,
+                                            "masa_aktif" => $t->masa_aktif ?: "Seumur Hidup",
+                                            "sk_lengkap" => $t->effective_sk_lengkap,
+                                        ]))'
                                         class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer"
                                         title="Edit Profil"
                                     >
@@ -171,7 +195,7 @@
 <!--              CREATE/EDIT USER MODAL        -->
 <!-- ========================================== -->
 <div id="modal-user" class="hidden fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl max-w-md w-full shadow-2xl p-6 border border-slate-100">
+    <div class="bg-white rounded-2xl max-w-xl w-full shadow-2xl p-6 border border-slate-100 max-h-[92vh] overflow-y-auto">
         <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-5">
             <h3 id="modal-title" class="text-lg font-bold text-slate-800">Tambah Pengguna Baru</h3>
             <button onclick="closeUserModal()" class="p-1 text-slate-400 hover:text-slate-600 rounded-lg cursor-pointer">
@@ -183,81 +207,132 @@
             @csrf
             <input type="hidden" id="modal-user-id" name="id" />
             
-            <div>
-                <label for="modal-role" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Peran Pengguna</label>
-                <select
-                    id="modal-role"
-                    name="role"
-                    onchange="toggleSkField()"
-                    class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-sm font-semibold text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all cursor-pointer"
-                >
-                    <option value="TRANSLATOR">Penerjemah Tersumpah</option>
-                    @if(Auth::user()->role === 'SUPERADMIN')
-                        <option value="ADMIN">Pengurus IPPTI (Admin)</option>
-                        <option value="SUPERADMIN">Pengurus IPPTI (Super Admin)</option>
-                    @endif
-                </select>
-            </div>
-
-            <div>
-                <label for="modal-name" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Nama Lengkap</label>
-                <input
-                    id="modal-name"
-                    name="name"
-                    type="text"
-                    required
-                    placeholder="Contoh: Muhammad Arifin"
-                    class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-sm font-semibold text-slate-850 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
-                />
-            </div>
-
-            <div>
-                <label for="modal-email" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Alamat Email</label>
-                <input
-                    id="modal-email"
-                    name="email"
-                    type="email"
-                    required
-                    placeholder="arifin@example.com"
-                    class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-sm font-semibold text-slate-850 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
-                />
-            </div>
-
-            <div id="field-sk" class="space-y-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                    <label for="modal-sk" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Nomor Anggota IPPTI</label>
+                    <label for="modal-role" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Peran Pengguna</label>
+                    <select
+                        id="modal-role"
+                        name="role"
+                        onchange="toggleSkField()"
+                        class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-sm font-semibold text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all cursor-pointer"
+                    >
+                        <option value="TRANSLATOR">Penerjemah Tersumpah</option>
+                        @if(Auth::user()->role === 'SUPERADMIN')
+                            <option value="ADMIN">Pengurus IPPTI (Admin)</option>
+                            <option value="SUPERADMIN">Pengurus IPPTI (Super Admin)</option>
+                        @endif
+                    </select>
+                </div>
+
+                <div>
+                    <label for="modal-name" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Nama Lengkap</label>
                     <input
-                        id="modal-sk"
-                        name="sk_number"
+                        id="modal-name"
+                        name="name"
                         type="text"
-                        placeholder="Contoh: 25004"
+                        required
+                        placeholder="Contoh: Muhammad Arifin"
                         class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-sm font-semibold text-slate-850 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
                     />
                 </div>
+
                 <div>
-                    <label for="modal-no-sk-kemenkum" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Nomor SK Menteri Hukum Republik Indonesia</label>
+                    <label for="modal-email" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Alamat Email</label>
                     <input
-                        id="modal-no-sk-kemenkum"
-                        name="no_sk_kemenkum"
-                        type="text"
-                        placeholder="Contoh: AHU-75.AH.03.07.2022"
+                        id="modal-email"
+                        name="email"
+                        type="email"
+                        required
+                        placeholder="arifin@example.com"
                         class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-sm font-semibold text-slate-850 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
                     />
                 </div>
+
                 <div>
-                    <label for="modal-tgl-sk" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Tanggal SK Menteri Hukum Republik Indonesia</label>
+                    <label for="modal-whatsapp" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Nomor WhatsApp / HP</label>
                     <input
-                        id="modal-tgl-sk"
-                        name="tgl_sk"
+                        id="modal-whatsapp"
+                        name="whatsapp"
                         type="text"
-                        placeholder="Contoh: 5 Oktober 2022"
+                        placeholder="Contoh: 08123456789"
                         class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-sm font-semibold text-slate-850 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
                     />
                 </div>
             </div>
 
+            <div id="field-sk" class="space-y-4 pt-2 border-t border-slate-100">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label for="modal-sk" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Nomor Anggota IPPTI</label>
+                        <input
+                            id="modal-sk"
+                            name="sk_number"
+                            type="text"
+                            placeholder="Contoh: 25004"
+                            class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-sm font-semibold text-slate-850 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
+                        />
+                    </div>
+                    <div>
+                        <label for="modal-masa-aktif" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Masa Aktif Registrasi</label>
+                        <input
+                            id="modal-masa-aktif"
+                            name="masa_aktif"
+                            type="text"
+                            placeholder="Contoh: Seumur Hidup"
+                            value="Seumur Hidup"
+                            class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-sm font-semibold text-slate-850 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
+                        />
+                    </div>
+                    <div>
+                        <label for="modal-no-sk-kemenkum" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Nomor SK Menteri Hukum RI</label>
+                        <input
+                            id="modal-no-sk-kemenkum"
+                            name="no_sk_kemenkum"
+                            type="text"
+                            oninput="autoSyncSkLengkapModal()"
+                            placeholder="Contoh: AHU-75.AH.03.07.2022"
+                            class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-sm font-semibold text-slate-850 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
+                        />
+                    </div>
+                    <div>
+                        <label for="modal-tgl-sk" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Tanggal SK Menteri Hukum RI</label>
+                        <input
+                            id="modal-tgl-sk"
+                            name="tgl_sk"
+                            type="text"
+                            oninput="autoSyncSkLengkapModal()"
+                            placeholder="Contoh: 5 Oktober 2022"
+                            class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-sm font-semibold text-slate-850 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
+                        />
+                    </div>
+                </div>
+
+                <div>
+                    <label for="modal-language-services" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Layanan Pasangan / Arah Bahasa</label>
+                    <input
+                        id="modal-language-services"
+                        name="language_services"
+                        type="text"
+                        placeholder="Contoh: Indonesia - Inggris, Inggris - Indonesia"
+                        class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-sm font-semibold text-slate-850 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
+                    />
+                </div>
+
+                <div>
+                    <label for="modal-sk-lengkap" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Keterangan SK Lengkap (Otomatis Sinkron)</label>
+                    <input
+                        id="modal-sk-lengkap"
+                        name="sk_lengkap"
+                        type="text"
+                        placeholder="Otomatis terisi dari Nomor SK & Tanggal SK"
+                        class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-sm font-semibold text-slate-850 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all bg-slate-50"
+                    />
+                    <p class="text-[10px] text-slate-400 mt-1">Tampil pada Kartu Verifikasi Penerjemah & tersinkronisasi dengan E-Certificate Hasil Verifikasi Dokumen.</p>
+                </div>
+            </div>
+
             <div>
-                <label id="label-password" for="modal-password" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Password Akses</label>
+                <label id="label-password" for="modal-password" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Password Akses</label>
                 <input
                     id="modal-password"
                     name="password"
@@ -279,7 +354,7 @@
                     type="submit"
                     class="px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-sm font-bold shadow-sm transition cursor-pointer"
                 >
-                    Simpan Akun
+                    Simpan & Sinkronkan
                 </button>
             </div>
         </form>
@@ -426,6 +501,15 @@
         }
     }
 
+    function autoSyncSkLengkapModal() {
+        const noSk = (document.getElementById('modal-no-sk-kemenkum')?.value || '').trim();
+        const tglSk = (document.getElementById('modal-tgl-sk')?.value || '').trim();
+        const skLengkapInput = document.getElementById('modal-sk-lengkap');
+        if (skLengkapInput && noSk) {
+            skLengkapInput.value = noSk + (tglSk ? ' tanggal ' + tglSk : '');
+        }
+    }
+
     function openUserModal(action, data = null) {
         const modal = document.getElementById('modal-user');
         const title = document.getElementById('modal-title');
@@ -437,9 +521,13 @@
         document.getElementById('modal-user-id').value = '';
         document.getElementById('modal-name').value = '';
         document.getElementById('modal-email').value = '';
+        if (document.getElementById('modal-whatsapp')) document.getElementById('modal-whatsapp').value = '';
         document.getElementById('modal-sk').value = '';
         if (document.getElementById('modal-no-sk-kemenkum')) document.getElementById('modal-no-sk-kemenkum').value = '';
         if (document.getElementById('modal-tgl-sk')) document.getElementById('modal-tgl-sk').value = '';
+        if (document.getElementById('modal-language-services')) document.getElementById('modal-language-services').value = '';
+        if (document.getElementById('modal-masa-aktif')) document.getElementById('modal-masa-aktif').value = 'Seumur Hidup';
+        if (document.getElementById('modal-sk-lengkap')) document.getElementById('modal-sk-lengkap').value = '';
         document.getElementById('modal-password').value = '';
         document.getElementById('modal-role').value = 'TRANSLATOR';
 
@@ -453,11 +541,15 @@
             form.setAttribute('action', '/admin/users/' + data.id + '/update');
             
             document.getElementById('modal-user-id').value = data.id;
-            document.getElementById('modal-name').value = data.name;
-            document.getElementById('modal-email').value = data.email;
+            document.getElementById('modal-name').value = data.name || '';
+            document.getElementById('modal-email').value = data.email || '';
+            if (document.getElementById('modal-whatsapp')) document.getElementById('modal-whatsapp').value = data.whatsapp || '';
             document.getElementById('modal-sk').value = data.sk_number || '';
             if (document.getElementById('modal-no-sk-kemenkum')) document.getElementById('modal-no-sk-kemenkum').value = data.no_sk_kemenkum || '';
             if (document.getElementById('modal-tgl-sk')) document.getElementById('modal-tgl-sk').value = data.tgl_sk || '';
+            if (document.getElementById('modal-language-services')) document.getElementById('modal-language-services').value = data.language_services || '';
+            if (document.getElementById('modal-masa-aktif')) document.getElementById('modal-masa-aktif').value = data.masa_aktif || 'Seumur Hidup';
+            if (document.getElementById('modal-sk-lengkap')) document.getElementById('modal-sk-lengkap').value = data.sk_lengkap || '';
             document.getElementById('modal-role').value = data.role;
             
             passLabel.innerText = 'Ganti Password (Kosongkan jika tidak diubah)';

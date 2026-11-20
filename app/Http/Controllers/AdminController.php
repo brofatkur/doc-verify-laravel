@@ -123,14 +123,25 @@ class AdminController extends Controller
             return back()->withErrors(['error' => 'Nomor Anggota wajib diisi untuk Penerjemah.']);
         }
 
+        $noSkKemenkum = $request->no_sk_kemenkum ? trim($request->no_sk_kemenkum) : null;
+        $tglSk = $request->tgl_sk ? trim($request->tgl_sk) : null;
+        $skLengkap = $request->filled('sk_lengkap')
+            ? trim($request->sk_lengkap)
+            : ($noSkKemenkum ? trim($noSkKemenkum . ($tglSk ? ' tanggal ' . $tglSk : '')) : null);
+
         $newUser = User::create([
             'role' => $role,
             'user_level' => 'reguler',
-            'name' => $request->name,
-            'email' => $request->email,
+            'name' => trim($request->name),
+            'email' => trim($request->email),
+            'whatsapp' => $request->whatsapp ? trim($request->whatsapp) : null,
             'sk_number' => $skNumber,
-            'no_sk_kemenkum' => $request->no_sk_kemenkum ? trim($request->no_sk_kemenkum) : null,
-            'tgl_sk' => $request->tgl_sk ? trim($request->tgl_sk) : null,
+            'no_sk_kemenkum' => $noSkKemenkum,
+            'tgl_sk' => $tglSk,
+            'language_services' => $request->language_services ? trim($request->language_services) : null,
+            'masa_aktif' => $request->masa_aktif ? trim($request->masa_aktif) : 'Seumur Hidup',
+            'sk_lengkap' => $skLengkap,
+            'bio' => $request->filled('bio') ? trim($request->bio) : $skLengkap,
             'password' => Hash::make($request->password),
         ]);
 
@@ -211,9 +222,13 @@ class AdminController extends Controller
             'role' => 'required|in:TRANSLATOR,ADMIN,SUPERADMIN',
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email,' . $id,
+            'whatsapp' => 'nullable|string|max:30',
             'sk_number' => 'nullable|string|max:255',
             'no_sk_kemenkum' => 'nullable|string|max:255',
             'tgl_sk' => 'nullable|string|max:255',
+            'language_services' => 'nullable|string|max:1000',
+            'masa_aktif' => 'nullable|string|max:255',
+            'sk_lengkap' => 'nullable|string|max:1000',
             'password' => 'nullable|string|min:6',
         ]);
 
@@ -234,22 +249,42 @@ class AdminController extends Controller
             return back()->withErrors(['error' => 'Nomor Anggota wajib diisi untuk Penerjemah.']);
         }
 
+        $noSkKemenkum = $request->no_sk_kemenkum ? trim($request->no_sk_kemenkum) : null;
+        $tglSk = $request->tgl_sk ? trim($request->tgl_sk) : null;
+
+        // Auto-sync sk_lengkap if no_sk_kemenkum or tgl_sk changed and sk_lengkap was not manually customized to a new value
+        $submittedSkLengkap = $request->filled('sk_lengkap') ? trim($request->sk_lengkap) : null;
+        $skChanged = ($noSkKemenkum !== $targetUser->no_sk_kemenkum) || ($tglSk !== $targetUser->tgl_sk);
+        if ($skChanged && ($submittedSkLengkap === null || $submittedSkLengkap === $targetUser->sk_lengkap)) {
+            $skLengkap = $noSkKemenkum ? trim($noSkKemenkum . ($tglSk ? ' tanggal ' . $tglSk : '')) : $submittedSkLengkap;
+        } else {
+            $skLengkap = $submittedSkLengkap ?: ($noSkKemenkum ? trim($noSkKemenkum . ($tglSk ? ' tanggal ' . $tglSk : '')) : null);
+        }
+
         $updateData = [
             'role' => $role,
-            'name' => $request->name,
-            'email' => $request->email,
+            'name' => trim($request->name),
+            'email' => trim($request->email),
+            'whatsapp' => $request->whatsapp ? trim($request->whatsapp) : $targetUser->whatsapp,
             'sk_number' => $skNumber,
-            'no_sk_kemenkum' => $request->no_sk_kemenkum ? trim($request->no_sk_kemenkum) : null,
-            'tgl_sk' => $request->tgl_sk ? trim($request->tgl_sk) : null,
+            'no_sk_kemenkum' => $noSkKemenkum,
+            'tgl_sk' => $tglSk,
+            'language_services' => $request->has('language_services') ? ($request->language_services ? trim($request->language_services) : null) : $targetUser->language_services,
+            'masa_aktif' => $request->has('masa_aktif') ? ($request->masa_aktif ? trim($request->masa_aktif) : 'Seumur Hidup') : $targetUser->masa_aktif,
+            'sk_lengkap' => $skLengkap,
         ];
 
         if ($request->filled('password')) {
             $updateData['password'] = Hash::make($request->password);
         }
 
+        $before = $targetUser->toArray();
         $targetUser->update($updateData);
+        $after = $targetUser->fresh()->toArray();
 
-        return redirect('/admin/users')->with('success', 'Data profil pengguna berhasil diperbarui!');
+        \App\Models\AuditLog::log('ADMIN_UPDATE_USER', User::class, $targetUser->id, $before, $after);
+
+        return redirect('/admin/users')->with('success', 'Data profil pengguna berhasil diperbarui dan disinkronkan ke seluruh hasil verifikasi!');
     }
 
     public function deleteUser($id)
@@ -316,14 +351,30 @@ class AdminController extends Controller
                 continue;
             }
 
-            // Check duplicate
-            $existing = User::where('email', $email)
-                ->orWhere('sk_number', $noAnggota)
+            // Check existing by sk_number or email -> Update & Sync instead of skipping!
+            $existing = User::where('sk_number', $noAnggota)
+                ->orWhere('email', $email)
                 ->first();
 
             if ($existing) {
-                $skippedCount++;
-                $errors[] = "Penerjemah '{$nama}' ({$email}/{$noAnggota}) sudah terdaftar, dilewati.";
+                try {
+                    $computedSkLengkap = $skLengkap ?: ($noSkKemenkum ? trim($noSkKemenkum . ($tglSk ? ' tanggal ' . $tglSk : '')) : $existing->sk_lengkap);
+                    $existing->update([
+                        'name' => $nama ?: $existing->name,
+                        'sk_number' => $noAnggota ?: $existing->sk_number,
+                        'language_services' => $arahBahasa ?: $existing->language_services,
+                        'no_sk_kemenkum' => $noSkKemenkum ?: $existing->no_sk_kemenkum,
+                        'tgl_sk' => $tglSk ?: $existing->tgl_sk,
+                        'masa_aktif' => $masaAktif ?: ($existing->masa_aktif ?: 'Seumur Hidup'),
+                        'sk_lengkap' => $computedSkLengkap,
+                        'bio' => $computedSkLengkap ?: $existing->bio,
+                        'profile_picture' => $urlFoto ?: $existing->profile_picture,
+                    ]);
+                    $importedCount++;
+                } catch (\Exception $e) {
+                    $skippedCount++;
+                    $errors[] = "Gagal memperbarui '{$nama}': " . $e->getMessage();
+                }
                 continue;
             }
 

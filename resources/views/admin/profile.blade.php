@@ -137,11 +137,11 @@
                             type="text"
                             id="no_sk_kemenkum"
                             name="no_sk_kemenkum"
-                            value="{{ old('no_sk_kemenkum', $user->no_sk_kemenkum) }}"
+                            value="{{ old('no_sk_kemenkum', $user->effective_no_sk !== $user->sk_number ? $user->effective_no_sk : $user->no_sk_kemenkum) }}"
                             class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-slate-800 text-sm font-semibold outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition"
                             placeholder="Contoh: AHU-75.AH.03.07.2022"
                         />
-                        <p class="text-[10px] text-slate-400 mt-1">Nomor SK Penetapan Menteri Hukum Republik Indonesia resmi yang tampil pada hasil verifikasi QR Code.</p>
+                        <p class="text-[10px] text-slate-400 mt-1">Otomatis tersinkronisasi ke Kartu Verifikasi Penerjemah & seluruh E-Certificate Hasil Verifikasi Dokumen.</p>
                     </div>
 
                     <div>
@@ -150,7 +150,7 @@
                             type="text"
                             id="tgl_sk"
                             name="tgl_sk"
-                            value="{{ old('tgl_sk', $user->tgl_sk) }}"
+                            value="{{ old('tgl_sk', $user->effective_tgl_sk) }}"
                             class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-slate-800 text-sm font-semibold outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition"
                             placeholder="Contoh: 5 Oktober 2022"
                         />

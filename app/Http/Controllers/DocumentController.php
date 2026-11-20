@@ -439,26 +439,25 @@ class DocumentController extends Controller
 
         $document = Document::withTrashed()
             ->where("document_id", $documentId)
-            ->with([
-                "translator" => function ($query) {
-                    $query->select(
-                        "id",
-                        "name",
-                        "sk_number",
-                        "no_sk_kemenkum",
-                        "tgl_sk",
-                        "bio",
-                        "language_services",
-                        "profile_picture",
-                        "role"
-                    );
-                },
-            ])
+            ->with("translator")
             ->first();
 
         // Exclude admin/superadmin accounts from public verification results (REV-13)
         if ($document && $document->translator && $document->translator->role !== 'TRANSLATOR') {
             $document = null;
+        }
+
+        // Ensure translator profile is synchronized with the latest record for the same sk_number
+        if ($document && $document->translator && !empty($document->translator->sk_number)) {
+            $latestTranslator = \App\Models\User::where('role', 'TRANSLATOR')
+                ->where('sk_number', $document->translator->sk_number)
+                ->orderByRaw('CASE WHEN no_sk_kemenkum IS NOT NULL AND no_sk_kemenkum != "" THEN 0 ELSE 1 END')
+                ->orderBy('updated_at', 'desc')
+                ->first();
+
+            if ($latestTranslator) {
+                $document->setRelation('translator', $latestTranslator);
+            }
         }
 
         return view("verify", compact("document", "documentId"));
