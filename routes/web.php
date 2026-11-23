@@ -63,6 +63,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/admin/users/{id}/update', [AdminController::class, 'updateUser']);
     Route::post('/admin/users/{id}/verify', [AdminController::class, 'verifyUser']);
     Route::post('/admin/users/{id}/reject', [AdminController::class, 'rejectUser']);
+    Route::post('/admin/users/{id}/renew', [AdminController::class, 'renewUserMembership']);
     Route::post('/admin/users/{id}/delete', [AdminController::class, 'deleteUser']);
     Route::post('/admin/users/{id}/topup', [AdminController::class, 'topupUserPoints']);
     Route::post('/admin/users/import-json', [AdminController::class, 'importTranslatorsJson']);
@@ -89,6 +90,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/admin/upgrade', [AdminController::class, 'upgrade']);
     Route::get('/admin/transactions', [AdminController::class, 'transactions']);
     Route::post('/payment/pro-upgrade/create', [PaymentController::class, 'createProUpgradePayment']);
+    Route::post('/payment/membership/create', [PaymentController::class, 'createMembershipPayment']);
 
     // Super Admin Finance & Payout Management
     Route::get('/admin/finance', [\App\Http\Controllers\FinanceController::class, 'index']);

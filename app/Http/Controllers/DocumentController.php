@@ -44,6 +44,12 @@ class DocumentController extends Controller
             ]);
         }
 
+        if ($user->isMembershipExpired()) {
+            return redirect('/admin')->withErrors([
+                'membership' => 'Masa aktif keanggotaan tahunan IPPTI Anda telah berakhir (Expired). Silakan lakukan perpanjangan keanggotaan terlebih dahulu untuk mengaktifkan kembali fitur input dokumen.'
+            ]);
+        }
+
         $request->validate([
             "registration_number" => "nullable|string|max:255",
             "document_date" => "required|date",
@@ -130,6 +136,12 @@ class DocumentController extends Controller
         if (!$user->isVerifiedTranslator()) {
             return redirect('/admin')->withErrors([
                 'verification' => 'Akun Anda belum diverifikasi oleh Pengurus Admin IPPTI.'
+            ]);
+        }
+
+        if ($user->isMembershipExpired()) {
+            return redirect('/admin')->withErrors([
+                'membership' => 'Masa aktif keanggotaan tahunan IPPTI Anda telah berakhir (Expired). Silakan lakukan perpanjangan keanggotaan terlebih dahulu.'
             ]);
         }
 
@@ -263,6 +275,13 @@ class DocumentController extends Controller
         if (!$user->isVerifiedTranslator()) {
             return response()->json(
                 ["success" => false, "error" => "Akun Anda sedang menunggu verifikasi Pengurus Admin IPPTI. Fitur impor dokumen belum aktif."],
+                403,
+            );
+        }
+
+        if ($user->isMembershipExpired()) {
+            return response()->json(
+                ["success" => false, "error" => "Masa aktif keanggotaan tahunan IPPTI Anda telah berakhir (Expired). Silakan perpanjang keanggotaan terlebih dahulu."],
                 403,
             );
         }

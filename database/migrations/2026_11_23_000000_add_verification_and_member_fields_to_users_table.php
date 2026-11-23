@@ -25,8 +25,17 @@ return new class extends Migration
                 if (!Schema::hasColumn('users', 'verified_by')) {
                     $table->uuid('verified_by')->nullable()->after('verified_at');
                 }
+                if (!Schema::hasColumn('users', 'registered_at')) {
+                    $table->timestamp('registered_at')->nullable()->after('verified_by');
+                }
+                if (!Schema::hasColumn('users', 'activated_at')) {
+                    $table->timestamp('activated_at')->nullable()->after('registered_at');
+                }
+                if (!Schema::hasColumn('users', 'expired_at')) {
+                    $table->timestamp('expired_at')->nullable()->after('activated_at');
+                }
                 if (!Schema::hasColumn('users', 'rejection_reason')) {
-                    $table->text('rejection_reason')->nullable()->after('verified_by');
+                    $table->text('rejection_reason')->nullable()->after('expired_at');
                 }
                 if (!Schema::hasColumn('users', 'nik')) {
                     $table->string('nik', 50)->nullable()->after('name');
@@ -56,6 +65,9 @@ return new class extends Migration
                     'verification_status',
                     'verified_at',
                     'verified_by',
+                    'registered_at',
+                    'activated_at',
+                    'expired_at',
                     'rejection_reason',
                     'nik',
                     'address',

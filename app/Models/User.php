@@ -28,6 +28,9 @@ class User extends Authenticatable
         'verification_status',
         'verified_at',
         'verified_by',
+        'registered_at',
+        'activated_at',
+        'expired_at',
         'rejection_reason',
         'whatsapp',
         'address',
@@ -64,6 +67,9 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'verified_at' => 'datetime',
+            'registered_at' => 'datetime',
+            'activated_at' => 'datetime',
+            'expired_at' => 'datetime',
             'is_verified' => 'boolean',
             'password' => 'hashed',
         ];
@@ -176,6 +182,84 @@ class User extends Authenticatable
     }
 
     /**
+     * Tanggal Daftar Efektif
+     */
+    public function getEffectiveRegisteredAtAttribute()
+    {
+        return $this->registered_at ?: $this->created_at;
+    }
+
+    /**
+     * Tanggal Aktivasi Efektif
+     */
+    public function getEffectiveActivatedAtAttribute()
+    {
+        if ($this->activated_at) {
+            return $this->activated_at;
+        }
+        if ($this->isVerifiedTranslator()) {
+            return $this->verified_at ?: $this->created_at;
+        }
+        return null;
+    }
+
+    /**
+     * Tanggal Expired Tahunan Efektif (Sesuai dengan Tanggal Aktivasi masing-masing member)
+     */
+    public function getEffectiveExpiredAtAttribute()
+    {
+        if ($this->expired_at) {
+            return \Carbon\Carbon::parse($this->expired_at);
+        }
+        if ($this->isVerifiedTranslator() && $this->effective_activated_at) {
+            $years = max(1, (int)\App\Models\Setting::get('member_duration_years', 1));
+            return \Carbon\Carbon::parse($this->effective_activated_at)->copy()->addYears($years);
+        }
+        return null;
+    }
+
+    /**
+     * Cek apakah masa aktif keanggotaan tahunan sudah expired
+     */
+    public function isMembershipExpired(): bool
+    {
+        if ($this->role !== 'TRANSLATOR') {
+            return false;
+        }
+        if (!$this->isVerifiedTranslator()) {
+            return false;
+        }
+        $exp = $this->effective_expired_at;
+        if ($exp && $exp->copy()->endOfDay()->isPast()) {
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Sisa hari sebelum expired (negatif jika sudah expired)
+     */
+    public function daysUntilExpiry(): ?int
+    {
+        $exp = $this->effective_expired_at;
+        if (!$exp) {
+            return null;
+        }
+        return (int)now()->startOfDay()->diffInDays($exp->copy()->startOfDay(), false);
+    }
+
+    /**
+     * Cek apakah penerjemah boleh menginput dokumen (Sudah diverifikasi DAN Belum expired)
+     */
+    public function canInputDocuments(): bool
+    {
+        if ($this->role !== 'TRANSLATOR') {
+            return true;
+        }
+        return $this->isVerifiedTranslator() && !$this->isMembershipExpired();
+    }
+
+    /**
      * Get synchronized Nomor SK Menteri Hukum RI
      */
     public function getEffectiveNoSkAttribute(): string
@@ -248,6 +332,11 @@ class User extends Authenticatable
                 'masa_aktif' => $this->masa_aktif,
                 'sk_lengkap' => $this->sk_lengkap,
                 'bio' => $this->bio,
+                'is_verified' => $this->is_verified,
+                'verification_status' => $this->verification_status,
+                'registered_at' => $this->registered_at,
+                'activated_at' => $this->activated_at,
+                'expired_at' => $this->expired_at,
                 'updated_at' => now(),
             ];
 
@@ -295,6 +384,13 @@ class User extends Authenticatable
                     }
                 } elseif (empty($user->sk_lengkap) && !empty($user->no_sk_kemenkum)) {
                     $user->sk_lengkap = trim($user->no_sk_kemenkum . ($user->tgl_sk ? ' tanggal ' . $user->tgl_sk : ''));
+                }
+                // When expired_at is set, keep masa_aktif label synchronized
+                if (!empty($user->expired_at)) {
+                    try {
+                        $expDate = \Carbon\Carbon::parse($user->expired_at);
+                        $user->masa_aktif = 'Aktif s/d ' . $expDate->translatedFormat('d F Y');
+                    } catch (\Throwable $e) {}
                 }
             }
         });

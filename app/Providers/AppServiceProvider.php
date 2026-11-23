@@ -38,6 +38,13 @@ class AppServiceProvider extends ServiceProvider
                         $table->string('sk_document_path')->nullable()->after('sk_lengkap');
                     });
                 }
+                if (!\Illuminate\Support\Facades\Schema::hasColumn('users', 'expired_at')) {
+                    \Illuminate\Support\Facades\Schema::table('users', function (\Illuminate\Database\Schema\Blueprint $table) {
+                        $table->timestamp('registered_at')->nullable()->after('verified_by');
+                        $table->timestamp('activated_at')->nullable()->after('registered_at');
+                        $table->timestamp('expired_at')->nullable()->after('activated_at');
+                    });
+                }
             }
 
             if (!\Illuminate\Support\Facades\Schema::hasTable('vouchers')) {

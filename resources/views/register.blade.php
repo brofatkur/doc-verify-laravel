@@ -75,13 +75,21 @@
                 <div class="p-2 bg-blue-500/20 text-blue-400 rounded-xl flex-shrink-0 mt-0.5">
                     <i data-lucide="shield-check" class="w-5 h-5"></i>
                 </div>
-                <div class="text-xs text-slate-300 space-y-1 leading-relaxed">
-                    <p class="font-bold text-white text-sm">Mekanisme Aktivasi Akun Penerjemah Tersumpah</p>
+                <div class="text-xs text-slate-300 space-y-1.5 leading-relaxed flex-1">
+                    <p class="font-bold text-white text-sm">Mekanisme Aktivasi & Keanggotaan Tahunan IPPTI</p>
                     <p>
                         1. Isi formulir pendaftaran di bawah ini dengan data SK Menteri Hukum RI yang valid.<br>
                         2. Setelah mendaftar, Anda <strong class="text-emerald-400">dapat langsung login</strong> ke dashboard.<br>
-                        3. Fitur <strong class="text-amber-300">Input Data Dokumen & QR Verifikasi</strong> akan otomatis aktif segera setelah Pengurus Admin IPPTI memverifikasi pendaftaran Anda.
+                        3. Fitur <strong class="text-amber-300">Input Data Dokumen & QR Verifikasi</strong> akan otomatis aktif segera setelah Pengurus Admin IPPTI memverifikasi pendaftaran Anda (Masa aktif berlaku <strong>{{ (int)\App\Models\Setting::get('member_duration_years', 1) }} Tahun</strong> sejak Tanggal Aktivasi).
                     </p>
+                    <div class="flex flex-wrap gap-3 pt-1 text-[11px]">
+                        <span class="px-2.5 py-1 rounded-lg bg-slate-950/70 border border-slate-800 text-emerald-400 font-bold">
+                            Biaya Daftar Awal: Rp {{ number_format((float)($registrationFee ?? \App\Models\Setting::get('member_registration_fee', 250000)), 0, ',', '.') }}
+                        </span>
+                        <span class="px-2.5 py-1 rounded-lg bg-slate-950/70 border border-slate-800 text-blue-400 font-bold">
+                            Perpanjangan Tahunan: Rp {{ number_format((float)($renewalFee ?? \App\Models\Setting::get('member_renewal_fee', 150000)), 0, ',', '.') }} / Tahun
+                        </span>
+                    </div>
                 </div>
             </div>
 

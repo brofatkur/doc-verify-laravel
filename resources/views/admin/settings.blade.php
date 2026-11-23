@@ -94,6 +94,75 @@
                         Bebas biaya awal aktivasi! 100% nominal top-up langsung menjadi Poin Verifikasi. Top-up minimal nominal ini (Default Rp 100.000) otomatis mengaktifkan status Akun PRO secara permanen.
                     </p>
                 </div>
+
+                <!-- Pengaturan Keanggotaan Tahunan IPPTI (Harga Daftar Awal & Perpanjangan Tahunan) -->
+                <div class="col-span-1 md:col-span-2 pt-3 border-t border-slate-200/80">
+                    <h3 class="text-sm font-extrabold text-slate-900 flex items-center gap-2 mb-3">
+                        <i data-lucide="user-check" class="w-4 h-4 text-emerald-600"></i>
+                        <span>Pengaturan Biaya Keanggotaan IPPTI (Daftar Awal & Perpanjangan Tahunan)</span>
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <!-- member_registration_fee -->
+                        <div class="space-y-2 p-4 bg-emerald-50/40 rounded-2xl border border-emerald-200/60">
+                            <label for="member_registration_fee" class="block text-xs font-bold text-emerald-900 uppercase tracking-wider">
+                                Harga Daftar Awal Member Baru (Rp)
+                            </label>
+                            <input
+                                type="number"
+                                id="member_registration_fee"
+                                name="member_registration_fee"
+                                value="{{ old('member_registration_fee', \App\Models\Setting::get('member_registration_fee', 250000)) }}"
+                                required
+                                min="0"
+                                step="10000"
+                                class="w-full px-3.5 py-2.5 border border-emerald-200 rounded-xl text-slate-900 text-sm font-black font-mono focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition bg-white"
+                            />
+                            <p class="text-[10.5px] text-emerald-800/80 leading-relaxed">
+                                Biaya pendaftaran awal bagi pendaftar anggota baru IPPTI.
+                            </p>
+                        </div>
+
+                        <!-- member_renewal_fee -->
+                        <div class="space-y-2 p-4 bg-blue-50/40 rounded-2xl border border-blue-200/60">
+                            <label for="member_renewal_fee" class="block text-xs font-bold text-blue-900 uppercase tracking-wider">
+                                Harga Perpanjangan Tahunan (Rp)
+                            </label>
+                            <input
+                                type="number"
+                                id="member_renewal_fee"
+                                name="member_renewal_fee"
+                                value="{{ old('member_renewal_fee', \App\Models\Setting::get('member_renewal_fee', 150000)) }}"
+                                required
+                                min="0"
+                                step="10000"
+                                class="w-full px-3.5 py-2.5 border border-blue-200 rounded-xl text-slate-900 text-sm font-black font-mono focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition bg-white"
+                            />
+                            <p class="text-[10.5px] text-blue-800/80 leading-relaxed">
+                                Biaya perpanjangan keanggotaan tahunan ketika masa aktif member expired.
+                            </p>
+                        </div>
+
+                        <!-- member_duration_years -->
+                        <div class="space-y-2 p-4 bg-slate-50/80 rounded-2xl border border-slate-200/80">
+                            <label for="member_duration_years" class="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                                Siklus Perpanjangan (Tahun)
+                            </label>
+                            <input
+                                type="number"
+                                id="member_duration_years"
+                                name="member_duration_years"
+                                value="{{ old('member_duration_years', \App\Models\Setting::get('member_duration_years', 1)) }}"
+                                required
+                                min="1"
+                                max="10"
+                                class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-slate-900 text-sm font-black font-mono focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition bg-white"
+                            />
+                            <p class="text-[10.5px] text-slate-500 leading-relaxed">
+                                Masa berlaku keanggotaan sejak tanggal aktivasi masing-masing member (Default: 1 Tahun).
+                            </p>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div class="pt-4 border-t border-slate-100 flex justify-end">

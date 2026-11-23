@@ -75,6 +75,52 @@ class PaymentController extends Controller
     }
 
     /**
+     * Create Payment Session for IPPTI Membership Registration or Annual Renewal
+     */
+    public function createMembershipPayment(Request $request)
+    {
+        $user = Auth::user();
+        if (!$user) {
+            return response()->json(['success' => false, 'error' => 'Silakan login terlebih dahulu.'], 401);
+        }
+
+        $type = strtolower(trim((string)$request->input('type', 'renewal')));
+        if ($type === 'initial' || $type === 'registration') {
+            $amount = (float)Setting::get('member_registration_fee', 250000);
+            $trxNo = 'MEMBER-REG-' . date('YmdHis') . '-' . strtoupper(substr(uniqid(), -4));
+            $orderType = 'member_registration';
+            $productName = 'Biaya Pendaftaran Awal Anggota Baru IPPTI';
+        } else {
+            $amount = (float)Setting::get('member_renewal_fee', 150000);
+            $trxNo = 'MEMBER-REN-' . date('YmdHis') . '-' . strtoupper(substr(uniqid(), -4));
+            $orderType = 'member_renewal';
+            $productName = 'Biaya Perpanjangan Tahunan Anggota IPPTI';
+        }
+
+        $points = (int)$amount;
+        $voucherCode = strtoupper(trim((string)$request->input('voucher_code', '')));
+        $discountAmount = 0;
+        $finalAmount = $amount;
+
+        if (!empty($voucherCode)) {
+            $voucher = \App\Models\Voucher::where('code', $voucherCode)->first();
+            if ($voucher) {
+                $validation = $voucher->isValidForAmount($amount);
+                if ($validation['valid']) {
+                    $discountAmount = (float)$validation['discount_amount'];
+                    $finalAmount = (float)$validation['final_amount'];
+                } else {
+                    return response()->json(['success' => false, 'error' => $validation['message']], 422);
+                }
+            } else {
+                return response()->json(['success' => false, 'error' => 'Kode voucher diskon "' . $voucherCode . '" tidak valid.'], 422);
+            }
+        }
+
+        return $this->processGatewayCheckout($user, $trxNo, $amount, $points, $productName, $orderType, $voucherCode, $discountAmount, $finalAmount);
+    }
+
+    /**
      * Internal helper to build Xenith Pay payment link checkout request
      */
     private function processGatewayCheckout($user, $trxNo, $amount, $points, $productName, $orderType = 'topup', $voucherCode = null, $discountAmount = 0, $finalAmount = null)
@@ -119,6 +165,23 @@ class PaymentController extends Controller
 
             // Add points directly to user
             $user->increment('points', $points);
+
+            if ($orderType === 'member_renewal') {
+                $durationYears = max(1, (int)Setting::get('member_duration_years', 1));
+                $currentExp = $user->effective_expired_at;
+                if ($currentExp && $currentExp->isFuture()) {
+                    $newExp = $currentExp->copy()->addYears($durationYears);
+                    $newAct = $user->effective_activated_at ?: now();
+                } else {
+                    $newAct = now();
+                    $newExp = $newAct->copy()->addYears($durationYears);
+                }
+                $user->update([
+                    'activated_at' => $newAct,
+                    'expired_at' => $newExp,
+                    'masa_aktif' => 'Aktif s/d ' . $newExp->translatedFormat('d F Y'),
+                ]);
+            }
 
             // Record point transaction in ledger
             \App\Models\PointTransaction::create([
@@ -371,6 +434,24 @@ class PaymentController extends Controller
                     $user->update(['user_level' => 'pro']);
                 }
 
+                // If Annual Membership Renewal transaction, extend expired_at by 1 year (member_duration_years)
+                if (str_starts_with((string)$refCode, 'MEMBER-REN-')) {
+                    $durationYears = max(1, (int)Setting::get('member_duration_years', 1));
+                    $currentExp = $user->effective_expired_at;
+                    if ($currentExp && $currentExp->isFuture()) {
+                        $newExp = $currentExp->copy()->addYears($durationYears);
+                        $newAct = $user->effective_activated_at ?: now();
+                    } else {
+                        $newAct = now();
+                        $newExp = $newAct->copy()->addYears($durationYears);
+                    }
+                    $user->update([
+                        'activated_at' => $newAct,
+                        'expired_at' => $newExp,
+                        'masa_aktif' => 'Aktif s/d ' . $newExp->translatedFormat('d F Y'),
+                    ]);
+                }
+
                 $idempotencyKey = 'topup_order_' . $refCode;
                 $user->creditPoints(
                     $points,
@@ -442,6 +523,23 @@ class PaymentController extends Controller
             if ($user) {
                 if ($user->isReguler()) {
                     $user->update(['user_level' => 'pro']);
+                }
+
+                if (str_starts_with((string)$trxNo, 'MEMBER-REN-')) {
+                    $durationYears = max(1, (int)Setting::get('member_duration_years', 1));
+                    $currentExp = $user->effective_expired_at;
+                    if ($currentExp && $currentExp->isFuture()) {
+                        $newExp = $currentExp->copy()->addYears($durationYears);
+                        $newAct = $user->effective_activated_at ?: now();
+                    } else {
+                        $newAct = now();
+                        $newExp = $newAct->copy()->addYears($durationYears);
+                    }
+                    $user->update([
+                        'activated_at' => $newAct,
+                        'expired_at' => $newExp,
+                        'masa_aktif' => 'Aktif s/d ' . $newExp->translatedFormat('d F Y'),
+                    ]);
                 }
 
                 $idempotencyKey = 'topup_order_' . $trxNo;

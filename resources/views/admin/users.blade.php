@@ -199,26 +199,34 @@
             <table class="w-full text-left text-sm" id="table-translators">
                 <thead class="bg-slate-50 border-b border-slate-200">
                     <tr>
-                        <th class="px-6 py-3.5 text-xs font-bold text-slate-500 uppercase tracking-wider">Nama Lengkap</th>
-                        <th class="px-6 py-3.5 text-xs font-bold text-slate-500 uppercase tracking-wider">Alamat Email</th>
-                        <th class="px-6 py-3.5 text-xs font-bold text-slate-500 uppercase tracking-wider">Peran</th>
-                        <th class="px-6 py-3.5 text-xs font-bold text-slate-500 uppercase tracking-wider">No. Anggota & SK Kemenkum</th>
-                        <th class="px-6 py-3.5 text-xs font-bold text-slate-500 uppercase tracking-wider text-center">Saldo Poin</th>
-                        <th class="px-6 py-3.5 text-xs font-bold text-slate-500 uppercase tracking-wider text-center">Dokumen</th>
-                        <th class="px-6 py-3.5 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Aksi</th>
+                        <th class="px-5 py-3.5 text-xs font-bold text-slate-500 uppercase tracking-wider">Nama Lengkap</th>
+                        <th class="px-5 py-3.5 text-xs font-bold text-slate-500 uppercase tracking-wider">Alamat Email</th>
+                        <th class="px-5 py-3.5 text-xs font-bold text-slate-500 uppercase tracking-wider">Peran & Status</th>
+                        <th class="px-5 py-3.5 text-xs font-bold text-slate-500 uppercase tracking-wider">No. Anggota & SK Kemenkum</th>
+                        <th class="px-5 py-3.5 text-xs font-bold text-slate-500 uppercase tracking-wider">Masa Keanggotaan (Tgl Daftar & Expired)</th>
+                        <th class="px-5 py-3.5 text-xs font-bold text-slate-500 uppercase tracking-wider text-center">Saldo Poin</th>
+                        <th class="px-5 py-3.5 text-xs font-bold text-slate-500 uppercase tracking-wider text-center">Dokumen</th>
+                        <th class="px-5 py-3.5 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Aksi</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
                     @foreach($translators as $t)
+                        @php
+                            $regDate = $t->effective_registered_at;
+                            $actDate = $t->effective_activated_at;
+                            $expDate = $t->effective_expired_at;
+                            $daysLeft = $t->daysUntilExpiry();
+                            $isExpired = $t->isMembershipExpired();
+                        @endphp
                         <tr class="hover:bg-slate-50/40 transition-colors duration-150 item-row">
-                            <td class="px-6 py-4">
+                            <td class="px-5 py-4">
                                 <p class="font-bold text-slate-900 target-name">{{ $t->name }}</p>
                                 @if($t->role === 'TRANSLATOR' && $t->language_services)
                                     <p class="text-[11px] text-slate-500 font-medium mt-0.5">{{ $t->language_services }}</p>
                                 @endif
                             </td>
-                            <td class="px-6 py-4 text-slate-600 font-medium target-email">{{ $t->email }}</td>
-                            <td class="px-6 py-4">
+                            <td class="px-5 py-4 text-slate-600 font-medium target-email text-xs">{{ $t->email }}</td>
+                            <td class="px-5 py-4">
                                 @if($t->role === 'SUPERADMIN')
                                     <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-50 text-amber-700 border border-amber-100 shadow-sm">
                                         <i data-lucide="shield-alert" class="w-3 h-3"></i>
@@ -234,23 +242,29 @@
                                         <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-blue-50 text-blue-700 border border-blue-100 shadow-sm">
                                             PENERJEMAH
                                         </span>
-                                        @if($t->isVerifiedTranslator())
-                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                                                <i data-lucide="check-circle-2" class="w-2.5 h-2.5"></i> Terverifikasi
-                                            </span>
-                                        @elseif(strtolower($t->verification_status ?? 'pending') === 'rejected')
-                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold bg-rose-50 text-rose-700 border border-rose-200">
-                                                <i data-lucide="x-circle" class="w-2.5 h-2.5"></i> Perlu Revisi
+                                        @if(!$t->isVerifiedTranslator())
+                                            @if(strtolower($t->verification_status ?? 'pending') === 'rejected')
+                                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold bg-rose-50 text-rose-700 border border-rose-200">
+                                                    <i data-lucide="x-circle" class="w-2.5 h-2.5"></i> Perlu Revisi
+                                                </span>
+                                            @else
+                                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                                                    <i data-lucide="clock" class="w-2.5 h-2.5"></i> Belum Diverifikasi
+                                                </span>
+                                            @endif
+                                        @elseif($isExpired)
+                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black bg-rose-100 text-rose-700 border border-rose-300">
+                                                <i data-lucide="alert-circle" class="w-2.5 h-2.5"></i> EXPIRED
                                             </span>
                                         @else
-                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
-                                                <i data-lucide="clock" class="w-2.5 h-2.5"></i> Belum Diverifikasi
+                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                                <i data-lucide="check-circle-2" class="w-2.5 h-2.5"></i> Terverifikasi & Aktif
                                             </span>
                                         @endif
                                     </div>
                                 @endif
                             </td>
-                            <td class="px-6 py-4 text-slate-600 font-mono text-xs target-sk">
+                            <td class="px-5 py-4 text-slate-600 font-mono text-xs target-sk">
                                 <span class="font-bold text-slate-800">{{ $t->sk_number ?: '-' }}</span>
                                 @if($t->role === 'TRANSLATOR')
                                     <p class="text-[10px] text-slate-500 mt-0.5">
@@ -258,7 +272,35 @@
                                     </p>
                                 @endif
                             </td>
-                            <td class="px-6 py-4 text-center">
+                            <td class="px-5 py-4 text-xs">
+                                @if($t->role === 'TRANSLATOR')
+                                    <div class="space-y-0.5 font-mono text-[11px]">
+                                        <div class="text-slate-500">
+                                            Daftar: <strong class="text-slate-800">{{ $regDate ? $regDate->format('d/m/Y') : '-' }}</strong>
+                                        </div>
+                                        @if($t->isVerifiedTranslator())
+                                            <div class="text-slate-500">
+                                                Aktivasi: <strong class="text-slate-800">{{ $actDate ? $actDate->format('d/m/Y') : '-' }}</strong>
+                                            </div>
+                                            <div class="{{ $isExpired ? 'text-rose-600 font-black' : ($daysLeft !== null && $daysLeft <= 30 ? 'text-amber-600 font-bold' : 'text-emerald-700 font-bold') }}">
+                                                Expired: {{ $expDate ? $expDate->format('d/m/Y') : '-' }}
+                                                @if($isExpired)
+                                                    <span class="ml-1 px-1.5 py-0.2 rounded bg-rose-100 text-rose-700 text-[9px] font-black uppercase">Expired</span>
+                                                @elseif($daysLeft !== null && $daysLeft <= 30)
+                                                    <span class="ml-1 px-1.5 py-0.2 rounded bg-amber-100 text-amber-800 text-[9px] font-bold">{{ $daysLeft }} hr lagi</span>
+                                                @endif
+                                            </div>
+                                        @else
+                                            <div class="text-amber-600 font-semibold text-[10px] italic">
+                                                Menunggu Aktivasi Admin
+                                            </div>
+                                        @endif
+                                    </div>
+                                @else
+                                    <span class="text-slate-400 font-mono text-xs">-</span>
+                                @endif
+                            </td>
+                            <td class="px-5 py-4 text-center">
                                 @if($t->role === 'TRANSLATOR')
                                     <span class="inline-flex items-center gap-1 font-mono font-bold text-xs {{ ($t->points ?? 0) <= 10000 ? 'text-amber-600' : 'text-emerald-700' }} bg-slate-50 border border-slate-200/80 px-2.5 py-1 rounded-full">
                                         <i data-lucide="coins" class="w-3 h-3 text-amber-500"></i>
@@ -268,10 +310,10 @@
                                     <span class="text-slate-400 font-mono text-xs">-</span>
                                 @endif
                             </td>
-                            <td class="px-6 py-4 text-center font-bold text-slate-650">
+                            <td class="px-5 py-4 text-center font-bold text-slate-650">
                                 {{ $t->role !== 'TRANSLATOR' ? '-' : $t->documents_count }}
                             </td>
-                            <td class="px-6 py-4 text-right">
+                            <td class="px-5 py-4 text-right">
                                 <div class="flex items-center justify-end gap-1.5">
                                     @if($t->role === 'TRANSLATOR' && !$t->isVerifiedTranslator())
                                         <button
@@ -283,12 +325,30 @@
                                                 "no_sk_kemenkum" => $t->effective_no_sk !== $t->sk_number ? $t->effective_no_sk : ($t->no_sk_kemenkum ?? ""),
                                                 "tgl_sk" => $t->effective_tgl_sk,
                                                 "language_services" => $t->language_services,
+                                                "registered_at" => $regDate ? $regDate->format("Y-m-d") : date("Y-m-d"),
                                             ]))'
                                             class="px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-[10px] font-extrabold transition cursor-pointer flex items-center gap-1 shadow-xs"
                                             title="Verifikasi & Aktifkan Akun Penerjemah"
                                         >
                                             <i data-lucide="check-circle-2" class="w-3.5 h-3.5"></i>
                                             <span>Verifikasi</span>
+                                        </button>
+                                    @elseif($t->role === 'TRANSLATOR')
+                                        <button
+                                            onclick='openRenewMemberModal(@json([
+                                                "id" => $t->id,
+                                                "name" => $t->name,
+                                                "sk_number" => $t->sk_number,
+                                                "activated_at" => $actDate ? $actDate->format("d/m/Y") : "-",
+                                                "expired_at_display" => $expDate ? $expDate->format("d/m/Y") : "-",
+                                                "next_expired_at" => ($expDate && $expDate->isFuture() ? $expDate->copy()->addYear() : now()->addYear())->format("Y-m-d"),
+                                                "is_expired" => $isExpired,
+                                            ]))'
+                                            class="px-2.5 py-1.5 {{ $isExpired ? 'bg-rose-600 hover:bg-rose-700 text-white' : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200' }} rounded-lg text-[10px] font-extrabold transition cursor-pointer flex items-center gap-1"
+                                            title="Perpanjang Masa Aktif Keanggotaan Tahunan (+1 Tahun)"
+                                        >
+                                            <i data-lucide="calendar-plus" class="w-3.5 h-3.5"></i>
+                                            <span>Perpanjang</span>
                                         </button>
                                     @endif
                                     <button
@@ -312,9 +372,12 @@
                                             "masa_aktif" => $t->masa_aktif ?: "Seumur Hidup",
                                             "sk_lengkap" => $t->effective_sk_lengkap,
                                             "verification_status" => $t->isVerifiedTranslator() ? "approved" : ($t->verification_status ?: "pending"),
+                                            "registered_at" => $regDate ? $regDate->format("Y-m-d") : date("Y-m-d"),
+                                            "activated_at" => $actDate ? $actDate->format("Y-m-d") : "",
+                                            "expired_at" => $expDate ? $expDate->format("Y-m-d") : "",
                                         ]))'
                                         class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer"
-                                        title="Edit Profil"
+                                        title="Edit Profil & Masa Aktif Member"
                                     >
                                         <i data-lucide="edit" class="w-4 h-4"></i>
                                     </button>
@@ -490,6 +553,41 @@
                         <option value="pending">Menunggu Verifikasi (Fitur Input Dokumen Terkunci)</option>
                         <option value="rejected">Ditolak / Perlu Revisi</option>
                     </select>
+                </div>
+
+                <!-- Tanggal Daftar, Tanggal Aktivasi, & Tanggal Expired Tahunan -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-emerald-50/50 border border-emerald-200/70 p-3.5 rounded-xl">
+                    <div>
+                        <label for="modal-registered-at" class="block text-[10px] font-bold text-slate-600 uppercase tracking-wider mb-1">Tanggal Daftar</label>
+                        <input
+                            id="modal-registered-at"
+                            name="registered_at"
+                            type="date"
+                            class="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs font-bold font-mono text-slate-800 bg-white focus:outline-none focus:border-emerald-500"
+                        />
+                    </div>
+                    <div>
+                        <label for="modal-activated-at" class="block text-[10px] font-bold text-slate-600 uppercase tracking-wider mb-1">Tanggal Aktivasi</label>
+                        <input
+                            id="modal-activated-at"
+                            name="activated_at"
+                            type="date"
+                            onchange="autoCalcExpiredFromActivation('modal-activated-at', 'modal-expired-at')"
+                            class="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs font-bold font-mono text-slate-800 bg-white focus:outline-none focus:border-emerald-500"
+                        />
+                    </div>
+                    <div>
+                        <label for="modal-expired-at" class="block text-[10px] font-bold text-emerald-800 uppercase tracking-wider mb-1">Tanggal Expired (1 Thn)</label>
+                        <input
+                            id="modal-expired-at"
+                            name="expired_at"
+                            type="date"
+                            class="w-full px-3 py-2 border border-emerald-300 rounded-lg text-xs font-bold font-mono text-emerald-900 bg-white focus:outline-none focus:border-emerald-600"
+                        />
+                    </div>
+                    <p class="sm:col-span-3 text-[10px] text-slate-500">
+                        Setiap member memiliki Tanggal Expired berbeda sesuai Tanggal Aktivasi (+{{ (int)\App\Models\Setting::get('member_duration_years', 1) }} Tahun).
+                    </p>
                 </div>
             </div>
 
@@ -672,12 +770,31 @@
         }
     }
 
+    const defaultDurationYears = {{ max(1, (int)\App\Models\Setting::get('member_duration_years', 1)) }};
+
+    function autoCalcExpiredFromActivation(actInputId, expInputId) {
+        const actVal = document.getElementById(actInputId)?.value;
+        const expEl = document.getElementById(expInputId);
+        if (actVal && expEl) {
+            const d = new Date(actVal);
+            if (!isNaN(d.getTime())) {
+                d.setFullYear(d.getFullYear() + defaultDurationYears);
+                expEl.value = d.toISOString().split('T')[0];
+            }
+        }
+    }
+
     function openUserModal(action, data = null) {
         const modal = document.getElementById('modal-user');
         const title = document.getElementById('modal-title');
         const form = document.getElementById('form-user');
         const passLabel = document.getElementById('label-password');
         const passInput = document.getElementById('modal-password');
+
+        const todayStr = new Date().toISOString().split('T')[0];
+        const nextYearDate = new Date();
+        nextYearDate.setFullYear(nextYearDate.getFullYear() + defaultDurationYears);
+        const nextYearStr = nextYearDate.toISOString().split('T')[0];
 
         // Reset
         document.getElementById('modal-user-id').value = '';
@@ -691,6 +808,9 @@
         if (document.getElementById('modal-masa-aktif')) document.getElementById('modal-masa-aktif').value = 'Seumur Hidup';
         if (document.getElementById('modal-sk-lengkap')) document.getElementById('modal-sk-lengkap').value = '';
         if (document.getElementById('modal-verification-status')) document.getElementById('modal-verification-status').value = 'approved';
+        if (document.getElementById('modal-registered-at')) document.getElementById('modal-registered-at').value = todayStr;
+        if (document.getElementById('modal-activated-at')) document.getElementById('modal-activated-at').value = todayStr;
+        if (document.getElementById('modal-expired-at')) document.getElementById('modal-expired-at').value = nextYearStr;
         document.getElementById('modal-password').value = '';
         document.getElementById('modal-role').value = 'TRANSLATOR';
 
@@ -700,7 +820,7 @@
             passLabel.innerText = 'Password Akses';
             passInput.setAttribute('required', 'required');
         } else {
-            title.innerText = 'Edit Profil Pengguna';
+            title.innerText = 'Edit Profil & Masa Keanggotaan';
             form.setAttribute('action', '/admin/users/' + data.id + '/update');
             
             document.getElementById('modal-user-id').value = data.id;
@@ -714,6 +834,9 @@
             if (document.getElementById('modal-masa-aktif')) document.getElementById('modal-masa-aktif').value = data.masa_aktif || 'Seumur Hidup';
             if (document.getElementById('modal-sk-lengkap')) document.getElementById('modal-sk-lengkap').value = data.sk_lengkap || '';
             if (document.getElementById('modal-verification-status')) document.getElementById('modal-verification-status').value = data.verification_status || 'approved';
+            if (document.getElementById('modal-registered-at')) document.getElementById('modal-registered-at').value = data.registered_at || todayStr;
+            if (document.getElementById('modal-activated-at')) document.getElementById('modal-activated-at').value = data.activated_at || '';
+            if (document.getElementById('modal-expired-at')) document.getElementById('modal-expired-at').value = data.expired_at || '';
             document.getElementById('modal-role').value = data.role;
             
             passLabel.innerText = 'Ganti Password (Kosongkan jika tidak diubah)';
@@ -926,6 +1049,11 @@
     }
 
     function openVerifyMemberModal(applicant) {
+        const todayStr = new Date().toISOString().split('T')[0];
+        const nextYearDate = new Date();
+        nextYearDate.setFullYear(nextYearDate.getFullYear() + defaultDurationYears);
+        const nextYearStr = nextYearDate.toISOString().split('T')[0];
+
         document.getElementById('form-verify-member').action = '/admin/users/' + applicant.id + '/verify';
         document.getElementById('verify-member-name').innerText = applicant.name || '';
         document.getElementById('verify-member-email').innerText = applicant.email || '';
@@ -933,12 +1061,28 @@
         document.getElementById('verify-no-sk-kemenkum').value = applicant.no_sk_kemenkum || '';
         document.getElementById('verify-tgl-sk').value = applicant.tgl_sk || '';
         document.getElementById('verify-language-services').value = applicant.language_services || '';
+        if (document.getElementById('verify-activated-at')) document.getElementById('verify-activated-at').value = todayStr;
+        if (document.getElementById('verify-expired-at')) document.getElementById('verify-expired-at').value = nextYearStr;
         document.getElementById('modal-verify-member').classList.remove('hidden');
         lucide.createIcons();
     }
 
     function closeVerifyMemberModal() {
         document.getElementById('modal-verify-member').classList.add('hidden');
+    }
+
+    function openRenewMemberModal(member) {
+        document.getElementById('form-renew-member').action = '/admin/users/' + member.id + '/renew';
+        document.getElementById('renew-member-name').innerText = member.name || '';
+        document.getElementById('renew-member-sk').innerText = member.sk_number || '-';
+        document.getElementById('renew-current-expired').innerText = member.expired_at_display || '-';
+        document.getElementById('renew-expired-at-input').value = member.next_expired_at || '';
+        document.getElementById('modal-renew-member').classList.remove('hidden');
+        lucide.createIcons();
+    }
+
+    function closeRenewMemberModal() {
+        document.getElementById('modal-renew-member').classList.add('hidden');
     }
 
     function openRejectMemberModal(applicant) {
@@ -1031,6 +1175,33 @@
                         class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-slate-900 text-sm font-semibold outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition"
                     />
                 </div>
+
+                <div>
+                    <label for="verify-activated-at" class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">
+                        Tanggal Aktivasi Member
+                    </label>
+                    <input
+                        type="date"
+                        id="verify-activated-at"
+                        name="activated_at"
+                        required
+                        onchange="autoCalcExpiredFromActivation('verify-activated-at', 'verify-expired-at')"
+                        class="w-full px-3.5 py-2 border border-slate-200 rounded-xl text-slate-900 text-xs font-bold font-mono outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition"
+                    />
+                </div>
+
+                <div>
+                    <label for="verify-expired-at" class="block text-xs font-bold text-emerald-700 uppercase tracking-wider mb-1">
+                        Tanggal Expired (+{{ max(1, (int)\App\Models\Setting::get('member_duration_years', 1)) }} Tahun)
+                    </label>
+                    <input
+                        type="date"
+                        id="verify-expired-at"
+                        name="expired_at"
+                        required
+                        class="w-full px-3.5 py-2 border border-emerald-300 bg-emerald-50/40 rounded-xl text-emerald-900 text-xs font-bold font-mono outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600 transition"
+                    />
+                </div>
             </div>
 
             <div class="bg-slate-50 border border-slate-200/80 p-3 rounded-xl text-[11px] text-slate-600 leading-relaxed">
@@ -1106,6 +1277,66 @@
                     class="px-5 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold transition shadow-sm cursor-pointer"
                 >
                     Simpan Status Revisi
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ========================================== -->
+<!--       RENEW ANNUAL MEMBERSHIP MODAL        -->
+<!-- ========================================== -->
+<div id="modal-renew-member" class="hidden fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full shadow-2xl p-6 border border-slate-100">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
+            <div class="flex items-center gap-2 text-emerald-700 font-bold text-sm">
+                <i data-lucide="calendar-plus" class="w-5 h-5 text-emerald-600"></i>
+                <span>Perpanjangan Keanggotaan Tahunan IPPTI</span>
+            </div>
+            <button onclick="closeRenewMemberModal()" class="p-1 text-slate-400 hover:text-slate-600 rounded-lg cursor-pointer">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+        </div>
+
+        <form id="form-renew-member" method="POST" class="space-y-4 text-left">
+            @csrf
+            <div class="bg-emerald-50/70 border border-emerald-200 p-3.5 rounded-xl space-y-1 text-xs">
+                <p class="text-slate-500">Member Penerjemah Tersumpah:</p>
+                <p id="renew-member-name" class="font-extrabold text-slate-900 text-sm"></p>
+                <p class="text-slate-600">No. Anggota: <strong id="renew-member-sk" class="font-mono"></strong></p>
+                <p class="text-slate-600">Tanggal Expired Saat Ini: <strong id="renew-current-expired" class="font-mono text-amber-700"></strong></p>
+            </div>
+
+            <div>
+                <label for="renew-expired-at-input" class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1.5">
+                    Tanggal Expired Baru (+{{ max(1, (int)\App\Models\Setting::get('member_duration_years', 1)) }} Tahun)
+                </label>
+                <input
+                    type="date"
+                    id="renew-expired-at-input"
+                    name="expired_at"
+                    required
+                    class="w-full px-3.5 py-2.5 border border-emerald-300 rounded-xl text-emerald-950 text-sm font-bold font-mono outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition bg-emerald-50/30"
+                />
+                <p class="text-[10.5px] text-slate-500 mt-1">
+                    Biaya Perpanjangan Tahunan: <strong>Rp {{ number_format((float)\App\Models\Setting::get('member_renewal_fee', 150000), 0, ',', '.') }}</strong>.
+                </p>
+            </div>
+
+            <div class="flex justify-end gap-3 pt-2">
+                <button
+                    type="button"
+                    onclick="closeRenewMemberModal()"
+                    class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition cursor-pointer"
+                >
+                    Batal
+                </button>
+                <button
+                    type="submit"
+                    class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-extrabold transition shadow-sm cursor-pointer flex items-center gap-1.5"
+                >
+                    <i data-lucide="check-circle-2" class="w-4 h-4"></i>
+                    <span>Proses Perpanjangan Tahunan</span>
                 </button>
             </div>
         </form>

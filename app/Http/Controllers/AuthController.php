@@ -52,7 +52,10 @@ class AuthController extends Controller
             }
         } catch (\Throwable $e) {}
 
-        return view('register', compact('languageDirections'));
+        $registrationFee = (float)\App\Models\Setting::get('member_registration_fee', 250000);
+        $renewalFee = (float)\App\Models\Setting::get('member_renewal_fee', 150000);
+
+        return view('register', compact('languageDirections', 'registrationFee', 'renewalFee'));
     }
 
     public function doRegister(Request $request)
@@ -159,6 +162,9 @@ class AuthController extends Controller
                 'bio' => $request->filled('bio') ? trim($request->bio) : ($skLengkap ?: $existingBySk->bio),
                 'is_verified' => false,
                 'verification_status' => 'pending',
+                'registered_at' => $existingBySk->registered_at ?: now(),
+                'activated_at' => null,
+                'expired_at' => null,
             ];
             if ($profilePicturePath) {
                 $updatePayload['profile_picture'] = $profilePicturePath;
@@ -179,6 +185,9 @@ class AuthController extends Controller
                 'user_level' => 'reguler',
                 'is_verified' => false,
                 'verification_status' => 'pending',
+                'registered_at' => now(),
+                'activated_at' => null,
+                'expired_at' => null,
                 'whatsapp' => $request->whatsapp ? trim($request->whatsapp) : null,
                 'address' => $request->address ? trim($request->address) : null,
                 'city' => $request->city ? trim($request->city) : null,

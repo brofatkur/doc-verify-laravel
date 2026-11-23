@@ -194,7 +194,15 @@
         <!-- ========================================== -->
         @php
             $isVerifiedTranslator = Auth::user()->isVerifiedTranslator();
+            $isMembershipExpired = Auth::user()->isMembershipExpired();
+            $canInputDocs = Auth::user()->canInputDocuments();
             $vStatus = strtolower(Auth::user()->verification_status ?? 'approved');
+            $regDate = Auth::user()->effective_registered_at;
+            $actDate = Auth::user()->effective_activated_at;
+            $expDate = Auth::user()->effective_expired_at;
+            $daysLeft = Auth::user()->daysUntilExpiry();
+            $regFee = (float)\App\Models\Setting::get('member_registration_fee', 250000);
+            $renFee = (float)\App\Models\Setting::get('member_renewal_fee', 150000);
         @endphp
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-200 pb-5">
             <div>
@@ -212,17 +220,23 @@
                         </a>
                     @endif
 
-                    @if($isVerifiedTranslator)
-                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-300">
-                            <i data-lucide="check-circle-2" class="w-3.5 h-3.5 text-emerald-600"></i> ANGGOTA TERVERIFIKASI
-                        </span>
-                    @elseif($vStatus === 'rejected')
+                    @if(!$isVerifiedTranslator)
+                        @if($vStatus === 'rejected')
+                            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-rose-100 text-rose-800 border border-rose-300">
+                                <i data-lucide="x-circle" class="w-3.5 h-3.5 text-rose-600"></i> PERLU REVISI VERIFIKASI
+                            </span>
+                        @else
+                            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-amber-100 text-amber-800 border border-amber-300">
+                                <i data-lucide="clock" class="w-3.5 h-3.5 text-amber-600"></i> MENUNGGU VERIFIKASI ADMIN
+                            </span>
+                        @endif
+                    @elseif($isMembershipExpired)
                         <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-rose-100 text-rose-800 border border-rose-300">
-                            <i data-lucide="x-circle" class="w-3.5 h-3.5 text-rose-600"></i> PERLU REVISI VERIFIKASI
+                            <i data-lucide="alert-circle" class="w-3.5 h-3.5 text-rose-600"></i> KEANGGOTAAN EXPIRED ({{ $expDate ? $expDate->format('d/m/Y') : '' }})
                         </span>
                     @else
-                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-amber-100 text-amber-800 border border-amber-300">
-                            <i data-lucide="clock" class="w-3.5 h-3.5 text-amber-600"></i> MENUNGGU VERIFIKASI ADMIN
+                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-300">
+                            <i data-lucide="check-circle-2" class="w-3.5 h-3.5 text-emerald-600"></i> ANGGOTA AKTIF (s/d {{ $expDate ? $expDate->format('d/m/Y') : '-' }})
                         </span>
                     @endif
                 </div>
@@ -231,7 +245,7 @@
             </div>
             
             <div class="flex items-center gap-3 w-full sm:w-auto">
-                @if($isVerifiedTranslator)
+                @if($canInputDocs)
                     <!-- Excel Import Button (Active) -->
                     <div class="flex flex-col sm:flex-row items-start sm:items-center gap-2">
                         <div>
@@ -270,12 +284,11 @@
                         <span>Dokumen Baru</span>
                     </a>
                 @else
-                    <!-- Locked Buttons when Unverified -->
+                    <!-- Locked Buttons when Unverified or Expired -->
                     <button
                         type="button"
-                        onclick="alert('Fitur Impor Dokumen belum aktif. Silakan tunggu Pengurus Admin IPPTI memverifikasi akun keanggotaan Anda.')"
+                        onclick="alert('{{ $isMembershipExpired ? 'Masa aktif keanggotaan tahunan Anda telah Expired. Silakan perpanjang keanggotaan terlebih dahulu.' : 'Fitur Impor Dokumen belum aktif. Silakan tunggu Pengurus Admin IPPTI memverifikasi akun keanggotaan Anda.' }}')"
                         class="flex items-center gap-2 border border-slate-200 bg-slate-100 text-slate-400 px-4 py-2.5 rounded-xl font-semibold text-sm cursor-not-allowed"
-                        title="Menunggu verifikasi Admin IPPTI"
                     >
                         <i data-lucide="lock" class="w-4 h-4 text-slate-400"></i>
                         <span>Impor Excel (Terkunci)</span>
@@ -283,9 +296,8 @@
 
                     <button
                         type="button"
-                        onclick="alert('Fitur Input Dokumen Baru belum aktif. Silakan tunggu Pengurus Admin IPPTI memverifikasi akun keanggotaan Anda.')"
+                        onclick="alert('{{ $isMembershipExpired ? 'Masa aktif keanggotaan tahunan Anda telah Expired. Silakan perpanjang keanggotaan terlebih dahulu.' : 'Fitur Input Dokumen Baru belum aktif. Silakan tunggu Pengurus Admin IPPTI memverifikasi akun keanggotaan Anda.' }}')"
                         class="flex items-center justify-center gap-2 bg-slate-300 text-slate-500 px-5 py-2.5 rounded-xl font-semibold text-sm cursor-not-allowed"
-                        title="Menunggu verifikasi Admin IPPTI"
                     >
                         <i data-lucide="lock" class="w-4 h-4"></i>
                         <span>Dokumen Baru (Terkunci)</span>
@@ -349,13 +361,103 @@
                             </p>
                         </div>
                     </div>
-                    <a href="/admin/profile" class="inline-flex items-center gap-2 px-4 py-2.5 bg-white hover:bg-amber-100 text-amber-900 border border-amber-300 rounded-xl text-xs font-extrabold shadow-xs transition flex-shrink-0">
-                        <i data-lucide="user-check" class="w-4 h-4 text-amber-600"></i>
-                        <span>Cek / Lengkapi Profil</span>
-                    </a>
+                    <div class="flex flex-wrap items-center gap-2 flex-shrink-0">
+                        @if($regFee > 0)
+                            <button
+                                type="button"
+                                onclick="processMembershipPayment('initial', this)"
+                                class="inline-flex items-center gap-2 px-4 py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-extrabold shadow-xs transition cursor-pointer"
+                            >
+                                <i data-lucide="credit-card" class="w-4 h-4"></i>
+                                <span>Bayar Daftar Awal (Rp {{ number_format($regFee, 0, ',', '.') }})</span>
+                            </button>
+                        @endif
+                        <a href="/admin/profile" class="inline-flex items-center gap-2 px-4 py-2.5 bg-white hover:bg-amber-100 text-amber-900 border border-amber-300 rounded-xl text-xs font-extrabold shadow-xs transition">
+                            <i data-lucide="user-check" class="w-4 h-4 text-amber-600"></i>
+                            <span>Cek / Lengkapi Profil</span>
+                        </a>
+                    </div>
                 </div>
             @endif
+        @elseif($isMembershipExpired)
+            <!-- Banner Keanggotaan Tahunan Expired -->
+            <div class="bg-rose-50 border-2 border-rose-300 text-rose-950 p-5 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm">
+                <div class="flex items-start gap-3.5">
+                    <div class="p-3 bg-rose-600 text-white rounded-xl flex-shrink-0 shadow-xs">
+                        <i data-lucide="calendar-x" class="w-6 h-6"></i>
+                    </div>
+                    <div class="space-y-1.5">
+                        <div class="flex items-center gap-2">
+                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-rose-200 text-rose-900">Keanggotaan Tahunan Expired</span>
+                            <span class="text-xs font-mono font-bold text-rose-800">Berakhir pada: {{ $expDate ? $expDate->translatedFormat('d F Y') : '-' }}</span>
+                        </div>
+                        <h3 class="font-extrabold text-base text-rose-950">Masa Aktif Keanggotaan Tahunan IPPTI Anda Telah Berakhir</h3>
+                        <p class="text-xs text-rose-900 font-medium leading-relaxed">
+                            Fitur <strong>Input Data Dokumen Baru & Impor Dokumen</strong> dinonaktifkan sementara hingga Anda melakukan perpanjangan keanggotaan tahunan sebesar <strong>Rp {{ number_format($renFee, 0, ',', '.') }} / Tahun</strong>.
+                        </p>
+                    </div>
+                </div>
+                <button
+                    type="button"
+                    onclick="processMembershipPayment('renewal', this)"
+                    class="inline-flex items-center gap-2 px-5 py-3 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-extrabold shadow-sm transition flex-shrink-0 cursor-pointer"
+                >
+                    <i data-lucide="calendar-plus" class="w-4 h-4"></i>
+                    <span>Perpanjang Tahunan (Rp {{ number_format($renFee, 0, ',', '.') }})</span>
+                </button>
+            </div>
         @endif
+
+        <!-- Kartu Informasi Masa Keanggotaan Member (Tanggal Daftar, Tanggal Aktivasi, & Tanggal Expired) -->
+        <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 flex-1 text-xs">
+                <div class="flex items-center gap-3">
+                    <div class="p-2.5 bg-slate-100 text-slate-700 rounded-xl">
+                        <i data-lucide="calendar" class="w-4 h-4"></i>
+                    </div>
+                    <div>
+                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Tanggal Daftar</p>
+                        <p class="font-extrabold text-slate-900 font-mono text-sm">{{ $regDate ? $regDate->translatedFormat('d M Y') : '-' }}</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3">
+                    <div class="p-2.5 bg-blue-50 text-blue-600 rounded-xl">
+                        <i data-lucide="user-check" class="w-4 h-4"></i>
+                    </div>
+                    <div>
+                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Tanggal Aktivasi</p>
+                        <p class="font-extrabold text-slate-900 font-mono text-sm">{{ $actDate ? $actDate->translatedFormat('d M Y') : 'Menunggu Aktivasi' }}</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3">
+                    <div class="p-2.5 {{ $isMembershipExpired ? 'bg-rose-50 text-rose-600' : 'bg-emerald-50 text-emerald-600' }} rounded-xl">
+                        <i data-lucide="clock" class="w-4 h-4"></i>
+                    </div>
+                    <div>
+                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Tanggal Expired (Tahunan)</p>
+                        <p class="font-extrabold {{ $isMembershipExpired ? 'text-rose-600' : 'text-emerald-700' }} font-mono text-sm">
+                            {{ $expDate ? $expDate->translatedFormat('d M Y') : '1 Tahun sejak Aktivasi' }}
+                            @if($isVerifiedTranslator && $daysLeft !== null)
+                                <span class="text-[11px] font-bold {{ $isMembershipExpired ? 'text-rose-600' : 'text-slate-500' }}">
+                                    ({{ $isMembershipExpired ? 'Expired' : 'Sisa ' . $daysLeft . ' hari' }})
+                                </span>
+                            @endif
+                        </p>
+                    </div>
+                </div>
+            </div>
+            @if($isVerifiedTranslator)
+                <button
+                    type="button"
+                    onclick="processMembershipPayment('renewal', this)"
+                    class="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 rounded-xl text-xs font-extrabold transition cursor-pointer flex-shrink-0"
+                    title="Perpanjang Masa Aktif Keanggotaan +1 Tahun"
+                >
+                    <i data-lucide="calendar-plus" class="w-4 h-4 text-emerald-600"></i>
+                    <span>Perpanjang +1 Tahun (Rp {{ number_format($renFee, 0, ',', '.') }})</span>
+                </button>
+            @endif
+        </div>
 
         <!-- Low Balance Polite Reminder Alert (points <= low_point_threshold) -->
         @if(Auth::check() && Auth::user()->points <= (int)\App\Models\Setting::get('low_point_threshold', 20000))
@@ -856,6 +958,39 @@
                 statusMsg.className = 'text-[11px] font-bold text-rose-600 block';
             } finally {
                 btn.disabled = false;
+            }
+        }
+
+        async function processMembershipPayment(type, btnEl) {
+            const origHtml = btnEl ? btnEl.innerHTML : '';
+            if (btnEl) {
+                btnEl.disabled = true;
+                btnEl.innerHTML = '<div class="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div> <span>Menyiapkan Pembayaran...</span>';
+            }
+
+            try {
+                const response = await fetch('/payment/membership/create', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({ type: type })
+                });
+                const data = await response.json();
+                if (data.success && data.payment_url) {
+                    window.location.href = data.payment_url;
+                } else {
+                    alert(data.error || 'Gagal menyiapkan tautan pembayaran keanggotaan.');
+                }
+            } catch (e) {
+                alert('Kesalahan jaringan: ' + e.message);
+            } finally {
+                if (btnEl) {
+                    btnEl.disabled = false;
+                    btnEl.innerHTML = origHtml;
+                    if (window.lucide) lucide.createIcons();
+                }
             }
         }
 

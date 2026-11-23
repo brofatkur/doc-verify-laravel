@@ -59,6 +59,11 @@ class AdminController extends Controller
                 'verification' => 'Akun Anda sedang menunggu verifikasi Pengurus Admin IPPTI. Fitur input data dokumen baru dapat digunakan setelah akun Anda diverifikasi.'
             ]);
         }
+        if ($user && $user->isMembershipExpired()) {
+            return redirect('/admin')->withErrors([
+                'membership' => 'Masa aktif keanggotaan tahunan IPPTI Anda telah berakhir (Expired). Silakan lakukan perpanjangan keanggotaan terlebih dahulu.'
+            ]);
+        }
 
         $documentTypes = \App\Models\DocumentType::orderBy('name', 'asc')->get();
         $languageDirections = \App\Models\LanguageDirection::orderBy('name', 'asc')->get();
@@ -71,6 +76,11 @@ class AdminController extends Controller
         if ($user && !$user->isVerifiedTranslator()) {
             return redirect('/admin')->withErrors([
                 'verification' => 'Akun Anda belum diverifikasi oleh Pengurus Admin IPPTI.'
+            ]);
+        }
+        if ($user && $user->isMembershipExpired()) {
+            return redirect('/admin')->withErrors([
+                'membership' => 'Masa aktif keanggotaan tahunan IPPTI Anda telah berakhir (Expired). Silakan lakukan perpanjangan keanggotaan terlebih dahulu.'
             ]);
         }
 
@@ -142,6 +152,13 @@ class AdminController extends Controller
             ? trim($request->sk_lengkap)
             : ($noSkKemenkum ? trim($noSkKemenkum . ($tglSk ? ' tanggal ' . $tglSk : '')) : null);
 
+        $durationYears = max(1, (int)\App\Models\Setting::get('member_duration_years', 1));
+        $registeredAt = $request->filled('registered_at') ? \Carbon\Carbon::parse($request->registered_at) : now();
+        $activatedAt = $request->filled('activated_at') ? \Carbon\Carbon::parse($request->activated_at) : now();
+        $expiredAt = $request->filled('expired_at')
+            ? \Carbon\Carbon::parse($request->expired_at)
+            : $activatedAt->copy()->addYears($durationYears);
+
         $newUser = User::create([
             'role' => $role,
             'user_level' => 'reguler',
@@ -149,6 +166,9 @@ class AdminController extends Controller
             'verification_status' => 'approved',
             'verified_at' => now(),
             'verified_by' => $currentUser->id,
+            'registered_at' => $registeredAt,
+            'activated_at' => $activatedAt,
+            'expired_at' => $expiredAt,
             'name' => trim($request->name),
             'email' => trim($request->email),
             'whatsapp' => $request->whatsapp ? trim($request->whatsapp) : null,
@@ -156,7 +176,7 @@ class AdminController extends Controller
             'no_sk_kemenkum' => $noSkKemenkum,
             'tgl_sk' => $tglSk,
             'language_services' => $request->language_services ? trim($request->language_services) : null,
-            'masa_aktif' => $request->masa_aktif ? trim($request->masa_aktif) : 'Seumur Hidup',
+            'masa_aktif' => 'Aktif s/d ' . $expiredAt->translatedFormat('d F Y'),
             'sk_lengkap' => $skLengkap,
             'bio' => $request->filled('bio') ? trim($request->bio) : $skLengkap,
             'password' => Hash::make($request->password),
@@ -291,13 +311,49 @@ class AdminController extends Controller
             'sk_lengkap' => $skLengkap,
         ];
 
+        $durationYears = max(1, (int)\App\Models\Setting::get('member_duration_years', 1));
+
+        if ($request->filled('registered_at')) {
+            try {
+                $updateData['registered_at'] = \Carbon\Carbon::parse($request->registered_at);
+            } catch (\Throwable $e) {}
+        }
+
+        if ($request->filled('activated_at')) {
+            try {
+                $actDate = \Carbon\Carbon::parse($request->activated_at);
+                $updateData['activated_at'] = $actDate;
+                // If expired_at was not manually filled, auto-calculate 1 year from activated_at
+                if (!$request->filled('expired_at')) {
+                    $updateData['expired_at'] = $actDate->copy()->addYears($durationYears);
+                }
+            } catch (\Throwable $e) {}
+        }
+
+        if ($request->filled('expired_at')) {
+            try {
+                $expDate = \Carbon\Carbon::parse($request->expired_at);
+                $updateData['expired_at'] = $expDate;
+                $updateData['masa_aktif'] = 'Aktif s/d ' . $expDate->translatedFormat('d F Y');
+            } catch (\Throwable $e) {}
+        }
+
         if ($request->has('verification_status')) {
             $vStatus = strtolower(trim($request->verification_status));
             $updateData['verification_status'] = $vStatus;
             $updateData['is_verified'] = ($vStatus === 'approved');
-            if ($vStatus === 'approved' && !$targetUser->verified_at) {
-                $updateData['verified_at'] = now();
-                $updateData['verified_by'] = $currentUser->id;
+            if ($vStatus === 'approved') {
+                if (!$targetUser->verified_at) {
+                    $updateData['verified_at'] = now();
+                    $updateData['verified_by'] = $currentUser->id;
+                }
+                if (empty($updateData['activated_at']) && !$targetUser->activated_at) {
+                    $actNow = now();
+                    $updateData['activated_at'] = $actNow;
+                    if (empty($updateData['expired_at']) && !$targetUser->expired_at) {
+                        $updateData['expired_at'] = $actNow->copy()->addYears($durationYears);
+                    }
+                }
                 $updateData['rejection_reason'] = null;
             }
         }
@@ -331,6 +387,12 @@ class AdminController extends Controller
         $languageServices = $request->filled('language_services') ? trim($request->language_services) : $targetUser->language_services;
         $skLengkap = $noSkKemenkum ? trim($noSkKemenkum . ($tglSk ? ' tanggal ' . $tglSk : '')) : $targetUser->sk_lengkap;
 
+        $durationYears = max(1, (int)\App\Models\Setting::get('member_duration_years', 1));
+        $activatedAt = $request->filled('activated_at') ? \Carbon\Carbon::parse($request->activated_at) : now();
+        $expiredAt = $request->filled('expired_at')
+            ? \Carbon\Carbon::parse($request->expired_at)
+            : $activatedAt->copy()->addYears($durationYears);
+
         $targetUser->update([
             'sk_number' => $skNumber,
             'no_sk_kemenkum' => $noSkKemenkum,
@@ -341,6 +403,10 @@ class AdminController extends Controller
             'verification_status' => 'approved',
             'verified_at' => now(),
             'verified_by' => $currentUser->id,
+            'registered_at' => $targetUser->registered_at ?: ($targetUser->created_at ?: now()),
+            'activated_at' => $activatedAt,
+            'expired_at' => $expiredAt,
+            'masa_aktif' => 'Aktif s/d ' . $expiredAt->translatedFormat('d F Y'),
             'rejection_reason' => null,
         ]);
 
@@ -349,7 +415,50 @@ class AdminController extends Controller
 
         return redirect('/admin/users')->with(
             'success',
-            "Pendaftar anggota baru IPPTI '{$targetUser->name}' (No. Anggota: {$targetUser->sk_number}) berhasil diverifikasi dan diaktifkan! Akun kini dapat digunakan untuk menginput dokumen terjemahan."
+            "Pendaftar anggota baru IPPTI '{$targetUser->name}' (No. Anggota: {$targetUser->sk_number}) berhasil diverifikasi dan diaktifkan! Masa aktif berlaku s/d " . $expiredAt->translatedFormat('d F Y') . "."
+        );
+    }
+
+    public function renewUserMembership(Request $request, $id)
+    {
+        $currentUser = Auth::user();
+        if ($currentUser->role !== 'SUPERADMIN' && $currentUser->role !== 'ADMIN') {
+            return back()->withErrors(['error' => 'Akses ditolak.']);
+        }
+
+        $targetUser = User::findOrFail($id);
+        $before = $targetUser->toArray();
+
+        $years = max(1, (int)$request->input('years', \App\Models\Setting::get('member_duration_years', 1)));
+
+        if ($request->filled('expired_at')) {
+            $newExpiredAt = \Carbon\Carbon::parse($request->expired_at);
+            $newActivatedAt = $targetUser->activated_at ?: now();
+        } else {
+            $currentExp = $targetUser->effective_expired_at;
+            if ($currentExp && $currentExp->isFuture()) {
+                $newExpiredAt = $currentExp->copy()->addYears($years);
+                $newActivatedAt = $targetUser->effective_activated_at ?: now();
+            } else {
+                $newActivatedAt = now();
+                $newExpiredAt = $newActivatedAt->copy()->addYears($years);
+            }
+        }
+
+        $targetUser->update([
+            'is_verified' => true,
+            'verification_status' => 'approved',
+            'activated_at' => $newActivatedAt,
+            'expired_at' => $newExpiredAt,
+            'masa_aktif' => 'Aktif s/d ' . $newExpiredAt->translatedFormat('d F Y'),
+        ]);
+
+        $after = $targetUser->fresh()->toArray();
+        \App\Models\AuditLog::log('RENEW_IPPTI_MEMBERSHIP', User::class, $targetUser->id, $before, $after);
+
+        return redirect('/admin/users')->with(
+            'success',
+            "Keanggotaan tahunan '{$targetUser->name}' berhasil diperpanjang (+{$years} Tahun)! Masa aktif baru berlaku s/d " . $newExpiredAt->translatedFormat('d F Y') . "."
         );
     }
 
@@ -813,6 +922,9 @@ class AdminController extends Controller
             'trial_bonus_points' => 'required|numeric|min:0',
             'min_topup_amount' => 'required|numeric|min:10000',
             'low_point_threshold' => 'required|numeric|min:0',
+            'member_registration_fee' => 'nullable|numeric|min:0',
+            'member_renewal_fee' => 'nullable|numeric|min:0',
+            'member_duration_years' => 'nullable|integer|min:1|max:10',
         ]);
 
         $keys = [
@@ -821,6 +933,9 @@ class AdminController extends Controller
             'pro_activation_price',
             'pro_activation_points',
             'low_point_threshold',
+            'member_registration_fee',
+            'member_renewal_fee',
+            'member_duration_years',
         ];
 
         foreach ($keys as $key) {
