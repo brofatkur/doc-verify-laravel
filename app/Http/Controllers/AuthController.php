@@ -52,8 +52,8 @@ class AuthController extends Controller
             }
         } catch (\Throwable $e) {}
 
-        $registrationFee = (float)\App\Models\Setting::get('member_registration_fee', 250000);
-        $renewalFee = (float)\App\Models\Setting::get('member_renewal_fee', 150000);
+        $registrationFee = (float)\App\Models\Setting::get('member_registration_fee', 850000);
+        $renewalFee = (float)\App\Models\Setting::get('member_renewal_fee', 700000);
 
         return view('register', compact('languageDirections', 'registrationFee', 'renewalFee'));
     }
@@ -225,9 +225,15 @@ class AuthController extends Controller
 
         Auth::login($user);
 
+        // Immediately redirect new registrant to Payment Gateway checkout page (Rp 850.000)
+        $paymentUrl = app(\App\Http\Controllers\PaymentController::class)->generateMembershipPaymentUrl($user, 'initial');
+        if (!empty($paymentUrl)) {
+            return redirect()->away($paymentUrl);
+        }
+
         return redirect('/admin')->with(
             'success',
-            'Pendaftaran Anggota Baru IPPTI berhasil dikirim! Anda sudah dapat masuk ke dashboard, namun fitur Input Data Dokumen baru akan aktif setelah akun Anda diverifikasi oleh Pengurus Admin IPPTI.'
+            'Pendaftaran Anggota Baru IPPTI berhasil dikirim! Silakan selesaikan pembayaran pendaftaran awal dan tunggu verifikasi Pengurus Admin IPPTI.'
         );
     }
 

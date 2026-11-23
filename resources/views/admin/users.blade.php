@@ -350,6 +350,16 @@
                                             <i data-lucide="calendar-plus" class="w-3.5 h-3.5"></i>
                                             <span>Perpanjang</span>
                                         </button>
+                                        <form action="/admin/users/{{ $t->id }}/send-reminder" method="POST" class="inline" onsubmit="return confirm('Kirim email pengingat perpanjangan keanggotaan ke {{ $t->name }} ({{ $t->email }})?')">
+                                            @csrf
+                                            <button
+                                                type="submit"
+                                                class="p-2 {{ ($isExpired || $isExpiringSoon) ? 'text-amber-600 bg-amber-50 hover:bg-amber-100 border border-amber-200' : 'text-slate-500 hover:bg-slate-100' }} rounded-lg transition-colors cursor-pointer"
+                                                title="Kirim Email Reminder Perpanjangan Keanggotaan"
+                                            >
+                                                <i data-lucide="mail" class="w-4 h-4"></i>
+                                            </button>
+                                        </form>
                                     @endif
                                     <button
                                         onclick="openTopupModal({ id: '{{ $t->id }}', name: @js($t->name), points: {{ $t->points ?? 0 }} })"
@@ -1319,7 +1329,7 @@
                     class="w-full px-3.5 py-2.5 border border-emerald-300 rounded-xl text-emerald-950 text-sm font-bold font-mono outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition bg-emerald-50/30"
                 />
                 <p class="text-[10.5px] text-slate-500 mt-1">
-                    Biaya Perpanjangan Tahunan: <strong>Rp {{ number_format((float)\App\Models\Setting::get('member_renewal_fee', 150000), 0, ',', '.') }}</strong>.
+                    Biaya Perpanjangan Tahunan: <strong>Rp {{ number_format((float)\App\Models\Setting::get('member_renewal_fee', 700000), 0, ',', '.') }}</strong>.
                 </p>
             </div>
 

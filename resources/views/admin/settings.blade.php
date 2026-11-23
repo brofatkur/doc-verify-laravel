@@ -111,14 +111,14 @@
                                 type="number"
                                 id="member_registration_fee"
                                 name="member_registration_fee"
-                                value="{{ old('member_registration_fee', \App\Models\Setting::get('member_registration_fee', 250000)) }}"
+                                value="{{ old('member_registration_fee', \App\Models\Setting::get('member_registration_fee', 850000)) }}"
                                 required
                                 min="0"
                                 step="10000"
                                 class="w-full px-3.5 py-2.5 border border-emerald-200 rounded-xl text-slate-900 text-sm font-black font-mono focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition bg-white"
                             />
                             <p class="text-[10.5px] text-emerald-800/80 leading-relaxed">
-                                Biaya pendaftaran awal bagi pendaftar anggota baru IPPTI.
+                                Biaya pendaftaran awal bagi pendaftar anggota baru IPPTI (Default: Rp 850.000).
                             </p>
                         </div>
 
@@ -131,14 +131,14 @@
                                 type="number"
                                 id="member_renewal_fee"
                                 name="member_renewal_fee"
-                                value="{{ old('member_renewal_fee', \App\Models\Setting::get('member_renewal_fee', 150000)) }}"
+                                value="{{ old('member_renewal_fee', \App\Models\Setting::get('member_renewal_fee', 700000)) }}"
                                 required
                                 min="0"
                                 step="10000"
                                 class="w-full px-3.5 py-2.5 border border-blue-200 rounded-xl text-slate-900 text-sm font-black font-mono focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition bg-white"
                             />
                             <p class="text-[10.5px] text-blue-800/80 leading-relaxed">
-                                Biaya perpanjangan keanggotaan tahunan ketika masa aktif member expired.
+                                Biaya perpanjangan keanggotaan tahunan ketika masa aktif member expired (Default: Rp 700.000).
                             </p>
                         </div>
 

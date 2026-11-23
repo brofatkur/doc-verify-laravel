@@ -76,18 +76,18 @@
                     <i data-lucide="shield-check" class="w-5 h-5"></i>
                 </div>
                 <div class="text-xs text-slate-300 space-y-1.5 leading-relaxed flex-1">
-                    <p class="font-bold text-white text-sm">Mekanisme Aktivasi & Keanggotaan Tahunan IPPTI</p>
+                    <p class="font-bold text-white text-sm">Mekanisme Aktivasi & Pembayaran Keanggotaan IPPTI</p>
                     <p>
                         1. Isi formulir pendaftaran di bawah ini dengan data SK Menteri Hukum RI yang valid.<br>
-                        2. Setelah mendaftar, Anda <strong class="text-emerald-400">dapat langsung login</strong> ke dashboard.<br>
-                        3. Fitur <strong class="text-amber-300">Input Data Dokumen & QR Verifikasi</strong> akan otomatis aktif segera setelah Pengurus Admin IPPTI memverifikasi pendaftaran Anda (Masa aktif berlaku <strong>{{ (int)\App\Models\Setting::get('member_duration_years', 1) }} Tahun</strong> sejak Tanggal Aktivasi).
+                        2. Setelah klik tombol daftar, Anda akan <strong class="text-emerald-400">langsung diarahkan ke halaman pembayaran via Payment Gateway</strong>.<br>
+                        3. Fitur <strong class="text-amber-300">Input Data Dokumen & QR Verifikasi</strong> akan otomatis aktif setelah pembayaran selesai dan Pengurus Admin IPPTI memverifikasi pendaftaran Anda (Masa aktif berlaku <strong>{{ (int)\App\Models\Setting::get('member_duration_years', 1) }} Tahun</strong> sejak Tanggal Aktivasi).
                     </p>
                     <div class="flex flex-wrap gap-3 pt-1 text-[11px]">
                         <span class="px-2.5 py-1 rounded-lg bg-slate-950/70 border border-slate-800 text-emerald-400 font-bold">
-                            Biaya Daftar Awal: Rp {{ number_format((float)($registrationFee ?? \App\Models\Setting::get('member_registration_fee', 250000)), 0, ',', '.') }}
+                            Biaya Pendaftaran Baru: Rp {{ number_format((float)($registrationFee ?? \App\Models\Setting::get('member_registration_fee', 850000)), 0, ',', '.') }}
                         </span>
                         <span class="px-2.5 py-1 rounded-lg bg-slate-950/70 border border-slate-800 text-blue-400 font-bold">
-                            Perpanjangan Tahunan: Rp {{ number_format((float)($renewalFee ?? \App\Models\Setting::get('member_renewal_fee', 150000)), 0, ',', '.') }} / Tahun
+                            Perpanjangan Tahunan: Rp {{ number_format((float)($renewalFee ?? \App\Models\Setting::get('member_renewal_fee', 700000)), 0, ',', '.') }} / Tahun
                         </span>
                     </div>
                 </div>
@@ -415,8 +415,8 @@
                         id="submit-btn"
                         class="w-full flex justify-center py-3.5 px-4 border border-transparent rounded-xl shadow-lg text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-500 active:scale-[0.99] transition-all duration-200 items-center gap-2 cursor-pointer"
                     >
-                        <i data-lucide="user-check" class="w-4 h-4"></i>
-                        <span id="submit-text">Kirim Pendaftaran Anggota IPPTI & Buat Akun</span>
+                        <i data-lucide="credit-card" class="w-4 h-4"></i>
+                        <span id="submit-text">Daftar & Lanjut Pembayaran (Rp {{ number_format((float)($registrationFee ?? \App\Models\Setting::get('member_registration_fee', 850000)), 0, ',', '.') }})</span>
                     </button>
                 </div>
             </form>

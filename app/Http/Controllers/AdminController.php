@@ -10,7 +10,7 @@ use App\Models\Document;
 
 class AdminController extends Controller
 {
-    public function dashboard()
+    public function dashboard(Request $request)
     {
         $user = Auth::user();
         if (!$user) {
@@ -19,11 +19,19 @@ class AdminController extends Controller
 
         $isSuperAdmin = $user->role === 'SUPERADMIN';
         $isAdmin = $user->role === 'ADMIN';
+        $reminderDays = (int)\App\Models\Setting::get('member_expiry_reminder_days', 30);
 
         if ($isSuperAdmin || $isAdmin) {
             $translators = User::withCount('documents')->orderBy('name', 'asc')->get();
             $documents = Document::with('translator')->orderBy('created_at', 'desc')->get();
             
+            // Auto-dispatch daily email reminders for translators expiring soon or expired
+            foreach ($translators as $t) {
+                if ($t->role === 'TRANSLATOR' && ($t->isExpiringSoon($reminderDays) || $t->isMembershipExpired())) {
+                    $t->sendExpiryReminderEmail(false);
+                }
+            }
+
             $totalTranslators = $translators->count();
             $totalDocs = $documents->count();
             $totalQrCodes = $documents->where('is_qr_generated', true)->count();
@@ -38,6 +46,19 @@ class AdminController extends Controller
                 'isSuperAdmin', 'isAdmin', 'translators', 'documents', 
                 'totalTranslators', 'totalDocs', 'totalQrCodes', 'docTypeStats'
             ));
+        }
+
+        // If translator clicked the renewal payment link from their reminder email (?pay_renewal=1)
+        if ($request->boolean('pay_renewal')) {
+            $paymentUrl = app(\App\Http\Controllers\PaymentController::class)->generateMembershipPaymentUrl($user, 'renewal');
+            if (!empty($paymentUrl)) {
+                return redirect()->away($paymentUrl);
+            }
+        }
+
+        // Auto-send email reminder (throttled 1x/day) if translator is expiring soon or expired
+        if ($user->isExpiringSoon($reminderDays) || $user->isMembershipExpired()) {
+            $user->sendExpiryReminderEmail(false);
         }
 
         // Sworn Translator Dashboard view
@@ -460,6 +481,33 @@ class AdminController extends Controller
             'success',
             "Keanggotaan tahunan '{$targetUser->name}' berhasil diperpanjang (+{$years} Tahun)! Masa aktif baru berlaku s/d " . $newExpiredAt->translatedFormat('d F Y') . "."
         );
+    }
+
+    public function sendExpiryReminder(Request $request, $id)
+    {
+        $currentUser = Auth::user();
+        if ($currentUser->role !== 'SUPERADMIN' && $currentUser->role !== 'ADMIN') {
+            return back()->withErrors(['error' => 'Akses ditolak.']);
+        }
+
+        $targetUser = User::findOrFail($id);
+        $sent = $targetUser->sendExpiryReminderEmail(true);
+
+        \App\Models\AuditLog::log('SEND_EXPIRY_REMINDER_EMAIL', User::class, $targetUser->id, null, [
+            'email' => $targetUser->email,
+            'expired_at' => $targetUser->effective_expired_at ? $targetUser->effective_expired_at->format('Y-m-d') : null,
+        ]);
+
+        if ($sent) {
+            return redirect('/admin/users')->with(
+                'success',
+                "Email pengingat perpanjangan keanggotaan tahunan berhasil dikirim ke {$targetUser->name} ({$targetUser->email})!"
+            );
+        }
+
+        return redirect('/admin/users')->withErrors([
+            'error' => "Gagal mengirim email pengingat ke {$targetUser->name}. Pastikan member memiliki alamat email aktif."
+        ]);
     }
 
     public function rejectUser(Request $request, $id)

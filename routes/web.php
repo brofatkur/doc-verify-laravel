@@ -64,6 +64,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/admin/users/{id}/verify', [AdminController::class, 'verifyUser']);
     Route::post('/admin/users/{id}/reject', [AdminController::class, 'rejectUser']);
     Route::post('/admin/users/{id}/renew', [AdminController::class, 'renewUserMembership']);
+    Route::post('/admin/users/{id}/send-reminder', [AdminController::class, 'sendExpiryReminder']);
     Route::post('/admin/users/{id}/delete', [AdminController::class, 'deleteUser']);
     Route::post('/admin/users/{id}/topup', [AdminController::class, 'topupUserPoints']);
     Route::post('/admin/users/import-json', [AdminController::class, 'importTranslatorsJson']);

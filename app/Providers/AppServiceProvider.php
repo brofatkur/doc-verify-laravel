@@ -47,6 +47,20 @@ class AppServiceProvider extends ServiceProvider
                 }
             }
 
+            if (\Illuminate\Support\Facades\Schema::hasTable('settings')) {
+                $curRegFee = \App\Models\Setting::get('member_registration_fee');
+                if ($curRegFee === null || (float)$curRegFee === 250000.0) {
+                    \App\Models\Setting::set('member_registration_fee', '850000');
+                }
+                $curRenFee = \App\Models\Setting::get('member_renewal_fee');
+                if ($curRenFee === null || (float)$curRenFee === 150000.0) {
+                    \App\Models\Setting::set('member_renewal_fee', '700000');
+                }
+                if (\App\Models\Setting::get('member_duration_years') === null) {
+                    \App\Models\Setting::set('member_duration_years', '1');
+                }
+            }
+
             if (!\Illuminate\Support\Facades\Schema::hasTable('vouchers')) {
                 \Illuminate\Support\Facades\Schema::create('vouchers', function (\Illuminate\Database\Schema\Blueprint $table) {
                     $table->id();

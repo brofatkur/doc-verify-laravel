@@ -249,6 +249,84 @@ class User extends Authenticatable
     }
 
     /**
+     * Cek apakah masa aktif keanggotaan akan segera expired (default <= 30 hari)
+     */
+    public function isExpiringSoon(int $thresholdDays = 30): bool
+    {
+        if ($this->role !== 'TRANSLATOR' || !$this->isVerifiedTranslator()) {
+            return false;
+        }
+        $days = $this->daysUntilExpiry();
+        return $days !== null && $days >= 0 && $days <= $thresholdDays;
+    }
+
+    /**
+     * Kirim Email Reminder Perpanjangan Keanggotaan Tahunan IPPTI
+     */
+    public function sendExpiryReminderEmail(bool $force = false): bool
+    {
+        if ($this->role !== 'TRANSLATOR' || empty($this->email) || str_ends_with($this->email, '@ippti.or.id')) {
+            return false;
+        }
+
+        $daysLeft = $this->daysUntilExpiry();
+        $expDate = $this->effective_expired_at;
+        if (!$expDate) {
+            return false;
+        }
+
+        $cacheKey = 'member_expiry_reminder_' . $this->id . '_' . date('Y-m-d');
+        if (!$force) {
+            try {
+                if (\Illuminate\Support\Facades\Cache::has($cacheKey)) {
+                    return false;
+                }
+            } catch (\Throwable $e) {}
+        }
+
+        $renewalFee = (float)\App\Models\Setting::get('member_renewal_fee', 700000);
+        $renewalFeeFormatted = 'Rp ' . number_format($renewalFee, 0, ',', '.');
+        $expDateFormatted = $expDate->translatedFormat('d F Y');
+        $payUrl = url('/admin?pay_renewal=1');
+
+        $statusText = $daysLeft < 0
+            ? "TELAH BERAKHIR (EXPIRED) pada tanggal {$expDateFormatted}"
+            : "AKAN BERAKHIR dalam {$daysLeft} hari lagi (pada tanggal {$expDateFormatted})";
+
+        $subject = "[DocVerify IPPTI] Pengingat Perpanjangan Keanggotaan Tahunan IPPTI - {$this->name}";
+        $body = "Yth. {$this->name} (No. Anggota IPPTI: {$this->sk_number}),\n\n"
+            . "Kami informasikan bahwa masa aktif keanggotaan tahunan IPPTI & akun Penerjemah Tersumpah Anda di portal DocVerify IPPTI {$statusText}.\n\n"
+            . "Rincian Perpanjangan Keanggotaan:\n"
+            . "- Nama Penerjemah : {$this->name}\n"
+            . "- Nomor Anggota   : {$this->sk_number}\n"
+            . "- Tanggal Expired : {$expDateFormatted}\n"
+            . "- Biaya Perpanjangan Tahunan : {$renewalFeeFormatted} / Tahun\n\n"
+            . "Silakan klik tautan berikut untuk melakukan pembayaran perpanjangan keanggotaan secara online via Payment Gateway:\n"
+            . "{$payUrl}\n\n"
+            . "Setelah pembayaran perpanjangan berhasil, masa aktif keanggotaan Anda akan otomatis diperpanjang selama 1 (satu) tahun ke depan.\n\n"
+            . "Hormat kami,\n"
+            . "Pengurus Nasional IPPTI\n"
+            . "Ikatan Penerjemah dan Pengalih Bahasa Tersumpah di Indonesia";
+
+        try {
+            \Illuminate\Support\Facades\Mail::raw($body, function ($message) use ($subject) {
+                $message->to($this->email, $this->name)
+                        ->subject($subject);
+            });
+        } catch (\Throwable $e) {
+            // Fallback to log if SMTP not configured
+        }
+
+        error_log("\n======================================================\n[EMAIL REMINDER PERPANJANGAN KEANGGOTAAN SENT TO {$this->email}]:\n{$body}\n======================================================\n");
+
+        try {
+            \Illuminate\Support\Facades\Cache::put($cacheKey, true, now()->addHours(24));
+        } catch (\Throwable $e) {}
+
+        return true;
+    }
+
+    /**
      * Cek apakah penerjemah boleh menginput dokumen (Sudah diverifikasi DAN Belum expired)
      */
     public function canInputDocuments(): bool

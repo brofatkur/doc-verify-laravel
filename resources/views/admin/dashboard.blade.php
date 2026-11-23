@@ -195,14 +195,15 @@
         @php
             $isVerifiedTranslator = Auth::user()->isVerifiedTranslator();
             $isMembershipExpired = Auth::user()->isMembershipExpired();
+            $isExpiringSoon = Auth::user()->isExpiringSoon((int)\App\Models\Setting::get('member_expiry_reminder_days', 30));
             $canInputDocs = Auth::user()->canInputDocuments();
             $vStatus = strtolower(Auth::user()->verification_status ?? 'approved');
             $regDate = Auth::user()->effective_registered_at;
             $actDate = Auth::user()->effective_activated_at;
             $expDate = Auth::user()->effective_expired_at;
             $daysLeft = Auth::user()->daysUntilExpiry();
-            $regFee = (float)\App\Models\Setting::get('member_registration_fee', 250000);
-            $renFee = (float)\App\Models\Setting::get('member_renewal_fee', 150000);
+            $regFee = (float)\App\Models\Setting::get('member_registration_fee', 850000);
+            $renFee = (float)\App\Models\Setting::get('member_renewal_fee', 700000);
         @endphp
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-200 pb-5">
             <div>
@@ -387,13 +388,13 @@
                         <i data-lucide="calendar-x" class="w-6 h-6"></i>
                     </div>
                     <div class="space-y-1.5">
-                        <div class="flex items-center gap-2">
+                        <div class="flex flex-wrap items-center gap-2">
                             <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-rose-200 text-rose-900">Keanggotaan Tahunan Expired</span>
                             <span class="text-xs font-mono font-bold text-rose-800">Berakhir pada: {{ $expDate ? $expDate->translatedFormat('d F Y') : '-' }}</span>
                         </div>
                         <h3 class="font-extrabold text-base text-rose-950">Masa Aktif Keanggotaan Tahunan IPPTI Anda Telah Berakhir</h3>
                         <p class="text-xs text-rose-900 font-medium leading-relaxed">
-                            Fitur <strong>Input Data Dokumen Baru & Impor Dokumen</strong> dinonaktifkan sementara hingga Anda melakukan perpanjangan keanggotaan tahunan sebesar <strong>Rp {{ number_format($renFee, 0, ',', '.') }} / Tahun</strong>.
+                            Fitur <strong>Input Data Dokumen Baru & Impor Dokumen</strong> dinonaktifkan sementara hingga Anda melakukan perpanjangan keanggotaan tahunan sebesar <strong>Rp {{ number_format($renFee, 0, ',', '.') }} / Tahun</strong>. Pengingat juga telah dikirimkan ke email Anda (<strong>{{ Auth::user()->email }}</strong>).
                         </p>
                     </div>
                 </div>
@@ -402,8 +403,35 @@
                     onclick="processMembershipPayment('renewal', this)"
                     class="inline-flex items-center gap-2 px-5 py-3 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-extrabold shadow-sm transition flex-shrink-0 cursor-pointer"
                 >
-                    <i data-lucide="calendar-plus" class="w-4 h-4"></i>
-                    <span>Perpanjang Tahunan (Rp {{ number_format($renFee, 0, ',', '.') }})</span>
+                    <i data-lucide="credit-card" class="w-4 h-4"></i>
+                    <span>Bayar Perpanjangan (Rp {{ number_format($renFee, 0, ',', '.') }})</span>
+                </button>
+            </div>
+        @elseif($isExpiringSoon)
+            <!-- Banner Notifikasi Peringatan Masa Aktif Akan Segera Expired -->
+            <div class="bg-amber-50 border-2 border-amber-300 text-amber-950 p-5 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm">
+                <div class="flex items-start gap-3.5">
+                    <div class="p-3 bg-amber-500 text-white rounded-xl flex-shrink-0 shadow-xs">
+                        <i data-lucide="bell-ring" class="w-6 h-6"></i>
+                    </div>
+                    <div class="space-y-1.5">
+                        <div class="flex flex-wrap items-center gap-2">
+                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-amber-200 text-amber-900">Pengingat Perpanjangan Tahunan</span>
+                            <span class="text-xs font-mono font-bold text-amber-800">Sisa {{ $daysLeft }} Hari (s/d {{ $expDate ? $expDate->translatedFormat('d F Y') : '-' }})</span>
+                        </div>
+                        <h3 class="font-extrabold text-base text-amber-950">Masa Aktif Keanggotaan IPPTI Anda Akan Segera Berakhir</h3>
+                        <p class="text-xs text-amber-900 font-medium leading-relaxed">
+                            Masa aktif keanggotaan tahunan Anda akan berakhir pada <strong>{{ $expDate ? $expDate->translatedFormat('d F Y') : '-' }}</strong> (pengingat otomatis juga telah dikirim ke email <strong>{{ Auth::user()->email }}</strong>). Silakan lakukan pembayaran perpanjangan tahunan sebesar <strong>Rp {{ number_format($renFee, 0, ',', '.') }}</strong> agar layanan input dokumen tetap aktif tanpa gangguan.
+                        </p>
+                    </div>
+                </div>
+                <button
+                    type="button"
+                    onclick="processMembershipPayment('renewal', this)"
+                    class="inline-flex items-center gap-2 px-5 py-3 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-extrabold shadow-sm transition flex-shrink-0 cursor-pointer"
+                >
+                    <i data-lucide="credit-card" class="w-4 h-4"></i>
+                    <span>Bayar Perpanjangan (Rp {{ number_format($renFee, 0, ',', '.') }})</span>
                 </button>
             </div>
         @endif
@@ -450,11 +478,11 @@
                 <button
                     type="button"
                     onclick="processMembershipPayment('renewal', this)"
-                    class="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 rounded-xl text-xs font-extrabold transition cursor-pointer flex-shrink-0"
-                    title="Perpanjang Masa Aktif Keanggotaan +1 Tahun"
+                    class="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-extrabold transition cursor-pointer flex-shrink-0 shadow-xs"
+                    title="Bayar Perpanjangan Masa Aktif Keanggotaan +1 Tahun via Payment Gateway"
                 >
-                    <i data-lucide="calendar-plus" class="w-4 h-4 text-emerald-600"></i>
-                    <span>Perpanjang +1 Tahun (Rp {{ number_format($renFee, 0, ',', '.') }})</span>
+                    <i data-lucide="credit-card" class="w-4 h-4"></i>
+                    <span>Bayar Perpanjangan (Rp {{ number_format($renFee, 0, ',', '.') }})</span>
                 </button>
             @endif
         </div>

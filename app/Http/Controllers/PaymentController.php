@@ -86,12 +86,12 @@ class PaymentController extends Controller
 
         $type = strtolower(trim((string)$request->input('type', 'renewal')));
         if ($type === 'initial' || $type === 'registration') {
-            $amount = (float)Setting::get('member_registration_fee', 250000);
+            $amount = (float)Setting::get('member_registration_fee', 850000);
             $trxNo = 'MEMBER-REG-' . date('YmdHis') . '-' . strtoupper(substr(uniqid(), -4));
             $orderType = 'member_registration';
             $productName = 'Biaya Pendaftaran Awal Anggota Baru IPPTI';
         } else {
-            $amount = (float)Setting::get('member_renewal_fee', 150000);
+            $amount = (float)Setting::get('member_renewal_fee', 700000);
             $trxNo = 'MEMBER-REN-' . date('YmdHis') . '-' . strtoupper(substr(uniqid(), -4));
             $orderType = 'member_renewal';
             $productName = 'Biaya Perpanjangan Tahunan Anggota IPPTI';
@@ -118,6 +118,39 @@ class PaymentController extends Controller
         }
 
         return $this->processGatewayCheckout($user, $trxNo, $amount, $points, $productName, $orderType, $voucherCode, $discountAmount, $finalAmount);
+    }
+
+    /**
+     * Generate direct payment gateway checkout URL for initial registration or renewal redirect
+     */
+    public function generateMembershipPaymentUrl(User $user, string $type = 'initial'): ?string
+    {
+        try {
+            if ($type === 'initial' || $type === 'registration') {
+                $amount = (float)Setting::get('member_registration_fee', 850000);
+                $trxNo = 'MEMBER-REG-' . date('YmdHis') . '-' . strtoupper(substr(uniqid(), -4));
+                $orderType = 'member_registration';
+                $productName = 'Biaya Pendaftaran Awal Anggota Baru IPPTI';
+            } else {
+                $amount = (float)Setting::get('member_renewal_fee', 700000);
+                $trxNo = 'MEMBER-REN-' . date('YmdHis') . '-' . strtoupper(substr(uniqid(), -4));
+                $orderType = 'member_renewal';
+                $productName = 'Biaya Perpanjangan Tahunan Anggota IPPTI';
+            }
+
+            if ($amount <= 0) {
+                return null;
+            }
+
+            $response = $this->processGatewayCheckout($user, $trxNo, $amount, (int)$amount, $productName, $orderType);
+            $data = $response->getData(true);
+            if (!empty($data['success']) && !empty($data['payment_url'])) {
+                return (string)$data['payment_url'];
+            }
+        } catch (\Throwable $e) {
+            // Safe fallback to dashboard if gateway unreachable
+        }
+        return null;
     }
 
     /**
