@@ -77,14 +77,14 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label for="name" class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Nama Lengkap</label>
-                        @if($user->role === 'TRANSLATOR')
+                        @if($user->role === 'TRANSLATOR' && $user->isVerifiedTranslator())
                             <input
                                 type="text"
                                 disabled
                                 value="{{ $user->name }}"
                                 class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl bg-slate-100 text-slate-500 text-sm font-semibold cursor-not-allowed outline-none"
                             />
-                            <p class="text-[9px] text-rose-500 mt-1 font-semibold">Nama lengkap resmi hanya dapat diubah oleh administrator IPPTI.</p>
+                            <p class="text-[9px] text-rose-500 mt-1 font-semibold">Nama lengkap resmi yang sudah terverifikasi hanya dapat diubah oleh administrator IPPTI.</p>
                         @else
                             <input
                                 type="text"
@@ -155,6 +155,61 @@
                             placeholder="Contoh: 5 Oktober 2022"
                         />
                     </div>
+
+                    <div>
+                        <label for="nik" class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">NIK / Nomor KTP</label>
+                        <input
+                            type="text"
+                            id="nik"
+                            name="nik"
+                            value="{{ old('nik', $user->nik) }}"
+                            class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-slate-800 text-sm font-semibold font-mono outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition"
+                            placeholder="16 digit NIK"
+                        />
+                    </div>
+
+                    <div>
+                        <label for="city" class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Kota / Provinsi Domisili</label>
+                        <input
+                            type="text"
+                            id="city"
+                            name="city"
+                            value="{{ old('city', $user->city) }}"
+                            class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-slate-800 text-sm font-semibold outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition"
+                            placeholder="Contoh: DKI Jakarta"
+                        />
+                    </div>
+
+                    <div class="md:col-span-2">
+                        <label for="address" class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Alamat Kantor / Domisili</label>
+                        <input
+                            type="text"
+                            id="address"
+                            name="address"
+                            value="{{ old('address', $user->address) }}"
+                            class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-slate-800 text-sm font-semibold outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition"
+                            placeholder="Alamat lengkap penerjemah"
+                        />
+                    </div>
+
+                    <div class="md:col-span-2">
+                        <label for="sk_document" class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Salinan SK Menteri Hukum RI (PDF / JPG / PNG)</label>
+                        <div class="flex flex-col sm:flex-row sm:items-center gap-3">
+                            <input
+                                type="file"
+                                id="sk_document"
+                                name="sk_document"
+                                accept=".pdf,image/jpeg,image/png,image/jpg,image/webp"
+                                class="flex-1 text-xs text-slate-600 file:mr-3 file:py-2 file:px-3.5 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 border border-slate-200 rounded-xl bg-white p-1.5 cursor-pointer"
+                            />
+                            @if($user->sk_document_path)
+                                <a href="{{ $user->sk_document_path }}" target="_blank" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 text-xs font-bold transition flex-shrink-0">
+                                    <i data-lucide="file-text" class="w-4 h-4"></i>
+                                    <span>Lihat Berkas SK Saat Ini</span>
+                                </a>
+                            @endif
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -165,7 +220,7 @@
                         <i data-lucide="globe" class="w-4 h-4 text-emerald-600"></i>
                         <span>Layanan Pasangan Bahasa</span>
                     </label>
-                    @if($user->role === 'TRANSLATOR')
+                    @if($user->role === 'TRANSLATOR' && $user->isVerifiedTranslator())
                         <input
                             type="text"
                             disabled
@@ -174,7 +229,7 @@
                         />
                         <p class="text-[10px] text-rose-500 mt-1 flex items-center gap-1 font-semibold">
                             <i data-lucide="shield-alert" class="w-3.5 h-3.5"></i>
-                            <span>Arah bahasa tersertifikasi resmi hanya dapat diubah oleh administrator IPPTI.</span>
+                            <span>Arah bahasa tersertifikasi resmi yang sudah diverifikasi hanya dapat diubah oleh administrator IPPTI.</span>
                         </p>
                     @else
                         <input

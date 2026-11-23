@@ -27,6 +27,121 @@
         </div>
     @endif
 
+    @php
+        $pendingApplicants = $translators->where('role', 'TRANSLATOR')->filter(fn($u) => !$u->isVerifiedTranslator());
+    @endphp
+
+    @if($pendingApplicants->isNotEmpty())
+        <!-- Antrean Verifikasi Pendaftar Anggota Baru IPPTI -->
+        <div class="bg-amber-50/70 border-2 border-amber-300 rounded-2xl p-6 space-y-4 shadow-sm">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-amber-200 pb-4">
+                <div class="flex items-center gap-3">
+                    <div class="p-2.5 bg-amber-500 text-white rounded-xl shadow-xs">
+                        <i data-lucide="user-check" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-base font-extrabold text-slate-900">
+                            Antrean Verifikasi Pendaftar Anggota Baru IPPTI ({{ $pendingApplicants->count() }} Pendaftar)
+                        </h2>
+                        <p class="text-xs text-slate-600">
+                            Pendaftar di bawah ini sudah memiliki akun login, namun <strong>belum dapat menginput dokumen terjemahan</strong> sebelum diverifikasi oleh Admin.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 gap-4">
+                @foreach($pendingApplicants as $applicant)
+                    <div class="bg-white border border-amber-200 rounded-xl p-4 sm:p-5 flex flex-col lg:flex-row lg:items-center justify-between gap-4 shadow-xs">
+                        <div class="flex items-start gap-3.5">
+                            <div class="w-12 h-12 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center font-bold text-slate-600 overflow-hidden flex-shrink-0">
+                                @if($applicant->profile_picture)
+                                    <img src="{{ $applicant->profile_picture }}" alt="{{ $applicant->name }}" class="w-full h-full object-cover" />
+                                @else
+                                    {{ substr($applicant->name, 0, 1) }}
+                                @endif
+                            </div>
+                            <div class="space-y-1.5 text-xs">
+                                <div class="flex flex-wrap items-center gap-2">
+                                    <span class="font-extrabold text-sm text-slate-900">{{ $applicant->name }}</span>
+                                    @if(strtolower($applicant->verification_status ?? 'pending') === 'rejected')
+                                        <span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-rose-100 text-rose-700 border border-rose-200 uppercase">Ditolak / Menunggu Revisi</span>
+                                    @else
+                                        <span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-100 text-amber-800 border border-amber-300 uppercase">Menunggu Verifikasi</span>
+                                    @endif
+                                    <span class="font-mono text-[11px] font-bold text-slate-500">No. Reg/Anggota: {{ $applicant->sk_number }}</span>
+                                </div>
+
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1 text-slate-600">
+                                    <div><strong>Email:</strong> {{ $applicant->email }}</div>
+                                    <div><strong>WhatsApp:</strong> {{ $applicant->whatsapp ?: '-' }}</div>
+                                    <div><strong>No. SK Kemenkum RI:</strong> <span class="font-mono font-bold text-slate-900">{{ $applicant->effective_no_sk ?: '-' }}</span></div>
+                                    <div><strong>Tanggal SK:</strong> {{ $applicant->effective_tgl_sk ?: '-' }}</div>
+                                    <div class="sm:col-span-2"><strong>Arah Bahasa:</strong> <span class="text-emerald-700 font-semibold">{{ $applicant->language_services ?: '-' }}</span></div>
+                                    @if($applicant->nik || $applicant->city || $applicant->address)
+                                        <div class="sm:col-span-2 text-[11px] text-slate-500">
+                                            @if($applicant->nik) <strong>NIK:</strong> {{ $applicant->nik }} &bull; @endif
+                                            @if($applicant->city) <strong>Kota:</strong> {{ $applicant->city }} &bull; @endif
+                                            @if($applicant->address) <strong>Alamat:</strong> {{ $applicant->address }} @endif
+                                        </div>
+                                    @endif
+                                </div>
+
+                                @if($applicant->sk_document_path || $applicant->profile_picture)
+                                    <div class="flex flex-wrap items-center gap-2 pt-1">
+                                        @if($applicant->sk_document_path)
+                                            <a href="{{ $applicant->sk_document_path }}" target="_blank" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 text-[11px] font-bold transition">
+                                                <i data-lucide="file-text" class="w-3.5 h-3.5"></i>
+                                                <span>Lihat Berkas SK Kemenkum</span>
+                                            </a>
+                                        @endif
+                                        @if($applicant->profile_picture)
+                                            <a href="{{ $applicant->profile_picture }}" target="_blank" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 text-[11px] font-bold transition">
+                                                <i data-lucide="image" class="w-3.5 h-3.5"></i>
+                                                <span>Lihat Pasfoto</span>
+                                            </a>
+                                        @endif
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+
+                        <div class="flex flex-wrap items-center gap-2 lg:flex-shrink-0 pt-2 lg:pt-0 border-t lg:border-t-0 border-slate-100">
+                            <button
+                                type="button"
+                                onclick='openVerifyMemberModal(@json([
+                                    "id" => $applicant->id,
+                                    "name" => $applicant->name,
+                                    "email" => $applicant->email,
+                                    "sk_number" => $applicant->sk_number,
+                                    "no_sk_kemenkum" => $applicant->effective_no_sk !== $applicant->sk_number ? $applicant->effective_no_sk : ($applicant->no_sk_kemenkum ?? ""),
+                                    "tgl_sk" => $applicant->effective_tgl_sk,
+                                    "language_services" => $applicant->language_services,
+                                ]))'
+                                class="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-extrabold shadow-xs transition cursor-pointer"
+                            >
+                                <i data-lucide="check-circle-2" class="w-4 h-4"></i>
+                                <span>Verifikasi & Aktifkan</span>
+                            </button>
+                            <button
+                                type="button"
+                                onclick='openRejectMemberModal(@json([
+                                    "id" => $applicant->id,
+                                    "name" => $applicant->name,
+                                    "rejection_reason" => $applicant->rejection_reason ?? "",
+                                ]))'
+                                class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-xl text-xs font-bold transition cursor-pointer"
+                            >
+                                <i data-lucide="x-circle" class="w-4 h-4"></i>
+                                <span>Tolak / Revisi</span>
+                            </button>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+    @endif
+
     <!-- Control Actions Bar -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2">
@@ -115,9 +230,24 @@
                                         ADMIN
                                     </span>
                                 @else
-                                    <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-blue-50 text-blue-700 border border-blue-100 shadow-sm">
-                                        PENERJEMAH
-                                    </span>
+                                    <div class="flex flex-col items-start gap-1">
+                                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-blue-50 text-blue-700 border border-blue-100 shadow-sm">
+                                            PENERJEMAH
+                                        </span>
+                                        @if($t->isVerifiedTranslator())
+                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                                <i data-lucide="check-circle-2" class="w-2.5 h-2.5"></i> Terverifikasi
+                                            </span>
+                                        @elseif(strtolower($t->verification_status ?? 'pending') === 'rejected')
+                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold bg-rose-50 text-rose-700 border border-rose-200">
+                                                <i data-lucide="x-circle" class="w-2.5 h-2.5"></i> Perlu Revisi
+                                            </span>
+                                        @else
+                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                                                <i data-lucide="clock" class="w-2.5 h-2.5"></i> Belum Diverifikasi
+                                            </span>
+                                        @endif
+                                    </div>
                                 @endif
                             </td>
                             <td class="px-6 py-4 text-slate-600 font-mono text-xs target-sk">
@@ -143,6 +273,24 @@
                             </td>
                             <td class="px-6 py-4 text-right">
                                 <div class="flex items-center justify-end gap-1.5">
+                                    @if($t->role === 'TRANSLATOR' && !$t->isVerifiedTranslator())
+                                        <button
+                                            onclick='openVerifyMemberModal(@json([
+                                                "id" => $t->id,
+                                                "name" => $t->name,
+                                                "email" => $t->email,
+                                                "sk_number" => $t->sk_number,
+                                                "no_sk_kemenkum" => $t->effective_no_sk !== $t->sk_number ? $t->effective_no_sk : ($t->no_sk_kemenkum ?? ""),
+                                                "tgl_sk" => $t->effective_tgl_sk,
+                                                "language_services" => $t->language_services,
+                                            ]))'
+                                            class="px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-[10px] font-extrabold transition cursor-pointer flex items-center gap-1 shadow-xs"
+                                            title="Verifikasi & Aktifkan Akun Penerjemah"
+                                        >
+                                            <i data-lucide="check-circle-2" class="w-3.5 h-3.5"></i>
+                                            <span>Verifikasi</span>
+                                        </button>
+                                    @endif
                                     <button
                                         onclick="openTopupModal({ id: '{{ $t->id }}', name: @js($t->name), points: {{ $t->points ?? 0 }} })"
                                         class="p-2 text-amber-600 hover:bg-amber-50 rounded-lg transition-colors cursor-pointer"
@@ -163,6 +311,7 @@
                                             "language_services" => $t->language_services,
                                             "masa_aktif" => $t->masa_aktif ?: "Seumur Hidup",
                                             "sk_lengkap" => $t->effective_sk_lengkap,
+                                            "verification_status" => $t->isVerifiedTranslator() ? "approved" : ($t->verification_status ?: "pending"),
                                         ]))'
                                         class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer"
                                         title="Edit Profil"
@@ -328,6 +477,19 @@
                         class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-sm font-semibold text-slate-850 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all bg-slate-50"
                     />
                     <p class="text-[10px] text-slate-400 mt-1">Tampil pada Kartu Verifikasi Penerjemah & tersinkronisasi dengan E-Certificate Hasil Verifikasi Dokumen.</p>
+                </div>
+
+                <div>
+                    <label for="modal-verification-status" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Status Verifikasi Keanggotaan IPPTI</label>
+                    <select
+                        id="modal-verification-status"
+                        name="verification_status"
+                        class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-sm font-semibold text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all cursor-pointer"
+                    >
+                        <option value="approved">Terverifikasi & Aktif (Dapat Input Dokumen)</option>
+                        <option value="pending">Menunggu Verifikasi (Fitur Input Dokumen Terkunci)</option>
+                        <option value="rejected">Ditolak / Perlu Revisi</option>
+                    </select>
                 </div>
             </div>
 
@@ -528,6 +690,7 @@
         if (document.getElementById('modal-language-services')) document.getElementById('modal-language-services').value = '';
         if (document.getElementById('modal-masa-aktif')) document.getElementById('modal-masa-aktif').value = 'Seumur Hidup';
         if (document.getElementById('modal-sk-lengkap')) document.getElementById('modal-sk-lengkap').value = '';
+        if (document.getElementById('modal-verification-status')) document.getElementById('modal-verification-status').value = 'approved';
         document.getElementById('modal-password').value = '';
         document.getElementById('modal-role').value = 'TRANSLATOR';
 
@@ -550,6 +713,7 @@
             if (document.getElementById('modal-language-services')) document.getElementById('modal-language-services').value = data.language_services || '';
             if (document.getElementById('modal-masa-aktif')) document.getElementById('modal-masa-aktif').value = data.masa_aktif || 'Seumur Hidup';
             if (document.getElementById('modal-sk-lengkap')) document.getElementById('modal-sk-lengkap').value = data.sk_lengkap || '';
+            if (document.getElementById('modal-verification-status')) document.getElementById('modal-verification-status').value = data.verification_status || 'approved';
             document.getElementById('modal-role').value = data.role;
             
             passLabel.innerText = 'Ganti Password (Kosongkan jika tidak diubah)';
@@ -760,7 +924,193 @@
     function setTopupPreset(val) {
         document.getElementById('topup-points-input').value = val;
     }
+
+    function openVerifyMemberModal(applicant) {
+        document.getElementById('form-verify-member').action = '/admin/users/' + applicant.id + '/verify';
+        document.getElementById('verify-member-name').innerText = applicant.name || '';
+        document.getElementById('verify-member-email').innerText = applicant.email || '';
+        document.getElementById('verify-sk-number').value = applicant.sk_number || '';
+        document.getElementById('verify-no-sk-kemenkum').value = applicant.no_sk_kemenkum || '';
+        document.getElementById('verify-tgl-sk').value = applicant.tgl_sk || '';
+        document.getElementById('verify-language-services').value = applicant.language_services || '';
+        document.getElementById('modal-verify-member').classList.remove('hidden');
+        lucide.createIcons();
+    }
+
+    function closeVerifyMemberModal() {
+        document.getElementById('modal-verify-member').classList.add('hidden');
+    }
+
+    function openRejectMemberModal(applicant) {
+        document.getElementById('form-reject-member').action = '/admin/users/' + applicant.id + '/reject';
+        document.getElementById('reject-member-name').innerText = applicant.name || '';
+        document.getElementById('reject-reason-input').value = applicant.rejection_reason || '';
+        document.getElementById('modal-reject-member').classList.remove('hidden');
+        lucide.createIcons();
+    }
+
+    function closeRejectMemberModal() {
+        document.getElementById('modal-reject-member').classList.add('hidden');
+    }
 </script>
+
+<!-- ========================================== -->
+<!--       VERIFY & ACTIVATE MEMBER MODAL       -->
+<!-- ========================================== -->
+<div id="modal-verify-member" class="hidden fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-lg w-full shadow-2xl p-6 border border-slate-100">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
+            <div class="flex items-center gap-2 text-emerald-700 font-bold text-sm">
+                <i data-lucide="user-check" class="w-5 h-5 text-emerald-600"></i>
+                <span>Verifikasi & Aktivasi Anggota Baru IPPTI</span>
+            </div>
+            <button onclick="closeVerifyMemberModal()" class="p-1 text-slate-400 hover:text-slate-600 rounded-lg cursor-pointer">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+        </div>
+
+        <form id="form-verify-member" method="POST" class="space-y-4 text-left">
+            @csrf
+            <div class="bg-emerald-50/70 border border-emerald-200 p-3.5 rounded-xl space-y-1 text-xs">
+                <p class="text-slate-500">Pendaftar Penerjemah Tersumpah:</p>
+                <p id="verify-member-name" class="font-extrabold text-slate-900 text-sm"></p>
+                <p id="verify-member-email" class="text-slate-600 font-medium"></p>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                <div class="sm:col-span-2">
+                    <label for="verify-sk-number" class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">
+                        Nomor Anggota Resmi IPPTI <span class="text-rose-500">*</span>
+                    </label>
+                    <input
+                        type="text"
+                        id="verify-sk-number"
+                        name="sk_number"
+                        required
+                        class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-slate-900 text-sm font-bold font-mono outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition"
+                        placeholder="Contoh: 25009"
+                    />
+                    <p class="text-[10px] text-slate-400 mt-1">Anda dapat menetapkan atau menyesuaikan Nomor Anggota resmi IPPTI untuk pendaftar ini.</p>
+                </div>
+
+                <div>
+                    <label for="verify-no-sk-kemenkum" class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">
+                        Nomor SK Menteri Hukum RI
+                    </label>
+                    <input
+                        type="text"
+                        id="verify-no-sk-kemenkum"
+                        name="no_sk_kemenkum"
+                        required
+                        class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-slate-900 text-sm font-semibold font-mono outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition"
+                    />
+                </div>
+
+                <div>
+                    <label for="verify-tgl-sk" class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">
+                        Tanggal SK Menteri Hukum RI
+                    </label>
+                    <input
+                        type="text"
+                        id="verify-tgl-sk"
+                        name="tgl_sk"
+                        required
+                        class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-slate-900 text-sm font-semibold outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition"
+                    />
+                </div>
+
+                <div class="sm:col-span-2">
+                    <label for="verify-language-services" class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">
+                        Pasangan / Arah Bahasa Tersumpah
+                    </label>
+                    <input
+                        type="text"
+                        id="verify-language-services"
+                        name="language_services"
+                        required
+                        class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-slate-900 text-sm font-semibold outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition"
+                    />
+                </div>
+            </div>
+
+            <div class="bg-slate-50 border border-slate-200/80 p-3 rounded-xl text-[11px] text-slate-600 leading-relaxed">
+                Dengan mengklik <strong>Setujui & Aktifkan Akun</strong>, akun penerjemah ini akan berstatus <strong>Terverifikasi</strong> dan langsung dapat menggunakan fitur <strong>Input Data Dokumen & QR Verifikasi</strong>.
+            </div>
+
+            <div class="flex justify-end gap-3 pt-2">
+                <button
+                    type="button"
+                    onclick="closeVerifyMemberModal()"
+                    class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition cursor-pointer"
+                >
+                    Batal
+                </button>
+                <button
+                    type="submit"
+                    class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-extrabold transition shadow-sm cursor-pointer flex items-center gap-1.5"
+                >
+                    <i data-lucide="check-circle-2" class="w-4 h-4"></i>
+                    <span>Setujui & Aktifkan Akun</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ========================================== -->
+<!--         REJECT / REVISION MEMBER MODAL     -->
+<!-- ========================================== -->
+<div id="modal-reject-member" class="hidden fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full shadow-2xl p-6 border border-slate-100">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
+            <div class="flex items-center gap-2 text-rose-700 font-bold text-sm">
+                <i data-lucide="alert-octagon" class="w-5 h-5 text-rose-600"></i>
+                <span>Tolak / Minta Revisi Pendaftaran</span>
+            </div>
+            <button onclick="closeRejectMemberModal()" class="p-1 text-slate-400 hover:text-slate-600 rounded-lg cursor-pointer">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+        </div>
+
+        <form id="form-reject-member" method="POST" class="space-y-4 text-left">
+            @csrf
+            <div class="bg-rose-50/70 border border-rose-200 p-3.5 rounded-xl space-y-1 text-xs">
+                <p class="text-slate-500">Pendaftar:</p>
+                <p id="reject-member-name" class="font-extrabold text-slate-900 text-sm"></p>
+            </div>
+
+            <div>
+                <label for="reject-reason-input" class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1.5">
+                    Alasan Penolakan / Catatan Revisi untuk Pendaftar
+                </label>
+                <textarea
+                    id="reject-reason-input"
+                    name="rejection_reason"
+                    rows="3"
+                    required
+                    placeholder="Contoh: Mohon unggah salinan SK Menteri Hukum RI yang jelas dan sesuaikan nomor SK..."
+                    class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-slate-800 text-xs font-semibold outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition"
+                ></textarea>
+            </div>
+
+            <div class="flex justify-end gap-3 pt-2">
+                <button
+                    type="button"
+                    onclick="closeRejectMemberModal()"
+                    class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition cursor-pointer"
+                >
+                    Batal
+                </button>
+                <button
+                    type="submit"
+                    class="px-5 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold transition shadow-sm cursor-pointer"
+                >
+                    Simpan Status Revisi
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
 
 <!-- ========================================== -->
 <!--              TOP-UP POINTS MODAL           -->

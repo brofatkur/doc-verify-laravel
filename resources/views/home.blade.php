@@ -62,6 +62,10 @@
             <a href="/verify-translator" id="nav-verify-trans" class="text-sm font-semibold text-blue-900 hover:text-blue-950 hover:underline transition-all duration-200">
                 Verifikasi Penerjemah
             </a>
+            <a href="/register" class="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-blue-950 hover:bg-blue-900 text-white text-xs font-bold shadow-xs transition">
+                <i data-lucide="user-plus" class="w-3.5 h-3.5"></i>
+                <span>Daftar Anggota IPPTI</span>
+            </a>
 
             <!-- Language Switcher -->
             <div class="flex bg-slate-200/60 p-0.5 rounded-lg border border-slate-200 dir-ltr" dir="ltr">

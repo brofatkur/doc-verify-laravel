@@ -19,11 +19,19 @@ class User extends Authenticatable
     protected $fillable = [
         'id',
         'name',
+        'nik',
         'email',
         'password',
         'sk_number',
         'role',
+        'is_verified',
+        'verification_status',
+        'verified_at',
+        'verified_by',
+        'rejection_reason',
         'whatsapp',
+        'address',
+        'city',
         'language_services',
         'bio',
         'profile_picture',
@@ -31,6 +39,7 @@ class User extends Authenticatable
         'tgl_sk',
         'masa_aktif',
         'sk_lengkap',
+        'sk_document_path',
         'points',
         'user_level',
     ];
@@ -54,6 +63,8 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
+            'verified_at' => 'datetime',
+            'is_verified' => 'boolean',
             'password' => 'hashed',
         ];
     }
@@ -141,6 +152,27 @@ class User extends Authenticatable
     public function isReguler(): bool
     {
         return strtolower($this->user_level ?? 'reguler') === 'reguler';
+    }
+
+    /**
+     * Cek apakah akun Penerjemah sudah diverifikasi oleh Admin IPPTI
+     * Jika belum diverifikasi, fitur input/impor dokumen belum aktif meskipun sudah bisa login.
+     */
+    public function isVerifiedTranslator(): bool
+    {
+        if ($this->role !== 'TRANSLATOR') {
+            return true;
+        }
+
+        if (array_key_exists('is_verified', $this->attributes) && !$this->is_verified) {
+            return false;
+        }
+
+        if (in_array(strtolower((string)($this->verification_status ?? 'approved')), ['pending', 'rejected'])) {
+            return false;
+        }
+
+        return true;
     }
 
     /**

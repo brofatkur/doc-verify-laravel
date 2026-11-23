@@ -2,10 +2,15 @@
 
 @section('content')
 <div class="space-y-8">
-    @if($isSuperAdmin)
+    @if($isSuperAdmin || (isset($isAdmin) && $isAdmin))
         <!-- ========================================== -->
-        <!--             SUPER ADMIN DASHBOARD          -->
+        <!--         SUPER ADMIN / ADMIN DASHBOARD      -->
         <!-- ========================================== -->
+        @php
+            $pendingApplicantsCount = isset($translators)
+                ? $translators->where('role', 'TRANSLATOR')->filter(fn($u) => !$u->isVerifiedTranslator())->count()
+                : 0;
+        @endphp
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-200 pb-5">
             <div>
                 <div class="flex items-center gap-2 text-emerald-700 font-bold text-xs bg-emerald-50 border border-emerald-100 px-3 py-1 rounded-full w-max mb-2.5">
@@ -16,6 +21,28 @@
                 <p class="text-slate-500 text-sm mt-1">Sistem audit terpadu untuk registrasi penerjemah tersumpah dan dokumen resmi se-Indonesia.</p>
             </div>
         </div>
+
+        @if($pendingApplicantsCount > 0)
+            <div class="bg-amber-50 border-2 border-amber-300 text-amber-950 p-5 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm">
+                <div class="flex items-start gap-3.5">
+                    <div class="p-2.5 bg-amber-500 text-white rounded-xl flex-shrink-0 shadow-xs">
+                        <i data-lucide="user-check" class="w-5 h-5"></i>
+                    </div>
+                    <div class="space-y-1">
+                        <p class="font-extrabold text-sm text-amber-950">
+                            {{ $pendingApplicantsCount }} Pendaftar Anggota Baru IPPTI Menunggu Verifikasi Admin
+                        </p>
+                        <p class="text-xs text-amber-800 font-medium leading-relaxed">
+                            Terdapat pendaftar penerjemah tersumpah baru yang telah membuat akun tetapi belum dapat menginput dokumen sebelum diverifikasi oleh Admin.
+                        </p>
+                    </div>
+                </div>
+                <a href="/admin/users" class="inline-flex items-center gap-2 px-4 py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-extrabold shadow-sm transition flex-shrink-0">
+                    <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                    <span>Tinjau & Verifikasi Pendaftar</span>
+                </a>
+            </div>
+        @endif
 
         @if($errors->any())
             <div class="bg-rose-50 border border-rose-200 text-rose-800 p-4 rounded-xl text-xs font-bold leading-snug">
@@ -165,9 +192,13 @@
         <!-- ========================================== -->
         <!--            TRANSLATOR DASHBOARD            -->
         <!-- ========================================== -->
+        @php
+            $isVerifiedTranslator = Auth::user()->isVerifiedTranslator();
+            $vStatus = strtolower(Auth::user()->verification_status ?? 'approved');
+        @endphp
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-200 pb-5">
             <div>
-                <div class="flex items-center gap-2 mb-1.5">
+                <div class="flex flex-wrap items-center gap-2 mb-1.5">
                     @if(Auth::user()->isPro())
                         <span class="inline-flex items-center gap-1 px-3 py-0.5 rounded-full text-xs font-black bg-amber-100 text-amber-800 border border-amber-300 shadow-xs">
                             <i data-lucide="award" class="w-3.5 h-3.5 text-amber-600"></i> AKUN PRO
@@ -180,56 +211,150 @@
                             <i data-lucide="zap" class="w-3.5 h-3.5 fill-amber-500 text-amber-500"></i> Upgrade Pro
                         </a>
                     @endif
+
+                    @if($isVerifiedTranslator)
+                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-300">
+                            <i data-lucide="check-circle-2" class="w-3.5 h-3.5 text-emerald-600"></i> ANGGOTA TERVERIFIKASI
+                        </span>
+                    @elseif($vStatus === 'rejected')
+                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-rose-100 text-rose-800 border border-rose-300">
+                            <i data-lucide="x-circle" class="w-3.5 h-3.5 text-rose-600"></i> PERLU REVISI VERIFIKASI
+                        </span>
+                    @else
+                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-amber-100 text-amber-800 border border-amber-300">
+                            <i data-lucide="clock" class="w-3.5 h-3.5 text-amber-600"></i> MENUNGGU VERIFIKASI ADMIN
+                        </span>
+                    @endif
                 </div>
                 <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight">Manajemen Dokumen</h1>
                 <p class="text-slate-500 text-sm mt-1">Daftarkan dokumen terjemahan tersumpah Anda dan kelola kode QR verifikasi publik.</p>
             </div>
             
             <div class="flex items-center gap-3 w-full sm:w-auto">
-                <!-- Excel Import Button -->
-                <div class="flex flex-col sm:flex-row items-start sm:items-center gap-2">
-                    <div>
-                        <input
-                            type="file"
-                            id="excel-upload-input"
-                            onchange="handleExcelImport(this)"
-                            accept=".xlsx,.xls,.csv"
-                            class="hidden"
-                        />
-                        <label
-                            for="excel-upload-input"
-                            id="btn-import-excel"
-                            class="flex items-center gap-2 border border-slate-200 hover:border-emerald-500 hover:text-emerald-700 bg-white text-gray-700 px-4 py-2.5 rounded-xl font-semibold transition cursor-pointer text-sm shadow-sm"
+                @if($isVerifiedTranslator)
+                    <!-- Excel Import Button (Active) -->
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center gap-2">
+                        <div>
+                            <input
+                                type="file"
+                                id="excel-upload-input"
+                                onchange="handleExcelImport(this)"
+                                accept=".xlsx,.xls,.csv"
+                                class="hidden"
+                            />
+                            <label
+                                for="excel-upload-input"
+                                id="btn-import-excel"
+                                class="flex items-center gap-2 border border-slate-200 hover:border-emerald-500 hover:text-emerald-700 bg-white text-gray-700 px-4 py-2.5 rounded-xl font-semibold transition cursor-pointer text-sm shadow-sm"
+                            >
+                                <i data-lucide="upload" class="w-4 h-4 text-gray-400"></i>
+                                <span>Impor Excel</span>
+                            </label>
+                        </div>
+                        <a
+                            href="/template-impor-dokumen.csv"
+                            download
+                            class="text-xs font-semibold text-emerald-600 hover:text-emerald-700 hover:underline flex items-center gap-1 px-1 py-1"
+                            title="Unduh template Excel/CSV yang benar"
                         >
-                            <i data-lucide="upload" class="w-4 h-4 text-gray-400"></i>
-                            <span>Impor Excel</span>
-                        </label>
+                            <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                            <span>Unduh Template</span>
+                        </a>
                     </div>
-                    <a
-                        href="/template-impor-dokumen.csv"
-                        download
-                        class="text-xs font-semibold text-emerald-600 hover:text-emerald-700 hover:underline flex items-center gap-1 px-1 py-1"
-                        title="Unduh template Excel/CSV yang benar"
-                    >
-                        <i data-lucide="download" class="w-3.5 h-3.5"></i>
-                        <span>Unduh Template</span>
-                    </a>
-                </div>
 
-                <a
-                    href="/admin/documents/new"
-                    class="flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-xl font-semibold shadow-sm hover:-translate-y-0.5 transition-all duration-200 text-sm cursor-pointer"
-                >
-                    <i data-lucide="plus" class="w-4 h-4 stroke-[3px]"></i>
-                    <span>Dokumen Baru</span>
-                </a>
+                    <a
+                        href="/admin/documents/new"
+                        class="flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-xl font-semibold shadow-sm hover:-translate-y-0.5 transition-all duration-200 text-sm cursor-pointer"
+                    >
+                        <i data-lucide="plus" class="w-4 h-4 stroke-[3px]"></i>
+                        <span>Dokumen Baru</span>
+                    </a>
+                @else
+                    <!-- Locked Buttons when Unverified -->
+                    <button
+                        type="button"
+                        onclick="alert('Fitur Impor Dokumen belum aktif. Silakan tunggu Pengurus Admin IPPTI memverifikasi akun keanggotaan Anda.')"
+                        class="flex items-center gap-2 border border-slate-200 bg-slate-100 text-slate-400 px-4 py-2.5 rounded-xl font-semibold text-sm cursor-not-allowed"
+                        title="Menunggu verifikasi Admin IPPTI"
+                    >
+                        <i data-lucide="lock" class="w-4 h-4 text-slate-400"></i>
+                        <span>Impor Excel (Terkunci)</span>
+                    </button>
+
+                    <button
+                        type="button"
+                        onclick="alert('Fitur Input Dokumen Baru belum aktif. Silakan tunggu Pengurus Admin IPPTI memverifikasi akun keanggotaan Anda.')"
+                        class="flex items-center justify-center gap-2 bg-slate-300 text-slate-500 px-5 py-2.5 rounded-xl font-semibold text-sm cursor-not-allowed"
+                        title="Menunggu verifikasi Admin IPPTI"
+                    >
+                        <i data-lucide="lock" class="w-4 h-4"></i>
+                        <span>Dokumen Baru (Terkunci)</span>
+                    </button>
+                @endif
             </div>
         </div>
+
+        @if($errors->any())
+            <div class="bg-rose-50 border border-rose-200 text-rose-800 p-4 rounded-xl text-xs font-bold leading-snug">
+                {{ $errors->first() }}
+            </div>
+        @endif
 
         @if(session('success'))
             <div class="bg-emerald-50 border border-emerald-200 text-emerald-800 p-4 rounded-xl text-xs font-bold leading-snug">
                 {{ session('success') }}
             </div>
+        @endif
+
+        <!-- Banner Status Verifikasi Anggota Baru IPPTI (Jika Belum Diverifikasi Admin) -->
+        @if(!$isVerifiedTranslator)
+            @if($vStatus === 'rejected')
+                <div class="bg-rose-50 border-2 border-rose-300 text-rose-950 p-5 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm">
+                    <div class="flex items-start gap-3.5">
+                        <div class="p-3 bg-rose-600 text-white rounded-xl flex-shrink-0 shadow-xs">
+                            <i data-lucide="shield-alert" class="w-6 h-6"></i>
+                        </div>
+                        <div class="space-y-1.5">
+                            <div class="flex items-center gap-2">
+                                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-rose-200 text-rose-900">Verifikasi Ditolak / Perlu Revisi</span>
+                            </div>
+                            <h3 class="font-extrabold text-base text-rose-950">Pendaftaran Keanggotaan Anda Memerlukan Perbaikan Data</h3>
+                            <p class="text-xs text-rose-800 font-medium leading-relaxed">
+                                <strong>Catatan Admin IPPTI:</strong> "{{ Auth::user()->rejection_reason ?: 'Mohon lengkapi Nomor SK Menteri Hukum RI dan dokumen pendukung Anda pada halaman Profil.' }}"
+                            </p>
+                            <p class="text-[11px] text-rose-700">
+                                Silakan perbarui informasi SK atau berkas Anda di menu <strong>Profil & Layanan</strong> untuk mengajukan verifikasi ulang.
+                            </p>
+                        </div>
+                    </div>
+                    <a href="/admin/profile" class="inline-flex items-center gap-2 px-4 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-extrabold shadow-sm transition flex-shrink-0">
+                        <i data-lucide="edit-3" class="w-4 h-4"></i>
+                        <span>Perbaiki Data Profil & SK</span>
+                    </a>
+                </div>
+            @else
+                <div class="bg-amber-50 border-2 border-amber-300 text-amber-950 p-5 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm">
+                    <div class="flex items-start gap-3.5">
+                        <div class="p-3 bg-amber-500 text-white rounded-xl flex-shrink-0 shadow-xs">
+                            <i data-lucide="clock" class="w-6 h-6"></i>
+                        </div>
+                        <div class="space-y-1.5">
+                            <div class="flex items-center gap-2">
+                                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-amber-200 text-amber-900">Status: Menunggu Verifikasi Admin</span>
+                                <span class="text-xs font-mono font-bold text-amber-800">No. Reg/Anggota: {{ Auth::user()->sk_number }}</span>
+                            </div>
+                            <h3 class="font-extrabold text-base text-amber-950">Akun Pendaftar Anggota Baru IPPTI Sedang Ditinjau</h3>
+                            <p class="text-xs text-amber-900 font-medium leading-relaxed">
+                                Terima kasih telah mendaftar sebagai Anggota IPPTI & Penerjemah Tersumpah. Saat ini Anda sudah dapat login dan melengkapi profil, namun <strong>fitur Input Data Dokumen Baru & Impor Dokumen belum aktif</strong> hingga Pengurus Admin IPPTI selesai memverifikasi data SK Kemenkum RI Anda ({{ Auth::user()->effective_no_sk }}).
+                            </p>
+                        </div>
+                    </div>
+                    <a href="/admin/profile" class="inline-flex items-center gap-2 px-4 py-2.5 bg-white hover:bg-amber-100 text-amber-900 border border-amber-300 rounded-xl text-xs font-extrabold shadow-xs transition flex-shrink-0">
+                        <i data-lucide="user-check" class="w-4 h-4 text-amber-600"></i>
+                        <span>Cek / Lengkapi Profil</span>
+                    </a>
+                </div>
+            @endif
         @endif
 
         <!-- Low Balance Polite Reminder Alert (points <= low_point_threshold) -->

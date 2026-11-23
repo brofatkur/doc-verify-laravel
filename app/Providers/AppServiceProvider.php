@@ -22,8 +22,24 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // Auto-ensure vouchers and payout tables exist
+        // Auto-ensure user verification columns, vouchers, and payout tables exist
         try {
+            if (\Illuminate\Support\Facades\Schema::hasTable('users')) {
+                if (!\Illuminate\Support\Facades\Schema::hasColumn('users', 'is_verified')) {
+                    \Illuminate\Support\Facades\Schema::table('users', function (\Illuminate\Database\Schema\Blueprint $table) {
+                        $table->boolean('is_verified')->default(true)->after('role');
+                        $table->string('verification_status')->default('approved')->after('is_verified');
+                        $table->timestamp('verified_at')->nullable()->after('verification_status');
+                        $table->uuid('verified_by')->nullable()->after('verified_at');
+                        $table->text('rejection_reason')->nullable()->after('verified_by');
+                        $table->string('nik', 50)->nullable()->after('name');
+                        $table->text('address')->nullable()->after('whatsapp');
+                        $table->string('city', 150)->nullable()->after('address');
+                        $table->string('sk_document_path')->nullable()->after('sk_lengkap');
+                    });
+                }
+            }
+
             if (!\Illuminate\Support\Facades\Schema::hasTable('vouchers')) {
                 \Illuminate\Support\Facades\Schema::create('vouchers', function (\Illuminate\Database\Schema\Blueprint $table) {
                     $table->id();

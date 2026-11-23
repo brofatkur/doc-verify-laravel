@@ -58,7 +58,7 @@
         <p class="mt-2 text-center text-sm text-slate-400">
             Atau 
             <a href="/register" class="font-semibold text-emerald-400 hover:text-emerald-350 hover:underline transition-all duration-200">
-                daftar profil penerjemah baru
+                daftar sebagai Anggota Baru IPPTI & Penerjemah Tersumpah
             </a>
         </p>
     </div>

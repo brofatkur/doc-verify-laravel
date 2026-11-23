@@ -67,9 +67,25 @@
                 </a>
                 
                 @if(Auth::check() && in_array(Auth::user()->role, ['SUPERADMIN', 'ADMIN']))
-                    <a href="/admin/users" class="flex items-center gap-3 px-4 py-3 rounded-lg transition {{ request()->is('admin/users*') ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-400 hover:bg-slate-800 hover:text-white' }}">
-                        <i data-lucide="award" class="w-5 h-5 {{ request()->is('admin/users*') ? 'text-white' : 'text-slate-400' }}"></i>
-                        <span class="font-medium">Manajemen User</span>
+                    @php
+                        $navPendingUsers = 0;
+                        try {
+                            if (\Illuminate\Support\Facades\Schema::hasColumn('users', 'is_verified')) {
+                                $navPendingUsers = \App\Models\User::where('role', 'TRANSLATOR')
+                                    ->where(function($q) {
+                                        $q->where('is_verified', false)->orWhereIn('verification_status', ['pending', 'rejected']);
+                                    })->count();
+                            }
+                        } catch (\Throwable $e) {}
+                    @endphp
+                    <a href="/admin/users" class="flex items-center justify-between px-4 py-3 rounded-lg transition {{ request()->is('admin/users*') ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-400 hover:bg-slate-800 hover:text-white' }}">
+                        <div class="flex items-center gap-3">
+                            <i data-lucide="award" class="w-5 h-5 {{ request()->is('admin/users*') ? 'text-white' : 'text-slate-400' }}"></i>
+                            <span class="font-medium">Manajemen User</span>
+                        </div>
+                        @if($navPendingUsers > 0)
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-500 text-slate-950 shadow-xs">{{ $navPendingUsers }}</span>
+                        @endif
                     </a>
                     <a href="/admin/finance" class="flex items-center gap-3 px-4 py-3 rounded-lg transition {{ request()->is('admin/finance*') ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-400 hover:bg-slate-800 hover:text-white' }}">
                         <i data-lucide="wallet" class="w-5 h-5 {{ request()->is('admin/finance*') ? 'text-white' : 'text-slate-400' }}"></i>

@@ -53,6 +53,13 @@ class AdminController extends Controller
 
     public function createDocument()
     {
+        $user = Auth::user();
+        if ($user && !$user->isVerifiedTranslator()) {
+            return redirect('/admin')->withErrors([
+                'verification' => 'Akun Anda sedang menunggu verifikasi Pengurus Admin IPPTI. Fitur input data dokumen baru dapat digunakan setelah akun Anda diverifikasi.'
+            ]);
+        }
+
         $documentTypes = \App\Models\DocumentType::orderBy('name', 'asc')->get();
         $languageDirections = \App\Models\LanguageDirection::orderBy('name', 'asc')->get();
         return view('admin.new', compact('documentTypes', 'languageDirections'));
@@ -61,6 +68,12 @@ class AdminController extends Controller
     public function editDocument($id)
     {
         $user = Auth::user();
+        if ($user && !$user->isVerifiedTranslator()) {
+            return redirect('/admin')->withErrors([
+                'verification' => 'Akun Anda belum diverifikasi oleh Pengurus Admin IPPTI.'
+            ]);
+        }
+
         $document = Document::findOrFail($id);
 
         if ($document->translator_id !== $user->id) {
@@ -132,6 +145,10 @@ class AdminController extends Controller
         $newUser = User::create([
             'role' => $role,
             'user_level' => 'reguler',
+            'is_verified' => true,
+            'verification_status' => 'approved',
+            'verified_at' => now(),
+            'verified_by' => $currentUser->id,
             'name' => trim($request->name),
             'email' => trim($request->email),
             'whatsapp' => $request->whatsapp ? trim($request->whatsapp) : null,
@@ -274,6 +291,17 @@ class AdminController extends Controller
             'sk_lengkap' => $skLengkap,
         ];
 
+        if ($request->has('verification_status')) {
+            $vStatus = strtolower(trim($request->verification_status));
+            $updateData['verification_status'] = $vStatus;
+            $updateData['is_verified'] = ($vStatus === 'approved');
+            if ($vStatus === 'approved' && !$targetUser->verified_at) {
+                $updateData['verified_at'] = now();
+                $updateData['verified_by'] = $currentUser->id;
+                $updateData['rejection_reason'] = null;
+            }
+        }
+
         if ($request->filled('password')) {
             $updateData['password'] = Hash::make($request->password);
         }
@@ -285,6 +313,73 @@ class AdminController extends Controller
         \App\Models\AuditLog::log('ADMIN_UPDATE_USER', User::class, $targetUser->id, $before, $after);
 
         return redirect('/admin/users')->with('success', 'Data profil pengguna berhasil diperbarui dan disinkronkan ke seluruh hasil verifikasi!');
+    }
+
+    public function verifyUser(Request $request, $id)
+    {
+        $currentUser = Auth::user();
+        if ($currentUser->role !== 'SUPERADMIN' && $currentUser->role !== 'ADMIN') {
+            return back()->withErrors(['error' => 'Akses ditolak.']);
+        }
+
+        $targetUser = User::findOrFail($id);
+        $before = $targetUser->toArray();
+
+        $skNumber = $request->filled('sk_number') ? trim($request->sk_number) : $targetUser->sk_number;
+        $noSkKemenkum = $request->filled('no_sk_kemenkum') ? trim($request->no_sk_kemenkum) : $targetUser->no_sk_kemenkum;
+        $tglSk = $request->filled('tgl_sk') ? trim($request->tgl_sk) : $targetUser->tgl_sk;
+        $languageServices = $request->filled('language_services') ? trim($request->language_services) : $targetUser->language_services;
+        $skLengkap = $noSkKemenkum ? trim($noSkKemenkum . ($tglSk ? ' tanggal ' . $tglSk : '')) : $targetUser->sk_lengkap;
+
+        $targetUser->update([
+            'sk_number' => $skNumber,
+            'no_sk_kemenkum' => $noSkKemenkum,
+            'tgl_sk' => $tglSk,
+            'language_services' => $languageServices,
+            'sk_lengkap' => $skLengkap,
+            'is_verified' => true,
+            'verification_status' => 'approved',
+            'verified_at' => now(),
+            'verified_by' => $currentUser->id,
+            'rejection_reason' => null,
+        ]);
+
+        $after = $targetUser->fresh()->toArray();
+        \App\Models\AuditLog::log('VERIFY_IPPTI_MEMBER', User::class, $targetUser->id, $before, $after);
+
+        return redirect('/admin/users')->with(
+            'success',
+            "Pendaftar anggota baru IPPTI '{$targetUser->name}' (No. Anggota: {$targetUser->sk_number}) berhasil diverifikasi dan diaktifkan! Akun kini dapat digunakan untuk menginput dokumen terjemahan."
+        );
+    }
+
+    public function rejectUser(Request $request, $id)
+    {
+        $currentUser = Auth::user();
+        if ($currentUser->role !== 'SUPERADMIN' && $currentUser->role !== 'ADMIN') {
+            return back()->withErrors(['error' => 'Akses ditolak.']);
+        }
+
+        $targetUser = User::findOrFail($id);
+        $before = $targetUser->toArray();
+
+        $reason = $request->filled('rejection_reason')
+            ? trim($request->rejection_reason)
+            : 'Data pendaftaran atau dokumen SK belum lengkap/sesuai. Silakan perbarui data profil Anda.';
+
+        $targetUser->update([
+            'is_verified' => false,
+            'verification_status' => 'rejected',
+            'rejection_reason' => $reason,
+        ]);
+
+        $after = $targetUser->fresh()->toArray();
+        \App\Models\AuditLog::log('REJECT_IPPTI_MEMBER', User::class, $targetUser->id, $before, $after);
+
+        return redirect('/admin/users')->with(
+            'success',
+            "Verifikasi pendaftar '{$targetUser->name}' ditolak / diminta revisi. Catatan telah dikirimkan ke dashboard pendaftar."
+        );
     }
 
     public function deleteUser($id)

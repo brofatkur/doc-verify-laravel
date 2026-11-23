@@ -31,6 +31,8 @@ Route::middleware('guest')->group(function () {
     Route::post('/login', [AuthController::class, 'doLogin']);
     Route::get('/register', [AuthController::class, 'register']);
     Route::post('/register', [AuthController::class, 'doRegister']);
+    Route::get('/daftar-anggota', [AuthController::class, 'register']);
+    Route::post('/daftar-anggota', [AuthController::class, 'doRegister']);
     Route::get('/forgot-password', [AuthController::class, 'forgotPasswordView']);
     Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
     Route::get('/reset-password', [AuthController::class, 'resetPasswordView']);
@@ -59,6 +61,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/admin/users', [AdminController::class, 'users']);
     Route::post('/admin/users', [AdminController::class, 'storeUser']);
     Route::post('/admin/users/{id}/update', [AdminController::class, 'updateUser']);
+    Route::post('/admin/users/{id}/verify', [AdminController::class, 'verifyUser']);
+    Route::post('/admin/users/{id}/reject', [AdminController::class, 'rejectUser']);
     Route::post('/admin/users/{id}/delete', [AdminController::class, 'deleteUser']);
     Route::post('/admin/users/{id}/topup', [AdminController::class, 'topupUserPoints']);
     Route::post('/admin/users/import-json', [AdminController::class, 'importTranslatorsJson']);

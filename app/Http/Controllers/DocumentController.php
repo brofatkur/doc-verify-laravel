@@ -38,6 +38,12 @@ class DocumentController extends Controller
             );
         }
 
+        if (!$user->isVerifiedTranslator()) {
+            return redirect('/admin')->withErrors([
+                'verification' => 'Akun Anda sedang menunggu verifikasi Pengurus Admin IPPTI. Fitur input data dokumen baru dapat digunakan setelah akun Anda diverifikasi.'
+            ]);
+        }
+
         $request->validate([
             "registration_number" => "nullable|string|max:255",
             "document_date" => "required|date",
@@ -119,6 +125,12 @@ class DocumentController extends Controller
         $user = Auth::user();
         if (!$user) {
             abort(403, 'Akses ditolak.');
+        }
+
+        if (!$user->isVerifiedTranslator()) {
+            return redirect('/admin')->withErrors([
+                'verification' => 'Akun Anda belum diverifikasi oleh Pengurus Admin IPPTI.'
+            ]);
         }
 
         $document = Document::findOrFail($id);
@@ -207,6 +219,13 @@ class DocumentController extends Controller
             );
         }
 
+        if (!$user->isVerifiedTranslator()) {
+            return response()->json(
+                ["success" => false, "error" => "Akun Anda belum diverifikasi oleh Admin IPPTI."],
+                403,
+            );
+        }
+
         $query = Document::withTrashed()->where("id", $id);
         if ($user->role !== "SUPERADMIN") {
             $query->where("translator_id", $user->id);
@@ -237,6 +256,13 @@ class DocumentController extends Controller
         if (!$user) {
             return response()->json(
                 ["success" => false, "error" => "Akses ditolak."],
+                403,
+            );
+        }
+
+        if (!$user->isVerifiedTranslator()) {
+            return response()->json(
+                ["success" => false, "error" => "Akun Anda sedang menunggu verifikasi Pengurus Admin IPPTI. Fitur impor dokumen belum aktif."],
                 403,
             );
         }

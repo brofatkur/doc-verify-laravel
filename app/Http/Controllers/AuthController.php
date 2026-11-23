@@ -45,21 +45,31 @@ class AuthController extends Controller
         if (Auth::check()) {
             return redirect('/admin');
         }
-        return view('register');
+        $languageDirections = [];
+        try {
+            if (\Illuminate\Support\Facades\Schema::hasTable('language_directions')) {
+                $languageDirections = \App\Models\LanguageDirection::orderBy('name', 'asc')->get();
+            }
+        } catch (\Throwable $e) {}
+
+        return view('register', compact('languageDirections'));
     }
 
     public function doRegister(Request $request)
     {
-        $skNumber = trim($request->sk_number);
-        $email = trim($request->email);
+        $skNumber = trim((string)$request->sk_number);
+        $email = trim((string)$request->email);
 
-        // Find if user already exists with the skNumber
-        $existingBySk = User::where('sk_number', $skNumber)->where('role', 'TRANSLATOR')->first();
+        // Find if user already exists with the skNumber (when provided)
+        $existingBySk = null;
+        if (!empty($skNumber)) {
+            $existingBySk = User::where('sk_number', $skNumber)->where('role', 'TRANSLATOR')->first();
+        }
 
         // If member already registered with real email, inform to login
         if ($existingBySk && !str_ends_with($existingBySk->email, '@ippti.or.id')) {
             return back()->withErrors([
-                'sk_number' => 'Anda sudah terdaftar, silahkan login.'
+                'sk_number' => 'Nomor anggota ini sudah terdaftar, silahkan login.'
             ])->with('already_registered', true)->withInput();
         }
 
@@ -76,36 +86,110 @@ class AuthController extends Controller
 
         $request->validate([
             'name' => 'required|string|max:255',
-            'sk_number' => 'required|string|max:255',
+            'nik' => 'nullable|string|max:50',
+            'sk_number' => 'nullable|string|max:255',
+            'no_sk_kemenkum' => 'required|string|max:255',
+            'tgl_sk' => 'required|string|max:255',
+            'language_services' => 'required|string|max:1000',
+            'whatsapp' => 'required|string|max:30',
+            'address' => 'nullable|string|max:1000',
+            'city' => 'nullable|string|max:150',
             'email' => $emailRules,
             'password' => 'required|string|min:6|confirmed',
+            'profile_picture' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
+            'sk_document' => 'nullable|file|mimes:pdf,jpeg,png,jpg,webp|max:5120',
         ], [
-            'name.required' => 'Nama lengkap wajib diisi.',
-            'sk_number.required' => 'Nomor Anggota wajib diisi.',
-            'email.required' => 'Email wajib diisi.',
+            'name.required' => 'Nama lengkap & gelar wajib diisi.',
+            'no_sk_kemenkum.required' => 'Nomor SK Menteri Hukum Republik Indonesia wajib diisi.',
+            'tgl_sk.required' => 'Tanggal SK Menteri Hukum Republik Indonesia wajib diisi.',
+            'language_services.required' => 'Pasangan / Arah Bahasa Tersumpah wajib diisi.',
+            'whatsapp.required' => 'Nomor WhatsApp / HP aktif wajib diisi.',
+            'email.required' => 'Alamat email wajib diisi.',
             'email.unique' => 'Email ini sudah terdaftar.',
             'password.required' => 'Password wajib diisi.',
             'password.min' => 'Password minimal terdiri dari 6 karakter.',
             'password.confirmed' => 'Konfirmasi password tidak cocok.',
+            'profile_picture.image' => 'Foto profil harus berupa berkas gambar.',
+            'profile_picture.max' => 'Ukuran foto profil maksimal 2MB.',
+            'sk_document.mimes' => 'Salinan SK harus berformat PDF, JPG, PNG, atau WEBP.',
+            'sk_document.max' => 'Ukuran berkas SK maksimal 5MB.',
         ]);
 
+        // Auto-generate candidate member number if applicant does not have an IPPTI Member Number yet
+        if (empty($skNumber)) {
+            do {
+                $skNumber = 'REG-' . date('ym') . rand(100, 999);
+            } while (User::where('sk_number', $skNumber)->exists());
+        }
+
+        $noSkKemenkum = trim((string)$request->no_sk_kemenkum);
+        $tglSk = trim((string)$request->tgl_sk);
+        $languageServices = trim((string)$request->language_services);
+        $skLengkap = trim($noSkKemenkum . ($tglSk ? ' tanggal ' . $tglSk : ''));
+
+        $profilePicturePath = null;
+        if ($request->hasFile('profile_picture')) {
+            $file = $request->file('profile_picture');
+            $fileName = 'profile-reg-' . time() . '-' . uniqid() . '.' . $file->getClientOriginalExtension();
+            $file->move(public_path('uploads'), $fileName);
+            $profilePicturePath = '/uploads/' . $fileName;
+        }
+
+        $skDocumentPath = null;
+        if ($request->hasFile('sk_document')) {
+            $file = $request->file('sk_document');
+            $fileName = 'sk-doc-' . time() . '-' . uniqid() . '.' . $file->getClientOriginalExtension();
+            $file->move(public_path('uploads'), $fileName);
+            $skDocumentPath = '/uploads/' . $fileName;
+        }
+
         if ($existingBySk) {
-            $existingBySk->update([
-                'name' => $request->name,
-                'email' => $request->email,
+            $updatePayload = [
+                'name' => trim($request->name),
+                'nik' => $request->nik ? trim($request->nik) : $existingBySk->nik,
+                'email' => $email,
                 'password' => Hash::make($request->password),
-                'whatsapp' => $request->whatsapp ?: null,
-            ]);
+                'whatsapp' => $request->whatsapp ? trim($request->whatsapp) : $existingBySk->whatsapp,
+                'address' => $request->address ? trim($request->address) : $existingBySk->address,
+                'city' => $request->city ? trim($request->city) : $existingBySk->city,
+                'no_sk_kemenkum' => $noSkKemenkum ?: $existingBySk->no_sk_kemenkum,
+                'tgl_sk' => $tglSk ?: $existingBySk->tgl_sk,
+                'language_services' => $languageServices ?: $existingBySk->language_services,
+                'sk_lengkap' => $skLengkap ?: $existingBySk->sk_lengkap,
+                'bio' => $request->filled('bio') ? trim($request->bio) : ($skLengkap ?: $existingBySk->bio),
+                'is_verified' => false,
+                'verification_status' => 'pending',
+            ];
+            if ($profilePicturePath) {
+                $updatePayload['profile_picture'] = $profilePicturePath;
+            }
+            if ($skDocumentPath) {
+                $updatePayload['sk_document_path'] = $skDocumentPath;
+            }
+            $existingBySk->update($updatePayload);
             $user = $existingBySk;
         } else {
             $user = User::create([
-                'name' => $request->name,
-                'sk_number' => $request->sk_number,
-                'email' => $request->email,
+                'name' => trim($request->name),
+                'nik' => $request->nik ? trim($request->nik) : null,
+                'sk_number' => $skNumber,
+                'email' => $email,
                 'password' => Hash::make($request->password),
                 'role' => 'TRANSLATOR',
                 'user_level' => 'reguler',
-                'whatsapp' => $request->whatsapp ?: null,
+                'is_verified' => false,
+                'verification_status' => 'pending',
+                'whatsapp' => $request->whatsapp ? trim($request->whatsapp) : null,
+                'address' => $request->address ? trim($request->address) : null,
+                'city' => $request->city ? trim($request->city) : null,
+                'no_sk_kemenkum' => $noSkKemenkum,
+                'tgl_sk' => $tglSk,
+                'language_services' => $languageServices,
+                'masa_aktif' => 'Seumur Hidup',
+                'sk_lengkap' => $skLengkap,
+                'bio' => $request->filled('bio') ? trim($request->bio) : $skLengkap,
+                'profile_picture' => $profilePicturePath,
+                'sk_document_path' => $skDocumentPath,
             ]);
         }
 
@@ -114,7 +198,7 @@ class AuthController extends Controller
         if ($trialBonus > 0 && $user->role === 'TRANSLATOR') {
             $user->creditPoints(
                 $trialBonus,
-                'Bonus Trial Poin Awal Registrasi Akun',
+                'Bonus Trial Poin Awal Registrasi Anggota IPPTI',
                 'trial_bonus',
                 'REG-' . $user->id,
                 'trial_bonus_' . $user->id,
@@ -122,9 +206,20 @@ class AuthController extends Controller
             );
         }
 
+        \App\Models\AuditLog::log('REGISTER_NEW_IPPTI_MEMBER', User::class, $user->id, null, [
+            'name' => $user->name,
+            'email' => $user->email,
+            'sk_number' => $user->sk_number,
+            'no_sk_kemenkum' => $user->no_sk_kemenkum,
+            'verification_status' => 'pending',
+        ]);
+
         Auth::login($user);
 
-        return redirect('/admin');
+        return redirect('/admin')->with(
+            'success',
+            'Pendaftaran Anggota Baru IPPTI berhasil dikirim! Anda sudah dapat masuk ke dashboard, namun fitur Input Data Dokumen baru akan aktif setelah akun Anda diverifikasi oleh Pengurus Admin IPPTI.'
+        );
     }
 
     public function checkMember($memberNo)
@@ -153,6 +248,9 @@ class AuthController extends Controller
                     'name' => $user->name,
                     'email' => str_ends_with($user->email, '@ippti.or.id') ? '' : $user->email,
                     'whatsapp' => $user->whatsapp ?: '',
+                    'no_sk_kemenkum' => $user->effective_no_sk !== $user->sk_number ? $user->effective_no_sk : ($user->no_sk_kemenkum ?: ''),
+                    'tgl_sk' => $user->effective_tgl_sk ?: '',
+                    'language_services' => $user->language_services ?: '',
                 ]
             ]);
         }
@@ -177,12 +275,17 @@ class AuthController extends Controller
 
         $rules = [
             'email' => 'required|email|unique:users,email,' . $user->id,
-            'whatsapp' => 'nullable|string|max:20',
+            'whatsapp' => 'nullable|string|max:30',
+            'nik' => 'nullable|string|max:50',
+            'address' => 'nullable|string|max:1000',
+            'city' => 'nullable|string|max:150',
             'bio' => 'nullable|string',
             'profile_picture' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
+            'sk_document' => 'nullable|file|mimes:pdf,jpeg,png,jpg,webp|max:5120',
         ];
 
-        if ($user->role !== 'TRANSLATOR') {
+        // Allow unverified translator applicants or admins to edit name and language_services
+        if ($user->role !== 'TRANSLATOR' || !$user->isVerifiedTranslator()) {
             $rules['name'] = 'required|string|max:255';
             $rules['language_services'] = 'nullable|string';
         }
@@ -194,6 +297,8 @@ class AuthController extends Controller
             'profile_picture.image' => 'Berkas harus berupa gambar.',
             'profile_picture.mimes' => 'Format gambar harus jpeg, png, jpg, atau webp.',
             'profile_picture.max' => 'Ukuran gambar maksimal 2MB.',
+            'sk_document.mimes' => 'Salinan SK harus berformat PDF, JPG, PNG, atau WEBP.',
+            'sk_document.max' => 'Ukuran berkas SK maksimal 5MB.',
         ]);
 
         $oldEmail = $user->email;
@@ -227,16 +332,28 @@ class AuthController extends Controller
         $updateData = [
             'email' => trim($request->email),
             'whatsapp' => $request->whatsapp ? trim($request->whatsapp) : null,
+            'nik' => $request->has('nik') ? ($request->nik ? trim($request->nik) : null) : $user->nik,
+            'address' => $request->has('address') ? ($request->address ? trim($request->address) : null) : $user->address,
+            'city' => $request->has('city') ? ($request->city ? trim($request->city) : null) : $user->city,
             'no_sk_kemenkum' => $noSkKemenkum,
             'tgl_sk' => $tglSk,
             'sk_lengkap' => $skLengkap,
             'bio' => $request->bio,
         ];
 
-        // Prevent translator from editing their own name or language services (REV-11)
-        if ($user->role !== 'TRANSLATOR') {
-            $updateData['name'] = trim($request->name);
-            $updateData['language_services'] = $request->language_services;
+        // Prevent verified translator from editing their own name or language services (REV-11), but allow unverified applicant to revise
+        if ($user->role !== 'TRANSLATOR' || !$user->isVerifiedTranslator()) {
+            if ($request->filled('name')) {
+                $updateData['name'] = trim($request->name);
+            }
+            if ($request->has('language_services')) {
+                $updateData['language_services'] = $request->language_services ? trim($request->language_services) : null;
+            }
+        }
+
+        // If previously rejected, updating profile resubmits for verification
+        if ($user->role === 'TRANSLATOR' && $user->verification_status === 'rejected') {
+            $updateData['verification_status'] = 'pending';
         }
 
         if ($request->hasFile('profile_picture')) {
@@ -247,6 +364,14 @@ class AuthController extends Controller
             $updateData['profile_picture'] = '/uploads/' . $fileName;
         }
 
+        if ($request->hasFile('sk_document')) {
+            $file = $request->file('sk_document');
+            $fileName = 'sk-doc-' . $user->id . '-' . time() . '.' . $file->getClientOriginalExtension();
+            
+            $file->move(public_path('uploads'), $fileName);
+            $updateData['sk_document_path'] = '/uploads/' . $fileName;
+        }
+
         $before = $user->toArray();
         $user->update($updateData);
         
@@ -255,7 +380,7 @@ class AuthController extends Controller
 
         \App\Models\AuditLog::log('UPDATE_PROFILE', User::class, $user->id, $before, $after);
 
-        return back()->with('success', 'Profil Anda berhasil diperbarui dan disinkronkan ke halaman verifikasi!');
+        return back()->with('success', 'Profil Anda berhasil diperbarui!');
     }
 
     public function forgotPasswordView()
@@ -356,8 +481,11 @@ class AuthController extends Controller
             return response()->json(['success' => false, 'error' => 'Kata kunci pencarian terlalu pendek.']);
         }
 
-        // Exclude Admin/Superadmin accounts from public search (REV-13)
-        $queryBuilder = User::where('role', 'TRANSLATOR');
+        // Exclude Admin/Superadmin and unverified accounts from public search (REV-13)
+        $queryBuilder = User::where('role', 'TRANSLATOR')
+            ->where(function ($q) {
+                $q->where('is_verified', true)->orWhereNull('is_verified');
+            });
 
         // Token-AND logic: keywords can match in any order (REV-07)
         $words = array_filter(explode(' ', trim($query)));
@@ -385,7 +513,7 @@ class AuthController extends Controller
             ->orderBy('updated_at', 'desc')
             ->firstOrFail();
 
-        if ($translator->role !== 'TRANSLATOR') {
+        if ($translator->role !== 'TRANSLATOR' || !$translator->isVerifiedTranslator()) {
             abort(404);
         }
 
