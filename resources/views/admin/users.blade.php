@@ -106,18 +106,27 @@
                             </div>
                         </div>
 
+                        @php
+                            $applicantVerifyData = [
+                                'id' => $applicant->id,
+                                'name' => $applicant->name,
+                                'email' => $applicant->email,
+                                'sk_number' => $applicant->sk_number,
+                                'no_sk_kemenkum' => $applicant->effective_no_sk !== $applicant->sk_number ? $applicant->effective_no_sk : ($applicant->no_sk_kemenkum ?? ''),
+                                'tgl_sk' => $applicant->effective_tgl_sk,
+                                'language_services' => $applicant->language_services,
+                            ];
+                            $applicantRejectData = [
+                                'id' => $applicant->id,
+                                'name' => $applicant->name,
+                                'rejection_reason' => $applicant->rejection_reason ?? '',
+                            ];
+                        @endphp
                         <div class="flex flex-wrap items-center gap-2 lg:flex-shrink-0 pt-2 lg:pt-0 border-t lg:border-t-0 border-slate-100">
                             <button
                                 type="button"
-                                onclick='openVerifyMemberModal(@json([
-                                    "id" => $applicant->id,
-                                    "name" => $applicant->name,
-                                    "email" => $applicant->email,
-                                    "sk_number" => $applicant->sk_number,
-                                    "no_sk_kemenkum" => $applicant->effective_no_sk !== $applicant->sk_number ? $applicant->effective_no_sk : ($applicant->no_sk_kemenkum ?? ""),
-                                    "tgl_sk" => $applicant->effective_tgl_sk,
-                                    "language_services" => $applicant->language_services,
-                                ]))'
+                                data-payload="{{ json_encode($applicantVerifyData) }}"
+                                onclick="openVerifyMemberModal(JSON.parse(this.dataset.payload))"
                                 class="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-extrabold shadow-xs transition cursor-pointer"
                             >
                                 <i data-lucide="check-circle-2" class="w-4 h-4"></i>
@@ -125,11 +134,8 @@
                             </button>
                             <button
                                 type="button"
-                                onclick='openRejectMemberModal(@json([
-                                    "id" => $applicant->id,
-                                    "name" => $applicant->name,
-                                    "rejection_reason" => $applicant->rejection_reason ?? "",
-                                ]))'
+                                data-payload="{{ json_encode($applicantRejectData) }}"
+                                onclick="openRejectMemberModal(JSON.parse(this.dataset.payload))"
                                 class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-xl text-xs font-bold transition cursor-pointer"
                             >
                                 <i data-lucide="x-circle" class="w-4 h-4"></i>
@@ -315,19 +321,55 @@
                                 {{ $t->role !== 'TRANSLATOR' ? '-' : $t->documents_count }}
                             </td>
                             <td class="px-5 py-4 text-right">
+                                @php
+                                    $rowVerifyData = [
+                                        'id' => $t->id,
+                                        'name' => $t->name,
+                                        'email' => $t->email,
+                                        'sk_number' => $t->sk_number,
+                                        'no_sk_kemenkum' => $t->effective_no_sk !== $t->sk_number ? $t->effective_no_sk : ($t->no_sk_kemenkum ?? ''),
+                                        'tgl_sk' => $t->effective_tgl_sk,
+                                        'language_services' => $t->language_services,
+                                        'registered_at' => $regDate ? $regDate->format('Y-m-d') : date('Y-m-d'),
+                                    ];
+                                    $rowRenewData = [
+                                        'id' => $t->id,
+                                        'name' => $t->name,
+                                        'sk_number' => $t->sk_number,
+                                        'activated_at' => $actDate ? $actDate->format('d/m/Y') : '-',
+                                        'expired_at_display' => $expDate ? $expDate->format('d/m/Y') : '-',
+                                        'next_expired_at' => ($expDate && $expDate->isFuture() ? $expDate->copy()->addYear() : now()->addYear())->format('Y-m-d'),
+                                        'is_expired' => $isExpired,
+                                    ];
+                                    $rowTopupData = [
+                                        'id' => $t->id,
+                                        'name' => $t->name,
+                                        'points' => (int)($t->points ?? 0),
+                                    ];
+                                    $rowEditData = [
+                                        'id' => $t->id,
+                                        'name' => $t->name,
+                                        'email' => $t->email,
+                                        'whatsapp' => $t->whatsapp,
+                                        'role' => $t->role,
+                                        'sk_number' => $t->sk_number,
+                                        'no_sk_kemenkum' => $t->effective_no_sk !== $t->sk_number ? $t->effective_no_sk : ($t->no_sk_kemenkum ?? ''),
+                                        'tgl_sk' => $t->effective_tgl_sk,
+                                        'language_services' => $t->language_services,
+                                        'masa_aktif' => $t->masa_aktif ?: 'Seumur Hidup',
+                                        'sk_lengkap' => $t->effective_sk_lengkap,
+                                        'verification_status' => $t->isVerifiedTranslator() ? 'approved' : ($t->verification_status ?: 'pending'),
+                                        'registered_at' => $regDate ? $regDate->format('Y-m-d') : date('Y-m-d'),
+                                        'activated_at' => $actDate ? $actDate->format('Y-m-d') : '',
+                                        'expired_at' => $expDate ? $expDate->format('Y-m-d') : '',
+                                    ];
+                                @endphp
                                 <div class="flex items-center justify-end gap-1.5">
                                     @if($t->role === 'TRANSLATOR' && !$t->isVerifiedTranslator())
                                         <button
-                                            onclick='openVerifyMemberModal(@json([
-                                                "id" => $t->id,
-                                                "name" => $t->name,
-                                                "email" => $t->email,
-                                                "sk_number" => $t->sk_number,
-                                                "no_sk_kemenkum" => $t->effective_no_sk !== $t->sk_number ? $t->effective_no_sk : ($t->no_sk_kemenkum ?? ""),
-                                                "tgl_sk" => $t->effective_tgl_sk,
-                                                "language_services" => $t->language_services,
-                                                "registered_at" => $regDate ? $regDate->format("Y-m-d") : date("Y-m-d"),
-                                            ]))'
+                                            type="button"
+                                            data-payload="{{ json_encode($rowVerifyData) }}"
+                                            onclick="openVerifyMemberModal(JSON.parse(this.dataset.payload))"
                                             class="px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-[10px] font-extrabold transition cursor-pointer flex items-center gap-1 shadow-xs"
                                             title="Verifikasi & Aktifkan Akun Penerjemah"
                                         >
@@ -336,22 +378,16 @@
                                         </button>
                                     @elseif($t->role === 'TRANSLATOR')
                                         <button
-                                            onclick='openRenewMemberModal(@json([
-                                                "id" => $t->id,
-                                                "name" => $t->name,
-                                                "sk_number" => $t->sk_number,
-                                                "activated_at" => $actDate ? $actDate->format("d/m/Y") : "-",
-                                                "expired_at_display" => $expDate ? $expDate->format("d/m/Y") : "-",
-                                                "next_expired_at" => ($expDate && $expDate->isFuture() ? $expDate->copy()->addYear() : now()->addYear())->format("Y-m-d"),
-                                                "is_expired" => $isExpired,
-                                            ]))'
+                                            type="button"
+                                            data-payload="{{ json_encode($rowRenewData) }}"
+                                            onclick="openRenewMemberModal(JSON.parse(this.dataset.payload))"
                                             class="px-2.5 py-1.5 {{ $isExpired ? 'bg-rose-600 hover:bg-rose-700 text-white' : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200' }} rounded-lg text-[10px] font-extrabold transition cursor-pointer flex items-center gap-1"
                                             title="Perpanjang Masa Aktif Keanggotaan Tahunan (+1 Tahun)"
                                         >
                                             <i data-lucide="calendar-plus" class="w-3.5 h-3.5"></i>
                                             <span>Perpanjang</span>
                                         </button>
-                                        <form action="/admin/users/{{ $t->id }}/send-reminder" method="POST" class="inline" onsubmit="return confirm('Kirim pengingat perpanjangan keanggotaan via Email ({{ $t->email }}) & WhatsApp Kirimdev.com ({{ $t->whatsapp ?: '-' }}) ke {{ $t->name }}?')">
+                                        <form action="/admin/users/{{ $t->id }}/send-reminder" method="POST" class="inline" onsubmit="return confirm('Kirim pengingat perpanjangan keanggotaan via Email & WhatsApp Kirimdev.com?')">
                                             @csrf
                                             <button
                                                 type="submit"
@@ -363,30 +399,18 @@
                                         </form>
                                     @endif
                                     <button
-                                        onclick="openTopupModal({ id: '{{ $t->id }}', name: @js($t->name), points: {{ $t->points ?? 0 }} })"
+                                        type="button"
+                                        data-payload="{{ json_encode($rowTopupData) }}"
+                                        onclick="openTopupModal(JSON.parse(this.dataset.payload))"
                                         class="p-2 text-amber-600 hover:bg-amber-50 rounded-lg transition-colors cursor-pointer"
                                         title="Top-Up Saldo Poin"
                                     >
                                         <i data-lucide="coins" class="w-4 h-4"></i>
                                     </button>
                                     <button
-                                        onclick='openUserModal("edit", @json([
-                                            "id" => $t->id,
-                                            "name" => $t->name,
-                                            "email" => $t->email,
-                                            "whatsapp" => $t->whatsapp,
-                                            "role" => $t->role,
-                                            "sk_number" => $t->sk_number,
-                                            "no_sk_kemenkum" => $t->effective_no_sk !== $t->sk_number ? $t->effective_no_sk : ($t->no_sk_kemenkum ?? ""),
-                                            "tgl_sk" => $t->effective_tgl_sk,
-                                            "language_services" => $t->language_services,
-                                            "masa_aktif" => $t->masa_aktif ?: "Seumur Hidup",
-                                            "sk_lengkap" => $t->effective_sk_lengkap,
-                                            "verification_status" => $t->isVerifiedTranslator() ? "approved" : ($t->verification_status ?: "pending"),
-                                            "registered_at" => $regDate ? $regDate->format("Y-m-d") : date("Y-m-d"),
-                                            "activated_at" => $actDate ? $actDate->format("Y-m-d") : "",
-                                            "expired_at" => $expDate ? $expDate->format("Y-m-d") : "",
-                                        ]))'
+                                        type="button"
+                                        data-payload="{{ json_encode($rowEditData) }}"
+                                        onclick="openUserModal('edit', JSON.parse(this.dataset.payload))"
                                         class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer"
                                         title="Edit Profil & Masa Aktif Member"
                                     >
