@@ -135,10 +135,21 @@
                     <span class="font-medium">Profil & Layanan</span>
                 </a>
 
-                <a href="/PANDUAN_LENGKAP_DOCVERIFY_IPPTI.pdf" target="_blank" class="flex items-center gap-3 px-4 py-2.5 rounded-lg transition text-slate-400 hover:bg-slate-800 hover:text-white mt-3 border border-slate-800">
-                    <i data-lucide="file-text" class="w-5 h-5 text-amber-400"></i>
-                    <span class="font-medium text-xs">Buku Panduan (.PDF)</span>
-                </a>
+                @if(Auth::check() && in_array(Auth::user()->role, ['SUPERADMIN', 'ADMIN']))
+                    <a href="/PANDUAN_ADMIN_DOCVERIFY_IPPTI.pdf" target="_blank" class="flex items-center gap-3 px-4 py-2.5 rounded-lg transition text-slate-400 hover:bg-slate-800 hover:text-white mt-3 border border-slate-800">
+                        <i data-lucide="file-text" class="w-5 h-5 text-emerald-400"></i>
+                        <span class="font-medium text-xs">Panduan Admin (.PDF)</span>
+                    </a>
+                    <a href="/PANDUAN_PENERJEMAH_DOCVERIFY_IPPTI.pdf" target="_blank" class="flex items-center gap-3 px-4 py-2.5 rounded-lg transition text-slate-400 hover:bg-slate-800 hover:text-white mt-1.5 border border-slate-800">
+                        <i data-lucide="file-text" class="w-5 h-5 text-amber-400"></i>
+                        <span class="font-medium text-xs">Panduan Penerjemah (.PDF)</span>
+                    </a>
+                @else
+                    <a href="/PANDUAN_PENERJEMAH_DOCVERIFY_IPPTI.pdf" target="_blank" class="flex items-center gap-3 px-4 py-2.5 rounded-lg transition text-slate-400 hover:bg-slate-800 hover:text-white mt-3 border border-slate-800">
+                        <i data-lucide="file-text" class="w-5 h-5 text-amber-400"></i>
+                        <span class="font-medium text-xs">Buku Panduan (.PDF)</span>
+                    </a>
+                @endif
             </nav>
 
             @auth
@@ -354,10 +365,21 @@
                     <span>Profil & Layanan</span>
                 </a>
 
-                <a href="/PANDUAN_LENGKAP_DOCVERIFY_IPPTI.pdf" target="_blank" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition text-sm font-semibold text-slate-300 hover:bg-slate-800 border border-slate-800/80 mt-2">
-                    <i data-lucide="file-text" class="w-4 h-4 text-amber-400"></i>
-                    <span>Buku Panduan (.PDF)</span>
-                </a>
+                @if(Auth::check() && in_array(Auth::user()->role, ['SUPERADMIN', 'ADMIN']))
+                    <a href="/PANDUAN_ADMIN_DOCVERIFY_IPPTI.pdf" target="_blank" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition text-sm font-semibold text-slate-300 hover:bg-slate-800 border border-slate-800/80 mt-2">
+                        <i data-lucide="file-text" class="w-4 h-4 text-emerald-400"></i>
+                        <span>Panduan Admin (.PDF)</span>
+                    </a>
+                    <a href="/PANDUAN_PENERJEMAH_DOCVERIFY_IPPTI.pdf" target="_blank" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition text-sm font-semibold text-slate-300 hover:bg-slate-800 border border-slate-800/80 mt-1.5">
+                        <i data-lucide="file-text" class="w-4 h-4 text-amber-400"></i>
+                        <span>Panduan Penerjemah (.PDF)</span>
+                    </a>
+                @else
+                    <a href="/PANDUAN_PENERJEMAH_DOCVERIFY_IPPTI.pdf" target="_blank" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition text-sm font-semibold text-slate-300 hover:bg-slate-800 border border-slate-800/80 mt-2">
+                        <i data-lucide="file-text" class="w-4 h-4 text-amber-400"></i>
+                        <span>Buku Panduan (.PDF)</span>
+                    </a>
+                @endif
             </nav>
 
             <!-- PWA Install Button inside Drawer -->
