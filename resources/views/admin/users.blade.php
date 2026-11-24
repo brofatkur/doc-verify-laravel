@@ -217,6 +217,7 @@
                             $expDate = $t->effective_expired_at;
                             $daysLeft = $t->daysUntilExpiry();
                             $isExpired = $t->isMembershipExpired();
+                            $isExpiringSoon = $t->isExpiringSoon();
                         @endphp
                         <tr class="hover:bg-slate-50/40 transition-colors duration-150 item-row">
                             <td class="px-5 py-4">
@@ -350,14 +351,14 @@
                                             <i data-lucide="calendar-plus" class="w-3.5 h-3.5"></i>
                                             <span>Perpanjang</span>
                                         </button>
-                                        <form action="/admin/users/{{ $t->id }}/send-reminder" method="POST" class="inline" onsubmit="return confirm('Kirim email pengingat perpanjangan keanggotaan ke {{ $t->name }} ({{ $t->email }})?')">
+                                        <form action="/admin/users/{{ $t->id }}/send-reminder" method="POST" class="inline" onsubmit="return confirm('Kirim pengingat perpanjangan keanggotaan via Email ({{ $t->email }}) & WhatsApp Kirimdev.com ({{ $t->whatsapp ?: '-' }}) ke {{ $t->name }}?')">
                                             @csrf
                                             <button
                                                 type="submit"
                                                 class="p-2 {{ ($isExpired || $isExpiringSoon) ? 'text-amber-600 bg-amber-50 hover:bg-amber-100 border border-amber-200' : 'text-slate-500 hover:bg-slate-100' }} rounded-lg transition-colors cursor-pointer"
-                                                title="Kirim Email Reminder Perpanjangan Keanggotaan"
+                                                title="Kirim Reminder Perpanjangan via Email & WhatsApp (Kirimdev.com)"
                                             >
-                                                <i data-lucide="mail" class="w-4 h-4"></i>
+                                                <i data-lucide="bell-ring" class="w-4 h-4"></i>
                                             </button>
                                         </form>
                                     @endif

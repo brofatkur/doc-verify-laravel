@@ -19,18 +19,16 @@ class AdminController extends Controller
 
         $isSuperAdmin = $user->role === 'SUPERADMIN';
         $isAdmin = $user->role === 'ADMIN';
-        $reminderDays = (int)\App\Models\Setting::get('member_expiry_reminder_days', 30);
+        $d1 = max(1, (int)\App\Models\Setting::get('member_reminder_days_1', 30));
+        $d2 = max(1, (int)\App\Models\Setting::get('member_reminder_days_2', 10));
+        $reminderDays = max($d1, $d2);
+
+        // Auto-dispatch H-30 & H-10 reminders (Email + WhatsApp Kirimdev.com) across all members
+        User::dispatchAutomaticExpiryReminders(false);
 
         if ($isSuperAdmin || $isAdmin) {
             $translators = User::withCount('documents')->orderBy('name', 'asc')->get();
             $documents = Document::with('translator')->orderBy('created_at', 'desc')->get();
-            
-            // Auto-dispatch daily email reminders for translators expiring soon or expired
-            foreach ($translators as $t) {
-                if ($t->role === 'TRANSLATOR' && ($t->isExpiringSoon($reminderDays) || $t->isMembershipExpired())) {
-                    $t->sendExpiryReminderEmail(false);
-                }
-            }
 
             $totalTranslators = $translators->count();
             $totalDocs = $documents->count();
@@ -48,7 +46,7 @@ class AdminController extends Controller
             ));
         }
 
-        // If translator clicked the renewal payment link from their reminder email (?pay_renewal=1)
+        // If translator clicked the renewal payment link from their reminder email / WhatsApp (?pay_renewal=1)
         if ($request->boolean('pay_renewal')) {
             $paymentUrl = app(\App\Http\Controllers\PaymentController::class)->generateMembershipPaymentUrl($user, 'renewal');
             if (!empty($paymentUrl)) {
@@ -56,9 +54,9 @@ class AdminController extends Controller
             }
         }
 
-        // Auto-send email reminder (throttled 1x/day) if translator is expiring soon or expired
+        // Auto-send Email & WhatsApp reminder for the current translator if at H-30, H-10, or Expired
         if ($user->isExpiringSoon($reminderDays) || $user->isMembershipExpired()) {
-            $user->sendExpiryReminderEmail(false);
+            $user->sendExpiryReminder(false);
         }
 
         // Sworn Translator Dashboard view
@@ -491,22 +489,35 @@ class AdminController extends Controller
         }
 
         $targetUser = User::findOrFail($id);
-        $sent = $targetUser->sendExpiryReminderEmail(true);
+        $res = $targetUser->sendExpiryReminder(true);
 
-        \App\Models\AuditLog::log('SEND_EXPIRY_REMINDER_EMAIL', User::class, $targetUser->id, null, [
+        \App\Models\AuditLog::log('SEND_EXPIRY_REMINDER', User::class, $targetUser->id, null, [
             'email' => $targetUser->email,
+            'whatsapp' => $targetUser->whatsapp,
+            'email_sent' => $res['email_sent'] ?? false,
+            'whatsapp_sent' => $res['whatsapp_sent'] ?? false,
+            'stage' => $res['stage'] ?? null,
             'expired_at' => $targetUser->effective_expired_at ? $targetUser->effective_expired_at->format('Y-m-d') : null,
         ]);
 
-        if ($sent) {
+        if (!empty($res['sent'])) {
+            $channels = [];
+            if (!empty($res['email_sent'])) {
+                $channels[] = "Email ({$targetUser->email})";
+            }
+            if (!empty($res['whatsapp_sent'])) {
+                $waInfo = !empty($res['whatsapp_result']['simulated']) ? "WhatsApp Kirimdev.com [Simulasi/Log]" : "WhatsApp Kirimdev.com ({$targetUser->whatsapp})";
+                $channels[] = $waInfo;
+            }
+            $channelText = implode(' & ', $channels);
             return redirect('/admin/users')->with(
                 'success',
-                "Email pengingat perpanjangan keanggotaan tahunan berhasil dikirim ke {$targetUser->name} ({$targetUser->email})!"
+                "Pengingat perpanjangan keanggotaan untuk '{$targetUser->name}' berhasil dikirim melalui {$channelText}!"
             );
         }
 
         return redirect('/admin/users')->withErrors([
-            'error' => "Gagal mengirim email pengingat ke {$targetUser->name}. Pastikan member memiliki alamat email aktif."
+            'error' => "Gagal mengirim pengingat ke {$targetUser->name}. Pastikan member memiliki alamat Email atau Nomor WhatsApp aktif."
         ]);
     }
 
@@ -973,6 +984,8 @@ class AdminController extends Controller
             'member_registration_fee' => 'nullable|numeric|min:0',
             'member_renewal_fee' => 'nullable|numeric|min:0',
             'member_duration_years' => 'nullable|integer|min:1|max:10',
+            'member_reminder_days_1' => 'nullable|integer|min:1|max:365',
+            'member_reminder_days_2' => 'nullable|integer|min:1|max:365',
         ]);
 
         $keys = [
@@ -984,6 +997,8 @@ class AdminController extends Controller
             'member_registration_fee',
             'member_renewal_fee',
             'member_duration_years',
+            'member_reminder_days_1',
+            'member_reminder_days_2',
         ];
 
         foreach ($keys as $key) {
@@ -992,9 +1007,120 @@ class AdminController extends Controller
             }
         }
 
-        \App\Models\AuditLog::log('UPDATE_SYSTEM_SETTINGS', User::class, $currentUser->id, [], $request->only($keys));
+        \App\Models\Setting::set('member_reminder_email_enabled', $request->boolean('member_reminder_email_enabled') ? '1' : '0');
+        \App\Models\Setting::set('member_reminder_whatsapp_enabled', $request->boolean('member_reminder_whatsapp_enabled') ? '1' : '0');
 
-        return redirect('/admin/settings')->with('success', 'Pengaturan dinamis sistem berhasil diperbarui!');
+        \App\Models\AuditLog::log('UPDATE_SYSTEM_SETTINGS', User::class, $currentUser->id, [], $request->only(array_merge($keys, [
+            'member_reminder_email_enabled',
+            'member_reminder_whatsapp_enabled',
+        ])));
+
+        return redirect('/admin/settings')->with('success', 'Pengaturan biaya, jadwal reminder H-30 & H-10, serta konfigurasi aplikasi berhasil diperbarui!');
+    }
+
+    public function updateKirimdevSettings(Request $request)
+    {
+        $currentUser = Auth::user();
+        if ($currentUser->role !== 'SUPERADMIN' && $currentUser->role !== 'ADMIN') {
+            return back()->withErrors(['error' => 'Akses ditolak.']);
+        }
+
+        $request->validate([
+            'kirimdev_api_key' => 'nullable|string|max:500',
+            'kirimdev_phone_number_id' => 'nullable|string|max:150',
+            'kirimdev_base_url' => 'nullable|url|max:255',
+            'member_reminder_days_1' => 'nullable|integer|min:1|max:365',
+            'member_reminder_days_2' => 'nullable|integer|min:1|max:365',
+        ]);
+
+        $apiKey = trim((string)$request->input('kirimdev_api_key', ''));
+        $phoneId = trim((string)$request->input('kirimdev_phone_number_id', ''));
+        $baseUrl = rtrim(trim((string)$request->input('kirimdev_base_url', 'https://api.kirimdev.com/v1')), '/');
+
+        if (!empty($apiKey)) {
+            \App\Models\Setting::set('kirimdev_api_key', $apiKey);
+        }
+        \App\Models\Setting::set('kirimdev_phone_number_id', $phoneId);
+        \App\Models\Setting::set('kirimdev_base_url', $baseUrl ?: 'https://api.kirimdev.com/v1');
+
+        if ($request->filled('member_reminder_days_1')) {
+            \App\Models\Setting::set('member_reminder_days_1', (int)$request->input('member_reminder_days_1'));
+        }
+        if ($request->filled('member_reminder_days_2')) {
+            \App\Models\Setting::set('member_reminder_days_2', (int)$request->input('member_reminder_days_2'));
+        }
+        if ($request->has('member_reminder_email_enabled') || $request->has('reminder_channels_form')) {
+            \App\Models\Setting::set('member_reminder_email_enabled', $request->boolean('member_reminder_email_enabled') ? '1' : '0');
+            \App\Models\Setting::set('member_reminder_whatsapp_enabled', $request->boolean('member_reminder_whatsapp_enabled') ? '1' : '0');
+        }
+
+        try {
+            $envPath = base_path('.env');
+            if (file_exists($envPath) && is_writable($envPath)) {
+                $envContent = file_get_contents($envPath);
+                $envKeys = [
+                    'KIRIMDEV_API_KEY' => $apiKey,
+                    'KIRIMDEV_PHONE_NUMBER_ID' => $phoneId,
+                    'KIRIMDEV_BASE_URL' => $baseUrl ?: 'https://api.kirimdev.com/v1',
+                ];
+                foreach ($envKeys as $k => $v) {
+                    if ($k === 'KIRIMDEV_API_KEY' && empty($v)) continue;
+                    if (preg_match("/^{$k}=.*/m", $envContent)) {
+                        $envContent = preg_replace("/^{$k}=.*/m", "{$k}=\"{$v}\"", $envContent);
+                    } else {
+                        $envContent .= "\n{$k}=\"{$v}\"";
+                    }
+                }
+                file_put_contents($envPath, $envContent);
+            }
+        } catch (\Throwable $e) {}
+
+        \App\Models\AuditLog::log('UPDATE_KIRIMDEV_WHATSAPP_SETTINGS', User::class, $currentUser->id, [], [
+            'phone_number_id' => $phoneId,
+            'base_url' => $baseUrl,
+            'has_api_key' => !empty($apiKey),
+        ]);
+
+        return back()->with('success', 'Pengaturan WhatsApp Gateway (Kirimdev.com) & Jadwal Reminder Perpanjangan berhasil disimpan!');
+    }
+
+    public function testKirimdevWhatsapp(Request $request)
+    {
+        $currentUser = Auth::user();
+        if ($currentUser->role !== 'SUPERADMIN' && $currentUser->role !== 'ADMIN') {
+            return back()->withErrors(['error' => 'Akses ditolak.']);
+        }
+
+        $request->validate([
+            'test_phone' => 'required|string|max:30',
+        ]);
+
+        $d1 = (int)\App\Models\Setting::get('member_reminder_days_1', 30);
+        $d2 = (int)\App\Models\Setting::get('member_reminder_days_2', 10);
+        $renewalFee = number_format((float)\App\Models\Setting::get('member_renewal_fee', 700000), 0, ',', '.');
+        $payUrl = url('/admin?pay_renewal=1');
+
+        $message = "*[DocVerify IPPTI - Test Reminder WhatsApp Kirimdev.com]*\n\n"
+            . "Halo *{$currentUser->name}*,\n"
+            . "Integrasi WhatsApp Gateway *Kirimdev.com* pada portal DocVerify IPPTI telah aktif!\n\n"
+            . "• Jadwal Reminder 1: *H-{$d1} ({$d1} hari sebelum expired)*\n"
+            . "• Jadwal Reminder 2: *H-{$d2} ({$d2} hari sebelum expired)*\n"
+            . "• Biaya Perpanjangan Tahunan: *Rp {$renewalFee}*\n"
+            . "• Link Pembayaran: {$payUrl}\n\n"
+            . "_Pesan ini dikirim otomatis dari Pengaturan Sistem DocVerify IPPTI._";
+
+        $result = User::sendWhatsappViaKirimdev($request->test_phone, $message);
+
+        if (!empty($result['success'])) {
+            $modeNote = !empty($result['simulated'])
+                ? ' (Mode Simulasi/Log karena API Key atau Phone Number ID Kirimdev.com belum diisi)'
+                : '';
+            return back()->with('success', "Pesan uji coba WhatsApp Kirimdev.com berhasil dikirim ke {$result['to']}{$modeNote}!");
+        }
+
+        return back()->withErrors([
+            'error' => "Gagal mengirim uji coba WhatsApp ke {$request->test_phone}: " . ($result['message'] ?? 'Unknown error')
+        ]);
     }
 
     public function upgrade()

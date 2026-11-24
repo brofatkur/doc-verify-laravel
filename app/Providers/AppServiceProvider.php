@@ -45,6 +45,12 @@ class AppServiceProvider extends ServiceProvider
                         $table->timestamp('expired_at')->nullable()->after('activated_at');
                     });
                 }
+                if (!\Illuminate\Support\Facades\Schema::hasColumn('users', 'last_reminder_stage')) {
+                    \Illuminate\Support\Facades\Schema::table('users', function (\Illuminate\Database\Schema\Blueprint $table) {
+                        $table->string('last_reminder_stage', 100)->nullable()->after('expired_at');
+                        $table->timestamp('last_reminder_sent_at')->nullable()->after('last_reminder_stage');
+                    });
+                }
             }
 
             if (\Illuminate\Support\Facades\Schema::hasTable('settings')) {
@@ -58,6 +64,21 @@ class AppServiceProvider extends ServiceProvider
                 }
                 if (\App\Models\Setting::get('member_duration_years') === null) {
                     \App\Models\Setting::set('member_duration_years', '1');
+                }
+                if (\App\Models\Setting::get('member_reminder_days_1') === null) {
+                    \App\Models\Setting::set('member_reminder_days_1', '30');
+                }
+                if (\App\Models\Setting::get('member_reminder_days_2') === null) {
+                    \App\Models\Setting::set('member_reminder_days_2', '10');
+                }
+                if (\App\Models\Setting::get('member_reminder_email_enabled') === null) {
+                    \App\Models\Setting::set('member_reminder_email_enabled', '1');
+                }
+                if (\App\Models\Setting::get('member_reminder_whatsapp_enabled') === null) {
+                    \App\Models\Setting::set('member_reminder_whatsapp_enabled', '1');
+                }
+                if (\App\Models\Setting::get('kirimdev_base_url') === null) {
+                    \App\Models\Setting::set('kirimdev_base_url', 'https://api.kirimdev.com/v1');
                 }
             }
 

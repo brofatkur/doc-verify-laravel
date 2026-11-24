@@ -163,6 +163,93 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Pengaturan Jadwal Reminder Perpanjangan Member (30 Hari & 10 Hari Sebelumnya via Email & WhatsApp Kirimdev.com) -->
+                <div class="col-span-1 md:col-span-2 pt-3 border-t border-slate-200/80">
+                    <h3 class="text-sm font-extrabold text-slate-900 flex items-center gap-2 mb-3">
+                        <i data-lucide="bell-ring" class="w-4 h-4 text-amber-600"></i>
+                        <span>Pengaturan Jadwal Reminder Perpanjangan Member (Otomatis Email & WhatsApp Kirimdev.com)</span>
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- member_reminder_days_1 (Default 30 Hari Sebelumnya) -->
+                        <div class="space-y-2 p-4 bg-amber-50/50 rounded-2xl border border-amber-200/70">
+                            <label for="member_reminder_days_1" class="block text-xs font-bold text-amber-950 uppercase tracking-wider flex items-center justify-between">
+                                <span>Reminder Tahap 1 (Hari Sebelum Expired)</span>
+                                <span class="px-2 py-0.5 bg-amber-100 text-amber-800 rounded text-[10px] font-black">Default: H-30</span>
+                            </label>
+                            <div class="relative">
+                                <input
+                                    type="number"
+                                    id="member_reminder_days_1"
+                                    name="member_reminder_days_1"
+                                    value="{{ old('member_reminder_days_1', \App\Models\Setting::get('member_reminder_days_1', 30)) }}"
+                                    required
+                                    min="1"
+                                    max="365"
+                                    class="w-full px-3.5 py-2.5 pr-28 border border-amber-200 rounded-xl text-slate-900 text-sm font-black font-mono focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 outline-none transition bg-white"
+                                />
+                                <span class="absolute right-3.5 top-2.5 text-xs font-bold text-slate-400">Hari Sebelum</span>
+                            </div>
+                            <p class="text-[10.5px] text-amber-900/80 leading-relaxed">
+                                Pengingat pertama otomatis dikirim via Email & WhatsApp (Kirimdev.com) saat masa aktif tersisa <strong>30 hari sebelum expired</strong>.
+                            </p>
+                        </div>
+
+                        <!-- member_reminder_days_2 (Default 10 Hari Sebelumnya) -->
+                        <div class="space-y-2 p-4 bg-rose-50/50 rounded-2xl border border-rose-200/70">
+                            <label for="member_reminder_days_2" class="block text-xs font-bold text-rose-950 uppercase tracking-wider flex items-center justify-between">
+                                <span>Reminder Tahap 2 (Hari Sebelum Expired)</span>
+                                <span class="px-2 py-0.5 bg-rose-100 text-rose-800 rounded text-[10px] font-black">Default: H-10</span>
+                            </label>
+                            <div class="relative">
+                                <input
+                                    type="number"
+                                    id="member_reminder_days_2"
+                                    name="member_reminder_days_2"
+                                    value="{{ old('member_reminder_days_2', \App\Models\Setting::get('member_reminder_days_2', 10)) }}"
+                                    required
+                                    min="1"
+                                    max="365"
+                                    class="w-full px-3.5 py-2.5 pr-28 border border-rose-200 rounded-xl text-slate-900 text-sm font-black font-mono focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 outline-none transition bg-white"
+                                />
+                                <span class="absolute right-3.5 top-2.5 text-xs font-bold text-slate-400">Hari Sebelum</span>
+                            </div>
+                            <p class="text-[10.5px] text-rose-900/80 leading-relaxed">
+                                Pengingat kedua otomatis dikirim via Email & WhatsApp (Kirimdev.com) saat masa aktif tersisa <strong>10 hari sebelum expired</strong>.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
+                        <label class="flex items-center gap-3 p-3.5 bg-slate-50 rounded-xl border border-slate-200 cursor-pointer hover:bg-slate-100/70 transition">
+                            <input
+                                type="checkbox"
+                                name="member_reminder_email_enabled"
+                                value="1"
+                                {{ (bool)\App\Models\Setting::get('member_reminder_email_enabled', 1) ? 'checked' : '' }}
+                                class="w-4 h-4 accent-emerald-600 rounded"
+                            />
+                            <div class="text-xs">
+                                <p class="font-extrabold text-slate-800">Aktifkan Pengiriman Otomatis via Email</p>
+                                <p class="text-[10.5px] text-slate-500">Kirim email pengingat H-30, H-10, & saat expired beserta link pembayaran</p>
+                            </div>
+                        </label>
+
+                        <label class="flex items-center gap-3 p-3.5 bg-emerald-50/50 rounded-xl border border-emerald-200 cursor-pointer hover:bg-emerald-50 transition">
+                            <input
+                                type="checkbox"
+                                name="member_reminder_whatsapp_enabled"
+                                value="1"
+                                {{ (bool)\App\Models\Setting::get('member_reminder_whatsapp_enabled', 1) ? 'checked' : '' }}
+                                class="w-4 h-4 accent-emerald-600 rounded"
+                            />
+                            <div class="text-xs">
+                                <p class="font-extrabold text-emerald-950">Aktifkan Pengiriman Otomatis via WhatsApp (Kirimdev.com)</p>
+                                <p class="text-[10.5px] text-emerald-700">Kirim pesan WhatsApp otomatis H-30, H-10, & saat expired via API Kirimdev.com</p>
+                            </div>
+                        </label>
+                    </div>
+                </div>
             </div>
 
             <div class="pt-4 border-t border-slate-100 flex justify-end">
@@ -274,6 +361,119 @@
                 </button>
             </div>
         </form>
+    </div>
+
+    <!-- WhatsApp Gateway Configuration Box (Kirimdev.com) -->
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="p-6 border-b border-slate-100 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="p-2.5 bg-emerald-50 text-emerald-600 rounded-xl border border-emerald-200">
+                    <i data-lucide="message-circle" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <h2 class="text-lg font-bold text-slate-900">Pengaturan WhatsApp Gateway (Kirimdev.com)</h2>
+                    <p class="text-xs text-slate-500">Integrasi resmi Meta WhatsApp Cloud API via <strong>kirimdev.com</strong> untuk pengiriman otomatis Reminder Perpanjangan H-{{ \App\Models\Setting::get('member_reminder_days_1', 30) }} & H-{{ \App\Models\Setting::get('member_reminder_days_2', 10) }}.</p>
+                </div>
+            </div>
+            <a href="https://docs.kirimdev.com" target="_blank" rel="noopener" class="text-xs font-bold text-emerald-700 hover:text-emerald-800 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-200 flex items-center gap-1">
+                <span>Docs Kirimdev</span>
+                <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+            </a>
+        </div>
+
+        <form action="/admin/settings/kirimdev" method="POST" class="p-6 space-y-5">
+            @csrf
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div>
+                    <label for="kirimdev_api_key" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+                        API Key Kirimdev (Bearer Token)
+                    </label>
+                    <input
+                        type="password"
+                        id="kirimdev_api_key"
+                        name="kirimdev_api_key"
+                        value="{{ old('kirimdev_api_key', \App\Models\Setting::get('kirimdev_api_key', env('KIRIMDEV_API_KEY', ''))) }}"
+                        placeholder="kdv_live_..."
+                        class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-slate-800 text-sm font-semibold outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition font-mono bg-white"
+                    />
+                    <p class="text-[11px] text-slate-500 mt-1">
+                        Dapatkan API Key (format <code class="font-mono text-emerald-700">kdv_live_...</code>) dari dashboard <a href="https://kirimdev.com" target="_blank" class="underline text-emerald-700">kirimdev.com</a>.
+                    </p>
+                </div>
+
+                <div>
+                    <label for="kirimdev_phone_number_id" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+                        WhatsApp Phone Number ID
+                    </label>
+                    <input
+                        type="text"
+                        id="kirimdev_phone_number_id"
+                        name="kirimdev_phone_number_id"
+                        value="{{ old('kirimdev_phone_number_id', \App\Models\Setting::get('kirimdev_phone_number_id', env('KIRIMDEV_PHONE_NUMBER_ID', ''))) }}"
+                        placeholder="Contoh: 105928374619283"
+                        class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-slate-800 text-sm font-semibold outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition font-mono bg-white"
+                    />
+                    <p class="text-[11px] text-slate-500 mt-1">
+                        ID Nomor WhatsApp pengirim dari dashboard Kirimdev / endpoint <code class="font-mono text-slate-700">/v1/accounts</code>.
+                    </p>
+                </div>
+            </div>
+
+            <div>
+                <label for="kirimdev_base_url" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+                    Base Endpoint URL Kirimdev
+                </label>
+                <input
+                    type="url"
+                    id="kirimdev_base_url"
+                    name="kirimdev_base_url"
+                    value="{{ old('kirimdev_base_url', \App\Models\Setting::get('kirimdev_base_url', env('KIRIMDEV_BASE_URL', 'https://api.kirimdev.com/v1'))) }}"
+                    placeholder="https://api.kirimdev.com/v1"
+                    class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-slate-800 text-sm font-semibold outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition font-mono bg-white"
+                />
+                <p class="text-[11px] text-slate-500 mt-1">
+                    Endpoint pengiriman: <code class="font-mono text-emerald-700">POST https://api.kirimdev.com/v1/{phone_number_id}/messages</code>
+                </p>
+            </div>
+
+            <div class="pt-2 flex justify-end">
+                <button
+                    type="submit"
+                    class="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2.5 rounded-xl font-bold text-xs transition shadow-sm cursor-pointer"
+                >
+                    <i data-lucide="save" class="w-4 h-4"></i>
+                    <span>Simpan Konfigurasi Kirimdev.com</span>
+                </button>
+            </div>
+        </form>
+
+        <!-- Form Uji Coba Kirim Pesan WhatsApp via Kirimdev.com -->
+        <div class="px-6 py-4 bg-slate-50 border-t border-slate-200/80">
+            <form action="/admin/settings/kirimdev/test" method="POST" class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+                @csrf
+                <div class="flex items-center gap-2 text-xs font-bold text-slate-700">
+                    <i data-lucide="send" class="w-4 h-4 text-emerald-600"></i>
+                    <span>Uji Coba Kirim Reminder WhatsApp (Kirimdev.com):</span>
+                </div>
+                <div class="flex items-center gap-2 flex-1 max-w-md">
+                    <input
+                        type="text"
+                        name="test_phone"
+                        placeholder="Nomor WA Tujuan (cth: 08123456789)"
+                        required
+                        class="flex-1 px-3.5 py-2 border border-slate-300 rounded-xl text-xs font-mono font-bold text-slate-800 bg-white outline-none focus:border-emerald-500"
+                    />
+                    <button
+                        type="submit"
+                        class="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-extrabold transition cursor-pointer whitespace-nowrap flex items-center gap-1.5"
+                    >
+                        <i data-lucide="message-Square" class="w-3.5 h-3.5"></i>
+                        <span>Test Kirim WA</span>
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
 @endsection

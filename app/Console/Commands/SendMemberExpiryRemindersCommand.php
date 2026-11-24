@@ -20,14 +20,16 @@ class SendMemberExpiryRemindersCommand extends Command
      *
      * @var string
      */
-    protected $description = 'Kirim email pengingat perpanjangan keanggotaan tahunan IPPTI kepada member yang akan atau sudah expired';
+    protected $description = 'Kirim pengingat perpanjangan keanggotaan tahunan IPPTI (H-30, H-10, & Expired) via Email & WhatsApp (Kirimdev.com)';
 
     /**
      * Execute the console command.
      */
     public function handle(): int
     {
-        $reminderDays = (int)Setting::get('member_expiry_reminder_days', 30);
+        $d1 = max(1, (int)Setting::get('member_reminder_days_1', 30));
+        $d2 = max(1, (int)Setting::get('member_reminder_days_2', 10));
+        $maxReminderDays = max($d1, $d2);
         $force = (bool)$this->option('force');
 
         $translators = User::where('role', 'TRANSLATOR')->get();
@@ -37,15 +39,19 @@ class SendMemberExpiryRemindersCommand extends Command
             if (!$user->isVerifiedTranslator()) {
                 continue;
             }
-            if ($user->isExpiringSoon($reminderDays) || $user->isMembershipExpired()) {
-                if ($user->sendExpiryReminderEmail($force)) {
+            if ($user->isExpiringSoon($maxReminderDays) || $user->isMembershipExpired()) {
+                $res = $user->sendExpiryReminder($force);
+                if (!empty($res['sent'])) {
                     $sentCount++;
-                    $this->info("Reminder terkirim ke: {$user->name} ({$user->email})");
+                    $channels = [];
+                    if (!empty($res['email_sent'])) $channels[] = "Email ({$user->email})";
+                    if (!empty($res['whatsapp_sent'])) $channels[] = "WhatsApp Kirimdev ({$user->whatsapp})";
+                    $this->info("Reminder [{$res['stage']}] terkirim ke: {$user->name} via " . implode(' & ', $channels));
                 }
             }
         }
 
-        $this->info("Selesai. Total email pengingat perpanjangan terkirim: {$sentCount}");
+        $this->info("Selesai. Total member yang dikirimi pengingat perpanjangan (Email & WA Kirimdev.com): {$sentCount}");
         return Command::SUCCESS;
     }
 }

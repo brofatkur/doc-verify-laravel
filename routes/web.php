@@ -86,6 +86,8 @@ Route::middleware('auth')->group(function () {
     // Dynamic System Settings (WordPress-style)
     Route::get('/admin/settings', [AdminController::class, 'settings']);
     Route::post('/admin/settings', [AdminController::class, 'updateSettings']);
+    Route::post('/admin/settings/kirimdev', [AdminController::class, 'updateKirimdevSettings']);
+    Route::post('/admin/settings/kirimdev/test', [AdminController::class, 'testKirimdevWhatsapp']);
 
     // Pro Mode Upgrade Checkout & Transaction History
     Route::get('/admin/upgrade', [AdminController::class, 'upgrade']);

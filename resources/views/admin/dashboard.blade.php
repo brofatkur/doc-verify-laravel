@@ -195,7 +195,9 @@
         @php
             $isVerifiedTranslator = Auth::user()->isVerifiedTranslator();
             $isMembershipExpired = Auth::user()->isMembershipExpired();
-            $isExpiringSoon = Auth::user()->isExpiringSoon((int)\App\Models\Setting::get('member_expiry_reminder_days', 30));
+            $d1 = max(1, (int)\App\Models\Setting::get('member_reminder_days_1', 30));
+            $d2 = max(1, (int)\App\Models\Setting::get('member_reminder_days_2', 10));
+            $isExpiringSoon = Auth::user()->isExpiringSoon(max($d1, $d2));
             $canInputDocs = Auth::user()->canInputDocuments();
             $vStatus = strtolower(Auth::user()->verification_status ?? 'approved');
             $regDate = Auth::user()->effective_registered_at;
@@ -394,7 +396,7 @@
                         </div>
                         <h3 class="font-extrabold text-base text-rose-950">Masa Aktif Keanggotaan Tahunan IPPTI Anda Telah Berakhir</h3>
                         <p class="text-xs text-rose-900 font-medium leading-relaxed">
-                            Fitur <strong>Input Data Dokumen Baru & Impor Dokumen</strong> dinonaktifkan sementara hingga Anda melakukan perpanjangan keanggotaan tahunan sebesar <strong>Rp {{ number_format($renFee, 0, ',', '.') }} / Tahun</strong>. Pengingat juga telah dikirimkan ke email Anda (<strong>{{ Auth::user()->email }}</strong>).
+                            Fitur <strong>Input Data Dokumen Baru & Impor Dokumen</strong> dinonaktifkan sementara hingga Anda melakukan perpanjangan keanggotaan tahunan sebesar <strong>Rp {{ number_format($renFee, 0, ',', '.') }} / Tahun</strong>. Pengingat otomatis juga telah dikirimkan ke Email (<strong>{{ Auth::user()->email }}</strong>) & WhatsApp (<strong>{{ Auth::user()->whatsapp ?: '-' }}</strong>).
                         </p>
                     </div>
                 </div>
@@ -416,12 +418,12 @@
                     </div>
                     <div class="space-y-1.5">
                         <div class="flex flex-wrap items-center gap-2">
-                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-amber-200 text-amber-900">Pengingat Perpanjangan Tahunan</span>
+                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-amber-200 text-amber-900">Pengingat Perpanjangan Tahunan (H-{{ $daysLeft <= min($d1, $d2) ? min($d1, $d2) : max($d1, $d2) }})</span>
                             <span class="text-xs font-mono font-bold text-amber-800">Sisa {{ $daysLeft }} Hari (s/d {{ $expDate ? $expDate->translatedFormat('d F Y') : '-' }})</span>
                         </div>
                         <h3 class="font-extrabold text-base text-amber-950">Masa Aktif Keanggotaan IPPTI Anda Akan Segera Berakhir</h3>
                         <p class="text-xs text-amber-900 font-medium leading-relaxed">
-                            Masa aktif keanggotaan tahunan Anda akan berakhir pada <strong>{{ $expDate ? $expDate->translatedFormat('d F Y') : '-' }}</strong> (pengingat otomatis juga telah dikirim ke email <strong>{{ Auth::user()->email }}</strong>). Silakan lakukan pembayaran perpanjangan tahunan sebesar <strong>Rp {{ number_format($renFee, 0, ',', '.') }}</strong> agar layanan input dokumen tetap aktif tanpa gangguan.
+                            Masa aktif keanggotaan tahunan Anda akan berakhir pada <strong>{{ $expDate ? $expDate->translatedFormat('d F Y') : '-' }}</strong> (pengingat otomatis H-{{ max($d1, $d2) }} & H-{{ min($d1, $d2) }} juga telah dikirim ke Email <strong>{{ Auth::user()->email }}</strong> & WhatsApp <strong>{{ Auth::user()->whatsapp ?: '-' }}</strong>). Silakan lakukan pembayaran perpanjangan tahunan sebesar <strong>Rp {{ number_format($renFee, 0, ',', '.') }}</strong> agar layanan input dokumen tetap aktif tanpa gangguan.
                         </p>
                     </div>
                 </div>

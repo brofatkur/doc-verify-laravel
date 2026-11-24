@@ -31,6 +31,8 @@ class User extends Authenticatable
         'registered_at',
         'activated_at',
         'expired_at',
+        'last_reminder_stage',
+        'last_reminder_sent_at',
         'rejection_reason',
         'whatsapp',
         'address',
@@ -70,6 +72,7 @@ class User extends Authenticatable
             'registered_at' => 'datetime',
             'activated_at' => 'datetime',
             'expired_at' => 'datetime',
+            'last_reminder_sent_at' => 'datetime',
             'is_verified' => 'boolean',
             'password' => 'hashed',
         ];
@@ -249,37 +252,213 @@ class User extends Authenticatable
     }
 
     /**
-     * Cek apakah masa aktif keanggotaan akan segera expired (default <= 30 hari)
+     * Cek apakah masa aktif keanggotaan akan segera expired (default mengikuti setting member_reminder_days_1 = 30 hari)
      */
-    public function isExpiringSoon(int $thresholdDays = 30): bool
+    public function isExpiringSoon(?int $thresholdDays = null): bool
     {
         if ($this->role !== 'TRANSLATOR' || !$this->isVerifiedTranslator()) {
             return false;
+        }
+        if ($thresholdDays === null) {
+            $d1 = max(1, (int)\App\Models\Setting::get('member_reminder_days_1', 30));
+            $d2 = max(1, (int)\App\Models\Setting::get('member_reminder_days_2', 10));
+            $thresholdDays = max($d1, $d2);
         }
         $days = $this->daysUntilExpiry();
         return $days !== null && $days >= 0 && $days <= $thresholdDays;
     }
 
     /**
-     * Kirim Email Reminder Perpanjangan Keanggotaan Tahunan IPPTI
+     * Tentukan tahap reminder saat ini berdasarkan setting 30 hari sebelumnya (Tahap 1) & 10 hari sebelumnya (Tahap 2)
      */
-    public function sendExpiryReminderEmail(bool $force = false): bool
+    public function determineReminderStage(): ?array
     {
-        if ($this->role !== 'TRANSLATOR' || empty($this->email) || str_ends_with($this->email, '@ippti.or.id')) {
-            return false;
-        }
-
-        $daysLeft = $this->daysUntilExpiry();
         $expDate = $this->effective_expired_at;
-        if (!$expDate) {
-            return false;
+        $daysLeft = $this->daysUntilExpiry();
+        if (!$expDate || $daysLeft === null) {
+            return null;
         }
 
-        $cacheKey = 'member_expiry_reminder_' . $this->id . '_' . date('Y-m-d');
+        $d1 = max(1, (int)\App\Models\Setting::get('member_reminder_days_1', 30));
+        $d2 = max(1, (int)\App\Models\Setting::get('member_reminder_days_2', 10));
+        $firstReminderDays = max($d1, $d2);
+        $secondReminderDays = min($d1, $d2);
+        $expKey = $expDate->format('Y-m-d');
+
+        if ($daysLeft < 0) {
+            return [
+                'code' => 'EXPIRED',
+                'label' => 'Masa Aktif Telah Berakhir (Expired)',
+                'stage_key' => "EXPIRED_{$expKey}",
+                'days_left' => $daysLeft,
+                'target_days' => 0,
+            ];
+        }
+
+        if ($daysLeft <= $secondReminderDays) {
+            return [
+                'code' => "H-{$secondReminderDays}",
+                'label' => "Pengingat H-{$secondReminderDays} ({$daysLeft} Hari Sebelum Expired)",
+                'stage_key' => "H{$secondReminderDays}_{$expKey}",
+                'days_left' => $daysLeft,
+                'target_days' => $secondReminderDays,
+            ];
+        }
+
+        if ($daysLeft <= $firstReminderDays) {
+            return [
+                'code' => "H-{$firstReminderDays}",
+                'label' => "Pengingat H-{$firstReminderDays} ({$daysLeft} Hari Sebelum Expired)",
+                'stage_key' => "H{$firstReminderDays}_{$expKey}",
+                'days_left' => $daysLeft,
+                'target_days' => $firstReminderDays,
+            ];
+        }
+
+        return null;
+    }
+
+    /**
+     * Format nomor WhatsApp ke standar internasional (+628...) untuk Kirimdev.com (Meta WhatsApp Cloud API)
+     */
+    public static function formatWhatsappNumber(?string $phone): ?string
+    {
+        if (empty($phone)) {
+            return null;
+        }
+
+        $cleaned = preg_replace('/[^0-9+]/', '', trim($phone));
+        if (empty($cleaned)) {
+            return null;
+        }
+
+        if (str_starts_with($cleaned, '08')) {
+            return '+62' . substr($cleaned, 1);
+        }
+        if (str_starts_with($cleaned, '628')) {
+            return '+' . $cleaned;
+        }
+        if (str_starts_with($cleaned, '8')) {
+            return '+62' . $cleaned;
+        }
+        if (!str_starts_with($cleaned, '+')) {
+            return '+' . $cleaned;
+        }
+
+        return $cleaned;
+    }
+
+    /**
+     * Kirim pesan WhatsApp melalui API Kirimdev.com (https://api.kirimdev.com/v1/{phone_number_id}/messages)
+     */
+    public static function sendWhatsappViaKirimdev(string $phone, string $message): array
+    {
+        $formattedPhone = static::formatWhatsappNumber($phone);
+        if (empty($formattedPhone)) {
+            return [
+                'success' => false,
+                'status' => null,
+                'message' => 'Nomor WhatsApp kosong atau tidak valid.',
+                'to' => null,
+            ];
+        }
+
+        $apiKey = trim((string)\App\Models\Setting::get('kirimdev_api_key', env('KIRIMDEV_API_KEY', '')));
+        $phoneNumberId = trim((string)\App\Models\Setting::get('kirimdev_phone_number_id', env('KIRIMDEV_PHONE_NUMBER_ID', '')));
+        $baseUrl = rtrim(trim((string)\App\Models\Setting::get('kirimdev_base_url', env('KIRIMDEV_BASE_URL', 'https://api.kirimdev.com/v1'))), '/');
+
+        if (empty($apiKey) || empty($phoneNumberId)) {
+            error_log("\n======================================================\n[WHATSAPP KIRIMDEV.COM SIMULATION - SENT TO {$formattedPhone}]:\n{$message}\n(Catatan: Isi API Key & Phone Number ID Kirimdev.com di Pengaturan Sistem untuk pengiriman live)\n======================================================\n");
+            return [
+                'success' => true,
+                'simulated' => true,
+                'status' => 200,
+                'message' => 'Tercatat di log sistem (API Key / Phone Number ID Kirimdev.com belum diisi).',
+                'to' => $formattedPhone,
+            ];
+        }
+
+        $endpoint = "{$baseUrl}/{$phoneNumberId}/messages";
+        $payload = [
+            'messaging_product' => 'whatsapp',
+            'to' => $formattedPhone,
+            'type' => 'text',
+            'text' => [
+                'preview_url' => true,
+                'body' => $message,
+            ],
+        ];
+
+        try {
+            $response = \Illuminate\Support\Facades\Http::withToken($apiKey)
+                ->acceptJson()
+                ->asJson()
+                ->timeout(15)
+                ->post($endpoint, $payload);
+
+            if ($response->successful()) {
+                return [
+                    'success' => true,
+                    'simulated' => false,
+                    'status' => $response->status(),
+                    'message' => 'WhatsApp berhasil dikirim via Kirimdev.com',
+                    'to' => $formattedPhone,
+                    'response' => $response->json(),
+                ];
+            }
+
+            error_log("[KIRIMDEV.COM WA ERROR {$response->status()} TO {$formattedPhone}]: " . $response->body());
+            return [
+                'success' => false,
+                'simulated' => false,
+                'status' => $response->status(),
+                'message' => 'Gagal kirim via Kirimdev.com: ' . ($response->json('error.message') ?? $response->body()),
+                'to' => $formattedPhone,
+            ];
+        } catch (\Throwable $e) {
+            error_log("[KIRIMDEV.COM WA EXCEPTION TO {$formattedPhone}]: " . $e->getMessage());
+            return [
+                'success' => false,
+                'simulated' => false,
+                'status' => 500,
+                'message' => 'Koneksi ke Kirimdev.com gagal: ' . $e->getMessage(),
+                'to' => $formattedPhone,
+            ];
+        }
+    }
+
+    /**
+     * Kirim Reminder Perpanjangan Keanggotaan Tahunan IPPTI secara Otomatis via Email & WhatsApp (Kirimdev.com)
+     * Mendukung jadwal H-30 (Tahap 1), H-10 (Tahap 2), dan Expired.
+     */
+    public function sendExpiryReminder(bool $force = false): array
+    {
+        if ($this->role !== 'TRANSLATOR') {
+            return ['sent' => false, 'email_sent' => false, 'whatsapp_sent' => false, 'stage' => null];
+        }
+
+        $expDate = $this->effective_expired_at;
+        $daysLeft = $this->daysUntilExpiry();
+        if (!$expDate || $daysLeft === null) {
+            return ['sent' => false, 'email_sent' => false, 'whatsapp_sent' => false, 'stage' => null];
+        }
+
+        $stage = $this->determineReminderStage();
+        if (!$stage && !$force) {
+            return ['sent' => false, 'email_sent' => false, 'whatsapp_sent' => false, 'stage' => null];
+        }
+
+        $stageKey = $stage ? $stage['stage_key'] : ('MANUAL_' . date('Y-m-d'));
+        $stageLabel = $stage ? $stage['label'] : "Pengingat Perpanjangan ({$daysLeft} Hari Sebelum Expired)";
+        $cacheKey = 'member_expiry_stage_' . $this->id . '_' . $stageKey;
+
         if (!$force) {
+            if ($this->last_reminder_stage === $stageKey) {
+                return ['sent' => false, 'email_sent' => false, 'whatsapp_sent' => false, 'stage' => $stageKey, 'reason' => 'already_sent'];
+            }
             try {
                 if (\Illuminate\Support\Facades\Cache::has($cacheKey)) {
-                    return false;
+                    return ['sent' => false, 'email_sent' => false, 'whatsapp_sent' => false, 'stage' => $stageKey, 'reason' => 'already_cached'];
                 }
             } catch (\Throwable $e) {}
         }
@@ -291,39 +470,137 @@ class User extends Authenticatable
 
         $statusText = $daysLeft < 0
             ? "TELAH BERAKHIR (EXPIRED) pada tanggal {$expDateFormatted}"
-            : "AKAN BERAKHIR dalam {$daysLeft} hari lagi (pada tanggal {$expDateFormatted})";
+            : ($daysLeft === 0
+                ? "BERAKHIR HARI INI ({$expDateFormatted})"
+                : "AKAN BERAKHIR dalam {$daysLeft} hari lagi (pada tanggal {$expDateFormatted})");
 
-        $subject = "[DocVerify IPPTI] Pengingat Perpanjangan Keanggotaan Tahunan IPPTI - {$this->name}";
-        $body = "Yth. {$this->name} (No. Anggota IPPTI: {$this->sk_number}),\n\n"
-            . "Kami informasikan bahwa masa aktif keanggotaan tahunan IPPTI & akun Penerjemah Tersumpah Anda di portal DocVerify IPPTI {$statusText}.\n\n"
-            . "Rincian Perpanjangan Keanggotaan:\n"
-            . "- Nama Penerjemah : {$this->name}\n"
-            . "- Nomor Anggota   : {$this->sk_number}\n"
-            . "- Tanggal Expired : {$expDateFormatted}\n"
-            . "- Biaya Perpanjangan Tahunan : {$renewalFeeFormatted} / Tahun\n\n"
-            . "Silakan klik tautan berikut untuk melakukan pembayaran perpanjangan keanggotaan secara online via Payment Gateway:\n"
-            . "{$payUrl}\n\n"
-            . "Setelah pembayaran perpanjangan berhasil, masa aktif keanggotaan Anda akan otomatis diperpanjang selama 1 (satu) tahun ke depan.\n\n"
-            . "Hormat kami,\n"
-            . "Pengurus Nasional IPPTI\n"
-            . "Ikatan Penerjemah dan Pengalih Bahasa Tersumpah di Indonesia";
+        $emailEnabled = (bool)\App\Models\Setting::get('member_reminder_email_enabled', 1);
+        $waEnabled = (bool)\App\Models\Setting::get('member_reminder_whatsapp_enabled', 1);
 
-        try {
-            \Illuminate\Support\Facades\Mail::raw($body, function ($message) use ($subject) {
-                $message->to($this->email, $this->name)
-                        ->subject($subject);
-            });
-        } catch (\Throwable $e) {
-            // Fallback to log if SMTP not configured
+        $emailSent = false;
+        $waSent = false;
+        $waResult = null;
+
+        // 1. Pengiriman via Email
+        if (($emailEnabled || $force) && !empty($this->email) && !str_ends_with($this->email, '@ippti.or.id')) {
+            $subject = "[DocVerify IPPTI] {$stageLabel} - Perpanjangan Keanggotaan {$this->name}";
+            $emailBody = "Yth. {$this->name} (No. Anggota IPPTI: {$this->sk_number}),\n\n"
+                . "Kami informasikan bahwa masa aktif keanggotaan tahunan IPPTI & akun Penerjemah Tersumpah Anda di portal DocVerify IPPTI {$statusText}.\n\n"
+                . "Rincian Perpanjangan Keanggotaan:\n"
+                . "- Tahap Pengingat : {$stageLabel}\n"
+                . "- Nama Penerjemah : {$this->name}\n"
+                . "- Nomor Anggota   : {$this->sk_number}\n"
+                . "- Tanggal Expired : {$expDateFormatted}\n"
+                . "- Biaya Perpanjangan Tahunan : {$renewalFeeFormatted} / Tahun\n\n"
+                . "Silakan klik tautan berikut untuk melakukan pembayaran perpanjangan keanggotaan secara online via Payment Gateway:\n"
+                . "{$payUrl}\n\n"
+                . "Setelah pembayaran perpanjangan berhasil, masa aktif keanggotaan Anda akan otomatis diperpanjang selama 1 (satu) tahun ke depan.\n\n"
+                . "Hormat kami,\n"
+                . "Pengurus Nasional IPPTI\n"
+                . "Ikatan Penerjemah dan Pengalih Bahasa Tersumpah di Indonesia";
+
+            try {
+                \Illuminate\Support\Facades\Mail::raw($emailBody, function ($message) use ($subject) {
+                    $message->to($this->email, $this->name)
+                            ->subject($subject);
+                });
+            } catch (\Throwable $e) {
+                // Fallback to error_log if SMTP not configured
+            }
+
+            error_log("\n======================================================\n[EMAIL REMINDER ({$stageKey}) SENT TO {$this->email}]:\n{$emailBody}\n======================================================\n");
+            $emailSent = true;
         }
 
-        error_log("\n======================================================\n[EMAIL REMINDER PERPANJANGAN KEANGGOTAAN SENT TO {$this->email}]:\n{$body}\n======================================================\n");
+        // 2. Pengiriman via WhatsApp (Kirimdev.com)
+        if (($waEnabled || $force) && !empty($this->whatsapp)) {
+            $waBody = "*[DocVerify IPPTI - {$stageLabel}]*\n\n"
+                . "Yth. *{$this->name}*\n"
+                . "No. Anggota IPPTI: *{$this->sk_number}*\n\n"
+                . "Kami mengingatkan bahwa masa aktif keanggotaan tahunan IPPTI Anda *{$statusText}*.\n\n"
+                . "*Rincian Perpanjangan:*\n"
+                . "• Tanggal Expired: *{$expDateFormatted}*\n"
+                . "• Biaya Perpanjangan: *{$renewalFeeFormatted} / Tahun*\n\n"
+                . "Silakan klik link berikut untuk langsung melakukan pembayaran perpanjangan via Payment Gateway:\n"
+                . "{$payUrl}\n\n"
+                . "_Masa aktif keanggotaan Anda akan otomatis bertambah +1 Tahun begitu pembayaran terkonfirmasi._\n\n"
+                . "Terima kasih,\n"
+                . "*Pengurus Nasional IPPTI*";
 
-        try {
-            \Illuminate\Support\Facades\Cache::put($cacheKey, true, now()->addHours(24));
-        } catch (\Throwable $e) {}
+            $waResult = static::sendWhatsappViaKirimdev($this->whatsapp, $waBody);
+            $waSent = !empty($waResult['success']);
+        }
 
-        return true;
+        if ($emailSent || $waSent) {
+            try {
+                \Illuminate\Support\Facades\DB::table('users')
+                    ->where('id', $this->id)
+                    ->update([
+                        'last_reminder_stage' => $stageKey,
+                        'last_reminder_sent_at' => now(),
+                    ]);
+                $this->last_reminder_stage = $stageKey;
+                $this->last_reminder_sent_at = now();
+            } catch (\Throwable $e) {}
+
+            try {
+                \Illuminate\Support\Facades\Cache::put($cacheKey, true, now()->addDays(40));
+            } catch (\Throwable $e) {}
+        }
+
+        return [
+            'sent' => ($emailSent || $waSent),
+            'email_sent' => $emailSent,
+            'whatsapp_sent' => $waSent,
+            'whatsapp_result' => $waResult,
+            'stage' => $stageKey,
+            'stage_label' => $stageLabel,
+        ];
+    }
+
+    /**
+     * Alias kompatibilitas untuk memicu pengiriman Email + WhatsApp Reminder
+     */
+    public function sendExpiryReminderEmail(bool $force = false): bool
+    {
+        $result = $this->sendExpiryReminder($force);
+        return !empty($result['sent']);
+    }
+
+    /**
+     * Jalankan pengecekan & pengiriman otomatis H-30 dan H-10 untuk seluruh member aktif
+     */
+    public static function dispatchAutomaticExpiryReminders(bool $force = false): int
+    {
+        if (!$force) {
+            try {
+                if (\Illuminate\Support\Facades\Cache::has('ippti_auto_reminder_sweep_lock')) {
+                    return 0;
+                }
+                \Illuminate\Support\Facades\Cache::put('ippti_auto_reminder_sweep_lock', true, now()->addMinutes(15));
+            } catch (\Throwable $e) {}
+        }
+
+        $d1 = max(1, (int)\App\Models\Setting::get('member_reminder_days_1', 30));
+        $d2 = max(1, (int)\App\Models\Setting::get('member_reminder_days_2', 10));
+        $maxDays = max($d1, $d2);
+
+        $translators = static::where('role', 'TRANSLATOR')->get();
+        $sentCount = 0;
+
+        foreach ($translators as $translator) {
+            if (!$translator->isVerifiedTranslator()) {
+                continue;
+            }
+            if ($translator->isExpiringSoon($maxDays) || $translator->isMembershipExpired()) {
+                $res = $translator->sendExpiryReminder($force);
+                if (!empty($res['sent'])) {
+                    $sentCount++;
+                }
+            }
+        }
+
+        return $sentCount;
     }
 
     /**
