@@ -936,11 +936,12 @@ class AdminController extends Controller
                 ];
 
                 foreach ($keys as $key => $value) {
-                    if (empty($value) && $key === 'XENITH_WEBHOOK_SECRET') continue;
+                    $safeVal = preg_replace('/[\r\n"\\\\$]/', '', (string)$value);
+                    if (empty($safeVal) && $key === 'XENITH_WEBHOOK_SECRET') continue;
                     if (preg_match("/^{$key}=.*/m", $envContent)) {
-                        $envContent = preg_replace("/^{$key}=.*/m", "{$key}=\"{$value}\"", $envContent);
+                        $envContent = preg_replace("/^{$key}=.*/m", "{$key}=\"{$safeVal}\"", $envContent);
                     } else {
-                        $envContent .= "\n{$key}=\"{$value}\"";
+                        $envContent .= "\n{$key}=\"{$safeVal}\"";
                     }
                 }
 
@@ -1064,11 +1065,12 @@ class AdminController extends Controller
                     'KIRIMDEV_BASE_URL' => $baseUrl ?: 'https://api.kirimdev.com/v1',
                 ];
                 foreach ($envKeys as $k => $v) {
-                    if ($k === 'KIRIMDEV_API_KEY' && empty($v)) continue;
+                    $safeVal = preg_replace('/[\r\n"\\\\$]/', '', (string)$v);
+                    if ($k === 'KIRIMDEV_API_KEY' && empty($safeVal)) continue;
                     if (preg_match("/^{$k}=.*/m", $envContent)) {
-                        $envContent = preg_replace("/^{$k}=.*/m", "{$k}=\"{$v}\"", $envContent);
+                        $envContent = preg_replace("/^{$k}=.*/m", "{$k}=\"{$safeVal}\"", $envContent);
                     } else {
-                        $envContent .= "\n{$k}=\"{$v}\"";
+                        $envContent .= "\n{$k}=\"{$safeVal}\"";
                     }
                 }
                 file_put_contents($envPath, $envContent);

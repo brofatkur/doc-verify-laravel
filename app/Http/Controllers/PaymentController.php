@@ -251,8 +251,8 @@ class PaymentController extends Controller
         }
 
         // 4. Fetch Xenith Pay configuration
-        $accessKey = Setting::get('xenith_access_key') ?: config('services.xenith.access_key') ?: env('XENITH_ACCESS_KEY', 'ak-6b4c740dae79be46ee0189169e6636fd41917774f4365a4025529300c731bd2b');
-        $secretKey = Setting::get('xenith_secret_key') ?: config('services.xenith.secret_key') ?: env('XENITH_SECRET_KEY', 'sk-2cc25d1dd0b624c03650712be4749eea1686ce4fb30690a6316dee7ef96879896f9a19fc211c9e7fd429771f888a422099f01e9bc34c0fbeac4b07ab9d9f799e');
+        $accessKey = Setting::get('xenith_access_key') ?: config('services.xenith.access_key') ?: env('XENITH_ACCESS_KEY', '');
+        $secretKey = Setting::get('xenith_secret_key') ?: config('services.xenith.secret_key') ?: env('XENITH_SECRET_KEY', '');
         $env = strtolower((string)(Setting::get('xenith_env') ?: config('services.xenith.env') ?: env('XENITH_ENV', 'production')));
 
         // Check if Xenith credentials are configured
@@ -382,29 +382,39 @@ class PaymentController extends Controller
      */
     public function handleXenithCallback(Request $request)
     {
-        // 1. Webhook Signature Verification according to Xenith Pay docs
-        $webhookSecret = Setting::get('xenith_webhook_secret') 
+        // 1. Strict Webhook Signature Verification according to Xenith Pay docs
+        $webhookSecret = trim((string)(Setting::get('xenith_webhook_secret') 
             ?: config('services.xenith.webhook_secret') 
-            ?: env('XENITH_WEBHOOK_SECRET', 'tqYxuHTdCIRApkXloJviGV0l5aBcMSMhf8K05nvgFXfEMs7-Xw0D1lV79V_PJt3Q');
+            ?: env('XENITH_WEBHOOK_SECRET', '')));
 
         $receivedSignature = trim((string)($request->header('X-Xenith-Signature') ?? $request->header('x-xenith-signature') ?? ''));
         $receivedTimestamp = trim((string)($request->header('X-Xenith-Timestamp') ?? $request->header('x-xenith-timestamp') ?? ''));
 
-        if (!empty($webhookSecret) && !empty($receivedSignature) && !empty($receivedTimestamp)) {
+        if (!empty($webhookSecret)) {
+            if (empty($receivedSignature) || empty($receivedTimestamp)) {
+                \Illuminate\Support\Facades\Log::warning('Xenith Webhook Missing Signature Headers', [
+                    'ip' => $request->ip(),
+                    'path' => $request->path(),
+                ]);
+                return response()->json(['status' => false, 'message' => 'Missing Webhook Signature Headers'], 401);
+            }
+
             $method = strtoupper($request->method());
             $path = '/' . ltrim($request->path(), '/');
             $rawBody = $request->getContent();
             
-            // Format: METHOD\nPATH\nBODY\nTIMESTAMP (literal \n as per Xenith docs)
-            $stringToSign = $method . '\n' . $path . '\n' . $rawBody . '\n' . $receivedTimestamp;
-            $computedSignature = base64_encode(hash_hmac('sha256', $stringToSign, $webhookSecret, true));
+            // Check both literal \n and newline format from Xenith docs
+            $stringToSignLiteral = $method . '\n' . $path . '\n' . $rawBody . '\n' . $receivedTimestamp;
+            $stringToSignNewline = $method . "\n" . $path . "\n" . $rawBody . "\n" . $receivedTimestamp;
+            $computedLiteral = base64_encode(hash_hmac('sha256', $stringToSignLiteral, $webhookSecret, true));
+            $computedNewline = base64_encode(hash_hmac('sha256', $stringToSignNewline, $webhookSecret, true));
 
-            if (!hash_equals($computedSignature, $receivedSignature)) {
+            if (!hash_equals($computedLiteral, $receivedSignature) && !hash_equals($computedNewline, $receivedSignature)) {
                 \Illuminate\Support\Facades\Log::warning('Xenith Webhook Signature Mismatch', [
-                    'computed' => $computedSignature,
                     'received' => $receivedSignature,
                     'path' => $path,
                     'timestamp' => $receivedTimestamp,
+                    'ip' => $request->ip(),
                 ]);
                 return response()->json(['status' => false, 'message' => 'Invalid Webhook Signature'], 401);
             }
@@ -550,8 +560,17 @@ class PaymentController extends Controller
             }
         }
 
-        // If simulation mode and pending, confirm simulated payment for testing
-        if ($isSimulated && $transaction && strtolower($transaction->status) === 'pending') {
+        // Only allow simulated confirmation in sandbox when no real gateway keys exist AND the transaction was created as SIMULATED-
+        $accessKey = Setting::get('xenith_access_key') ?: config('services.xenith.access_key') ?: env('XENITH_ACCESS_KEY', '');
+        $xenithEnv = strtolower((string)(Setting::get('xenith_env') ?: config('services.xenith.env') ?: env('XENITH_ENV', 'production')));
+        $canSimulate = $isSimulated
+            && $xenithEnv !== 'production'
+            && empty($accessKey)
+            && $transaction
+            && isset($transaction->session_id)
+            && str_starts_with((string)$transaction->session_id, 'SIMULATED-');
+
+        if ($canSimulate && strtolower($transaction->status) === 'pending') {
             $user = User::find($transaction->user_id);
             if ($user) {
                 if ($user->isReguler()) {

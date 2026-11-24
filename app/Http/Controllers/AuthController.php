@@ -30,14 +30,201 @@ class AuthController extends Controller
             'password.required' => 'Password wajib diisi.',
         ]);
 
-        if (Auth::attempt($credentials)) {
+        $throttleKey = 'login:' . strtolower(trim($credentials['email'])) . '|' . $request->ip();
+        if (\Illuminate\Support\Facades\RateLimiter::tooManyAttempts($throttleKey, 5)) {
+            $seconds = \Illuminate\Support\Facades\RateLimiter::availableIn($throttleKey);
+            return back()->withErrors([
+                'email' => "Terlalu banyak percobaan login gagal. Silakan tunggu {$seconds} detik sebelum mencoba kembali.",
+            ])->onlyInput('email');
+        }
+
+        $user = User::where('email', $credentials['email'])->first();
+
+        if ($user && Hash::check($credentials['password'], $user->password)) {
+            \Illuminate\Support\Facades\RateLimiter::clear($throttleKey);
+
+            // Check if 2FA (OTP Email/WhatsApp or Google Authenticator TOTP) is enabled
+            if ($user->hasTwoFactorEnabled()) {
+                $request->session()->put('2fa_pending_user_id', $user->id);
+                $request->session()->put('2fa_pending_expires', now()->addMinutes(10)->timestamp);
+
+                if (strtolower((string)$user->two_factor_method) === 'otp') {
+                    $user->sendTwoFactorOtp();
+                }
+
+                return redirect('/login/2fa');
+            }
+
+            Auth::login($user);
             $request->session()->regenerate();
             return redirect()->intended('/admin');
         }
 
+        \Illuminate\Support\Facades\RateLimiter::hit($throttleKey, 60);
+
         return back()->withErrors([
             'email' => 'Email atau password salah.',
         ])->onlyInput('email');
+    }
+
+    public function showTwoFactorForm(Request $request)
+    {
+        if (Auth::check()) {
+            return redirect('/admin');
+        }
+
+        $userId = $request->session()->get('2fa_pending_user_id');
+        $expires = (int)$request->session()->get('2fa_pending_expires', 0);
+
+        if (!$userId || $expires < now()->timestamp) {
+            $request->session()->forget(['2fa_pending_user_id', '2fa_pending_expires']);
+            return redirect('/login')->withErrors(['email' => 'Sesi verifikasi 2FA telah berakhir. Silakan login kembali.']);
+        }
+
+        $user = User::find($userId);
+        if (!$user) {
+            return redirect('/login');
+        }
+
+        $method = strtolower((string)($user->two_factor_method ?? 'otp'));
+        $emailParts = explode('@', $user->email);
+        $maskedEmail = substr($emailParts[0], 0, 2) . '***@' . ($emailParts[1] ?? '');
+        $maskedWhatsapp = $user->whatsapp ? (substr($user->whatsapp, 0, 4) . '****' . substr($user->whatsapp, -3)) : null;
+
+        return view('auth.verify-2fa', compact('method', 'maskedEmail', 'maskedWhatsapp'));
+    }
+
+    public function verifyTwoFactor(Request $request)
+    {
+        $request->validate([
+            'code' => 'required|string|min:6|max:10',
+        ], [
+            'code.required' => 'Kode verifikasi 6-digit wajib diisi.',
+        ]);
+
+        $userId = $request->session()->get('2fa_pending_user_id');
+        $expires = (int)$request->session()->get('2fa_pending_expires', 0);
+
+        if (!$userId || $expires < now()->timestamp) {
+            $request->session()->forget(['2fa_pending_user_id', '2fa_pending_expires']);
+            return redirect('/login')->withErrors(['email' => 'Sesi verifikasi 2FA telah berakhir. Silakan login kembali.']);
+        }
+
+        $throttleKey = '2fa_verify:' . $userId . '|' . $request->ip();
+        if (\Illuminate\Support\Facades\RateLimiter::tooManyAttempts($throttleKey, 5)) {
+            $seconds = \Illuminate\Support\Facades\RateLimiter::availableIn($throttleKey);
+            return back()->withErrors(['code' => "Terlalu banyak percobaan kode 2FA salah. Silakan tunggu {$seconds} detik."]);
+        }
+
+        $user = User::find($userId);
+        if (!$user) {
+            return redirect('/login');
+        }
+
+        if ($user->verifyTwoFactorCode($request->code)) {
+            \Illuminate\Support\Facades\RateLimiter::clear($throttleKey);
+            $request->session()->forget(['2fa_pending_user_id', '2fa_pending_expires']);
+
+            Auth::login($user);
+            $request->session()->regenerate();
+
+            \App\Models\AuditLog::log('LOGIN_2FA_VERIFIED', User::class, $user->id, null, [
+                'method' => $user->two_factor_method,
+                'ip' => $request->ip(),
+            ]);
+
+            return redirect()->intended('/admin');
+        }
+
+        \Illuminate\Support\Facades\RateLimiter::hit($throttleKey, 60);
+
+        return back()->withErrors([
+            'code' => 'Kode verifikasi 2FA tidak valid atau sudah kadaluarsa.',
+        ]);
+    }
+
+    public function resendTwoFactorOtp(Request $request)
+    {
+        $userId = $request->session()->get('2fa_pending_user_id');
+        if (!$userId) {
+            return redirect('/login');
+        }
+
+        $throttleKey = '2fa_resend:' . $userId;
+        if (\Illuminate\Support\Facades\RateLimiter::tooManyAttempts($throttleKey, 3)) {
+            $seconds = \Illuminate\Support\Facades\RateLimiter::availableIn($throttleKey);
+            return back()->withErrors(['code' => "Mohon tunggu {$seconds} detik sebelum meminta pengiriman ulang OTP."]);
+        }
+
+        $user = User::find($userId);
+        if (!$user) {
+            return redirect('/login');
+        }
+
+        \Illuminate\Support\Facades\RateLimiter::hit($throttleKey, 60);
+        $user->sendTwoFactorOtp();
+
+        return back()->with('success', 'Kode OTP 6-digit baru telah dikirimkan ke Email & WhatsApp Anda!');
+    }
+
+    public function updateTwoFactorSettings(Request $request)
+    {
+        $user = Auth::user();
+        if (!$user) {
+            return redirect('/login');
+        }
+
+        $request->validate([
+            'two_factor_method' => 'required|in:none,otp,totp',
+            'totp_secret' => 'nullable|string|max:64',
+            'totp_verify_code' => 'nullable|string|max:10',
+        ]);
+
+        $method = strtolower($request->two_factor_method);
+
+        if ($method === 'totp') {
+            $secret = strtoupper(trim((string)($request->totp_secret ?: $user->two_factor_secret)));
+            $code = trim((string)$request->totp_verify_code);
+
+            if (empty($secret)) {
+                return back()->withErrors(['totp_verify_code' => 'Secret key Google Authenticator tidak ditemukan.']);
+            }
+
+            // Require verifying a 6-digit code from Google Authenticator app when activating TOTP
+            if (!empty($code) || $user->two_factor_method !== 'totp') {
+                if (empty($code) || !\App\Support\TotpAuthenticator::verifyCode($secret, $code)) {
+                    return back()->withErrors([
+                        'totp_verify_code' => 'Kode 6-digit Google Authenticator tidak cocok. Pastikan Anda sudah memindai QR Code dan memasukkan kode terbaru dari aplikasi Authenticator.',
+                    ]);
+                }
+            }
+
+            $user->update([
+                'two_factor_method' => 'totp',
+                'two_factor_secret' => $secret,
+            ]);
+
+            \App\Models\AuditLog::log('ENABLE_2FA_TOTP', User::class, $user->id, null, ['method' => 'totp']);
+            return back()->with('success', 'Keamanan 2FA Google Authenticator berhasil diaktifkan pada akun Anda!');
+        }
+
+        if ($method === 'otp') {
+            $user->update([
+                'two_factor_method' => 'otp',
+            ]);
+
+            \App\Models\AuditLog::log('ENABLE_2FA_OTP', User::class, $user->id, null, ['method' => 'otp']);
+            return back()->with('success', 'Keamanan 2FA Kode OTP (via Email & WhatsApp Kirimdev.com) berhasil diaktifkan pada akun Anda!');
+        }
+
+        $user->update([
+            'two_factor_method' => 'none',
+            'two_factor_otp_code' => null,
+            'two_factor_otp_expires_at' => null,
+        ]);
+
+        \App\Models\AuditLog::log('DISABLE_2FA', User::class, $user->id, null, ['method' => 'none']);
+        return back()->with('success', 'Verifikasi 2FA telah dinonaktifkan.');
     }
 
     public function register()
@@ -404,7 +591,14 @@ class AuthController extends Controller
             'email.email' => 'Format email tidak valid.'
         ]);
 
-        $email = $request->email;
+        $email = trim($request->email);
+        $throttleKey = 'forgot_password:' . strtolower($email) . '|' . $request->ip();
+        if (\Illuminate\Support\Facades\RateLimiter::tooManyAttempts($throttleKey, 3)) {
+            $seconds = \Illuminate\Support\Facades\RateLimiter::availableIn($throttleKey);
+            return back()->withErrors(['email' => "Terlalu banyak permintaan reset password. Silakan tunggu {$seconds} detik."]);
+        }
+        \Illuminate\Support\Facades\RateLimiter::hit($throttleKey, 60);
+
         $user = User::where('email', $email)->first();
 
         if (!$user) {
@@ -416,25 +610,45 @@ class AuthController extends Controller
         }
 
         $token = Str::random(60);
-        
-        // Save to DB
+        $hashedToken = hash('sha256', $token);
+
+        // Save SHA-256 hashed token to DB
         \Illuminate\Support\Facades\DB::table('password_reset_tokens')->updateOrInsert(
             ['email' => $email],
             [
-                'token' => $token,
+                'token' => $hashedToken,
                 'created_at' => now()
             ]
         );
 
         $resetLink = url('/reset-password?token=' . $token);
 
-        // Log link to terminal for easy local testing
-        error_log("\n======================================================");
-        error_log("[RESET PASSWORD LINK (LARAVEL) FOR {$email}]:");
-        error_log($resetLink);
-        error_log("======================================================\n");
+        // Send via Email
+        try {
+            $subject = "[DocVerify IPPTI] Permintaan Reset Password Akun - {$user->name}";
+            $body = "Yth. {$user->name},\n\n"
+                . "Kami menerima permintaan reset password untuk akun DocVerify IPPTI Anda ({$email}).\n\n"
+                . "Silakan klik tautan berikut untuk membuat password baru (berlaku selama 60 menit):\n"
+                . "{$resetLink}\n\n"
+                . "Jika Anda tidak merasa meminta reset password, abaikan pesan ini.\n\n"
+                . "Hormat kami,\n"
+                . "Pengurus Nasional IPPTI";
+            \Illuminate\Support\Facades\Mail::raw($body, function ($message) use ($email, $user, $subject) {
+                $message->to($email, $user->name)->subject($subject);
+            });
+        } catch (\Throwable $e) {}
 
-        return back()->with('status', 'Link reset password telah dikirim ke email terdaftar (dan dicatat di log terminal).');
+        // Also send via WhatsApp (Kirimdev.com) if user has whatsapp number
+        if (!empty($user->whatsapp)) {
+            $waBody = "*[DocVerify IPPTI - Reset Password]*\n\n"
+                . "Yth. *{$user->name}*,\n"
+                . "Klik tautan berikut untuk mereset password akun DocVerify IPPTI Anda (berlaku 60 menit):\n"
+                . "{$resetLink}\n\n"
+                . "_Abaikan pesan ini jika Anda tidak meminta reset password._";
+            User::sendWhatsappViaKirimdev($user->whatsapp, $waBody);
+        }
+
+        return back()->with('status', 'Link reset password telah dikirim ke Email & WhatsApp terdaftar Anda (berlaku 60 menit).');
     }
 
     public function resetPasswordView(Request $request)
@@ -446,7 +660,7 @@ class AuthController extends Controller
     public function resetPassword(Request $request)
     {
         $request->validate([
-            'token' => 'required',
+            'token' => 'required|string',
             'password' => 'required|string|min:6|confirmed'
         ], [
             'token.required' => 'Token reset wajib diisi.',
@@ -455,12 +669,22 @@ class AuthController extends Controller
             'password.confirmed' => 'Konfirmasi password baru tidak cocok.'
         ]);
 
+        $hashedToken = hash('sha256', (string)$request->token);
         $tokenRecord = \Illuminate\Support\Facades\DB::table('password_reset_tokens')
-            ->where('token', $request->token)
+            ->where('token', $hashedToken)
+            ->orWhere('token', $request->token)
             ->first();
 
         if (!$tokenRecord) {
             return back()->withErrors(['email' => 'Token reset password tidak valid atau telah kadaluarsa.']);
+        }
+
+        // Enforce 60-minute token expiry
+        if (!empty($tokenRecord->created_at) && \Carbon\Carbon::parse($tokenRecord->created_at)->addMinutes(60)->isPast()) {
+            \Illuminate\Support\Facades\DB::table('password_reset_tokens')
+                ->where('email', $tokenRecord->email)
+                ->delete();
+            return back()->withErrors(['email' => 'Token reset password telah kadaluarsa (lebih dari 60 menit). Silakan ajukan ulang.']);
         }
 
         // Update password
@@ -594,19 +818,29 @@ class AuthController extends Controller
      */
     protected function storeUploadedFile(\Illuminate\Http\UploadedFile $file, string $basePrefix): ?string
     {
-        $ext = strtolower($file->extension() ?: $file->getClientOriginalExtension() ?: 'jpg');
-        $ext = preg_replace('/[^a-z0-9]/', '', $ext) ?: 'jpg';
-        $fileName = $basePrefix . '.' . $ext;
+        // Strict MIME-based extension whitelist (prevents PHP/script execution attacks)
+        $allowedExtensions = ['jpg', 'jpeg', 'png', 'webp', 'pdf'];
+        $detectedExt = strtolower((string)$file->extension());
+        if (!in_array($detectedExt, $allowedExtensions, true)) {
+            $clientExt = strtolower((string)$file->getClientOriginalExtension());
+            $detectedExt = in_array($clientExt, $allowedExtensions, true) ? $clientExt : 'jpg';
+        }
+        $fileName = preg_replace('/[^A-Za-z0-9._-]/', '', $basePrefix) . '.' . $detectedExt;
 
         $publicDir = public_path('uploads');
         $storageDir = storage_path('app/public/uploads');
 
-        // 1. Try storage/app/public/uploads first or as guaranteed writable directory
         if (!is_dir($storageDir)) {
             @mkdir($storageDir, 0775, true);
         }
         if (!is_dir($publicDir)) {
             @mkdir($publicDir, 0775, true);
+        }
+
+        // Write protective .htaccess in public/uploads to block PHP execution
+        $htaccessPath = $publicDir . '/.htaccess';
+        if (is_dir($publicDir) && is_writable($publicDir) && !file_exists($htaccessPath)) {
+            @file_put_contents($htaccessPath, "<FilesMatch \"\\.(php|php8|phtml|phar|sh|pl|py|cgi)$\">\n    Require all denied\n</FilesMatch>\nOptions -Indexes\n");
         }
 
         // If public/uploads is writable, move there and also copy to storage/app/public/uploads

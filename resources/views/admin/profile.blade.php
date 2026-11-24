@@ -333,6 +333,134 @@
         </form>
     </div>
 
+    <!-- ========================================== -->
+    <!-- KEAMANAN LOGIN & AUTENTIKASI 2 FAKTOR (2FA) -->
+    <!-- ========================================== -->
+    @php
+        $current2faMethod = strtolower((string)($user->two_factor_method ?? 'none'));
+        $totpSecret = $user->two_factor_secret ?: \App\Support\TotpAuthenticator::generateSecret(16);
+        $otpAuthUri = \App\Support\TotpAuthenticator::getOtpAuthUri($user->email, $totpSecret, 'DocVerify IPPTI');
+    @endphp
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="p-6 space-y-5">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100">
+                <div class="flex items-center gap-3">
+                    <div class="p-2.5 bg-emerald-50 text-emerald-600 rounded-xl border border-emerald-200">
+                        <i data-lucide="shield-check" class="w-6 h-6"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-lg font-bold text-slate-900">Keamanan Login &amp; Autentikasi Dua Faktor (2FA)</h2>
+                        <p class="text-xs text-slate-500">Lindungi akun Anda dengan verifikasi 2 langkah melalui <strong>Kode OTP Email &amp; WhatsApp (Kirimdev.com)</strong> atau <strong>Google Authenticator</strong>.</p>
+                    </div>
+                </div>
+                @if($user->hasTwoFactorEnabled())
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-300 self-start sm:self-auto">
+                        <i data-lucide="lock" class="w-3.5 h-3.5 text-emerald-600"></i>
+                        <span>2FA AKTIF ({{ strtoupper($current2faMethod) }})</span>
+                    </span>
+                @else
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-600 border border-slate-200 self-start sm:self-auto">
+                        <span>2FA NONAKTIF</span>
+                    </span>
+                @endif
+            </div>
+
+            <form action="/admin/profile/2fa" method="POST" class="space-y-5">
+                @csrf
+                <input type="hidden" name="totp_secret" value="{{ $totpSecret }}" />
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3.5">
+                    <!-- Option 1: None -->
+                    <label class="flex items-start gap-3 p-4 rounded-2xl border {{ $current2faMethod === 'none' ? 'border-slate-900 bg-slate-50' : 'border-slate-200 hover:bg-slate-50/60' }} cursor-pointer transition">
+                        <input
+                            type="radio"
+                            name="two_factor_method"
+                            value="none"
+                            onchange="toggle2faMethodPanel(this.value)"
+                            {{ $current2faMethod === 'none' ? 'checked' : '' }}
+                            class="mt-1 w-4 h-4 accent-slate-900"
+                        />
+                        <div class="text-xs space-y-1">
+                            <p class="font-extrabold text-slate-900">Nonaktif (Standar)</p>
+                            <p class="text-[11px] text-slate-500 leading-relaxed">Login hanya menggunakan Email &amp; Password tanpa kode tambahan.</p>
+                        </div>
+                    </label>
+
+                    <!-- Option 2: OTP Email & WhatsApp -->
+                    <label class="flex items-start gap-3 p-4 rounded-2xl border {{ $current2faMethod === 'otp' ? 'border-emerald-600 bg-emerald-50/40' : 'border-slate-200 hover:bg-slate-50/60' }} cursor-pointer transition">
+                        <input
+                            type="radio"
+                            name="two_factor_method"
+                            value="otp"
+                            onchange="toggle2faMethodPanel(this.value)"
+                            {{ $current2faMethod === 'otp' ? 'checked' : '' }}
+                            class="mt-1 w-4 h-4 accent-emerald-600"
+                        />
+                        <div class="text-xs space-y-1">
+                            <p class="font-extrabold text-emerald-950">OTP Email &amp; WhatsApp</p>
+                            <p class="text-[11px] text-slate-600 leading-relaxed">Kirim 6-digit kode OTP otomatis ke Email &amp; WhatsApp (Kirimdev.com) saat login.</p>
+                        </div>
+                    </label>
+
+                    <!-- Option 3: Google Authenticator (TOTP) -->
+                    <label class="flex items-start gap-3 p-4 rounded-2xl border {{ $current2faMethod === 'totp' ? 'border-blue-600 bg-blue-50/40' : 'border-slate-200 hover:bg-slate-50/60' }} cursor-pointer transition">
+                        <input
+                            type="radio"
+                            name="two_factor_method"
+                            value="totp"
+                            onchange="toggle2faMethodPanel(this.value)"
+                            {{ $current2faMethod === 'totp' ? 'checked' : '' }}
+                            class="mt-1 w-4 h-4 accent-blue-600"
+                        />
+                        <div class="text-xs space-y-1">
+                            <p class="font-extrabold text-blue-950">Google Authenticator</p>
+                            <p class="text-[11px] text-slate-600 leading-relaxed">Gunakan aplikasi Google Authenticator / Authy di HP Anda (kode berganti tiap 30 detik).</p>
+                        </div>
+                    </label>
+                </div>
+
+                <!-- Google Authenticator Setup Box -->
+                <div id="panel-totp-setup" class="{{ $current2faMethod === 'totp' ? '' : 'hidden' }} p-5 rounded-2xl bg-blue-50/50 border border-blue-200 space-y-4">
+                    <div class="flex flex-col sm:flex-row items-center gap-5">
+                        <div class="p-3 bg-white rounded-2xl border border-blue-200 shadow-xs flex-shrink-0">
+                            {!! \SimpleSoftwareIO\QrCode\Facades\QrCode::size(140)->margin(1)->generate($otpAuthUri) !!}
+                        </div>
+                        <div class="space-y-2 text-xs flex-1">
+                            <p class="font-extrabold text-blue-950 text-sm">Cara Aktivasi Google Authenticator:</p>
+                            <ol class="list-decimal list-inside space-y-1 text-slate-700 leading-relaxed">
+                                <li>Buka aplikasi <strong>Google Authenticator</strong> atau <strong>Authy</strong> di ponsel Anda.</li>
+                                <li>Pilih menu <strong>+ (Scan a QR code)</strong> lalu arahkan kamera ke QR Code di samping.</li>
+                                <li>Atau masukkan Secret Key manual: <code class="px-2 py-0.5 bg-white border border-blue-200 rounded font-mono font-black text-blue-900 select-all">{{ $totpSecret }}</code></li>
+                                <li>Masukkan 6-digit angka yang muncul di aplikasi ke kolom verifikasi di bawah ini:</li>
+                            </ol>
+                            <div class="pt-1 max-w-xs">
+                                <input
+                                    type="text"
+                                    name="totp_verify_code"
+                                    inputmode="numeric"
+                                    pattern="[0-9]*"
+                                    maxlength="6"
+                                    placeholder="Masukkan 6-digit kode Authenticator"
+                                    class="w-full px-3.5 py-2 border border-blue-300 rounded-xl bg-white text-slate-900 font-mono font-black text-sm tracking-widest outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600"
+                                />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex justify-end pt-2 border-t border-slate-100">
+                    <button
+                        type="submit"
+                        class="flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white px-5 py-2.5 rounded-xl font-bold text-xs transition shadow-sm cursor-pointer"
+                    >
+                        <i data-lucide="shield-check" class="w-4 h-4"></i>
+                        <span>Simpan Pengaturan 2FA</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     @if(Auth::user()->role === 'SUPERADMIN' || Auth::user()->role === 'ADMIN')
         <!-- Payment Gateway Configuration Card -->
         <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
@@ -447,6 +575,16 @@
             if (icon) {
                 icon.classList.add('hidden');
             }
+        }
+    }
+
+    function toggle2faMethodPanel(val) {
+        const panel = document.getElementById('panel-totp-setup');
+        if (!panel) return;
+        if (val === 'totp') {
+            panel.classList.remove('hidden');
+        } else {
+            panel.classList.add('hidden');
         }
     }
 

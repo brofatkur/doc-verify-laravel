@@ -430,28 +430,38 @@ class FinanceController extends Controller
      */
     public function handlePayoutCallback(Request $request)
     {
-        // 1. Webhook Signature Verification
-        $webhookSecret = Setting::get('xenith_webhook_secret') 
+        // 1. Strict Webhook Signature Verification
+        $webhookSecret = trim((string)(Setting::get('xenith_webhook_secret') 
             ?: config('services.xenith.webhook_secret') 
-            ?: env('XENITH_WEBHOOK_SECRET', 'tqYxuHTdCIRApkXloJviGV0l5aBcMSMhf8K05nvgFXfEMs7-Xw0D1lV79V_PJt3Q');
+            ?: env('XENITH_WEBHOOK_SECRET', '')));
 
         $receivedSignature = trim((string)($request->header('X-Xenith-Signature') ?? $request->header('x-xenith-signature') ?? ''));
         $receivedTimestamp = trim((string)($request->header('X-Xenith-Timestamp') ?? $request->header('x-xenith-timestamp') ?? ''));
 
-        if (!empty($webhookSecret) && !empty($receivedSignature) && !empty($receivedTimestamp)) {
+        if (!empty($webhookSecret)) {
+            if (empty($receivedSignature) || empty($receivedTimestamp)) {
+                \Illuminate\Support\Facades\Log::warning('Xenith Payout Webhook Missing Signature Headers', [
+                    'ip' => $request->ip(),
+                    'path' => $request->path(),
+                ]);
+                return response()->json(['status' => false, 'message' => 'Missing Webhook Signature Headers'], 401);
+            }
+
             $method = strtoupper($request->method());
             $path = '/' . ltrim($request->path(), '/');
             $rawBody = $request->getContent();
             
-            $stringToSign = $method . '\n' . $path . '\n' . $rawBody . '\n' . $receivedTimestamp;
-            $computedSignature = base64_encode(hash_hmac('sha256', $stringToSign, $webhookSecret, true));
+            $stringToSignLiteral = $method . '\n' . $path . '\n' . $rawBody . '\n' . $receivedTimestamp;
+            $stringToSignNewline = $method . "\n" . $path . "\n" . $rawBody . "\n" . $receivedTimestamp;
+            $computedLiteral = base64_encode(hash_hmac('sha256', $stringToSignLiteral, $webhookSecret, true));
+            $computedNewline = base64_encode(hash_hmac('sha256', $stringToSignNewline, $webhookSecret, true));
 
-            if (!hash_equals($computedSignature, $receivedSignature)) {
+            if (!hash_equals($computedLiteral, $receivedSignature) && !hash_equals($computedNewline, $receivedSignature)) {
                 \Illuminate\Support\Facades\Log::warning('Xenith Payout Webhook Signature Mismatch', [
-                    'computed' => $computedSignature,
                     'received' => $receivedSignature,
                     'path' => $path,
                     'timestamp' => $receivedTimestamp,
+                    'ip' => $request->ip(),
                 ]);
                 return response()->json(['status' => false, 'message' => 'Invalid Webhook Signature'], 401);
             }

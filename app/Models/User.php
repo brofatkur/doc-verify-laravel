@@ -22,6 +22,10 @@ class User extends Authenticatable
         'nik',
         'email',
         'password',
+        'two_factor_method',
+        'two_factor_secret',
+        'two_factor_otp_code',
+        'two_factor_otp_expires_at',
         'sk_number',
         'role',
         'is_verified',
@@ -57,6 +61,8 @@ class User extends Authenticatable
     protected $hidden = [
         'password',
         'remember_token',
+        'two_factor_secret',
+        'two_factor_otp_code',
     ];
 
     /**
@@ -73,6 +79,7 @@ class User extends Authenticatable
             'activated_at' => 'datetime',
             'expired_at' => 'datetime',
             'last_reminder_sent_at' => 'datetime',
+            'two_factor_otp_expires_at' => 'datetime',
             'is_verified' => 'boolean',
             'password' => 'hashed',
         ];
@@ -161,6 +168,117 @@ class User extends Authenticatable
     public function isReguler(): bool
     {
         return strtolower($this->user_level ?? 'reguler') === 'reguler';
+    }
+
+    /**
+     * Cek apakah user mengaktifkan Two-Factor Authentication (2FA)
+     */
+    public function hasTwoFactorEnabled(): bool
+    {
+        $method = strtolower((string)($this->two_factor_method ?? 'none'));
+        if ($method === 'totp' && !empty($this->two_factor_secret)) {
+            return true;
+        }
+        if ($method === 'otp') {
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Generate & kirim kode OTP 6-digit untuk 2FA Login melalui Email & WhatsApp (Kirimdev.com)
+     */
+    public function sendTwoFactorOtp(): array
+    {
+        $otp = str_pad((string)random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+        $expiresAt = now()->addMinutes(5);
+
+        try {
+            \Illuminate\Support\Facades\DB::table('users')
+                ->where('id', $this->id)
+                ->update([
+                    'two_factor_otp_code' => \Illuminate\Support\Facades\Hash::make($otp),
+                    'two_factor_otp_expires_at' => $expiresAt,
+                ]);
+            $this->two_factor_otp_code = \Illuminate\Support\Facades\Hash::make($otp);
+            $this->two_factor_otp_expires_at = $expiresAt;
+        } catch (\Throwable $e) {}
+
+        $emailSent = false;
+        $waSent = false;
+
+        if (!empty($this->email) && !str_ends_with($this->email, '@ippti.or.id')) {
+            $subject = "[DocVerify IPPTI] Kode OTP Verifikasi Login 2FA: {$otp}";
+            $body = "Yth. {$this->name},\n\n"
+                . "Kode OTP Verifikasi Login 2FA Anda di portal DocVerify IPPTI adalah:\n\n"
+                . "    {$otp}\n\n"
+                . "Kode ini berlaku selama 5 menit (hingga {$expiresAt->format('H:i')} WIB). Jangan berikan kode ini kepada siapa pun.\n\n"
+                . "Hormat kami,\n"
+                . "Pengurus Nasional IPPTI\n"
+                . "Ikatan Penerjemah dan Pengalih Bahasa Tersumpah di Indonesia";
+
+            try {
+                \Illuminate\Support\Facades\Mail::raw($body, function ($message) use ($subject) {
+                    $message->to($this->email, $this->name)->subject($subject);
+                });
+                $emailSent = true;
+            } catch (\Throwable $e) {}
+        }
+
+        if (!empty($this->whatsapp)) {
+            $waMessage = "*[DocVerify IPPTI - Kode OTP Login 2FA]*\n\n"
+                . "Halo *{$this->name}*,\n"
+                . "Kode OTP verifikasi masuk (Login 2FA) Anda adalah:\n\n"
+                . "*{$otp}*\n\n"
+                . "_Berlaku selama 5 menit. Jangan bagikan kode ini kepada siapa pun._";
+
+            $waRes = static::sendWhatsappViaKirimdev($this->whatsapp, $waMessage);
+            $waSent = !empty($waRes['success']);
+        }
+
+        return [
+            'email_sent' => $emailSent,
+            'whatsapp_sent' => $waSent,
+            'expires_at' => $expiresAt,
+        ];
+    }
+
+    /**
+     * Verifikasi kode 2FA (mendukung Google Authenticator TOTP maupun OTP Email/WhatsApp)
+     */
+    public function verifyTwoFactorCode(string $code): bool
+    {
+        $cleanCode = preg_replace('/[^0-9]/', '', trim($code));
+        if (strlen($cleanCode) !== 6) {
+            return false;
+        }
+
+        $method = strtolower((string)($this->two_factor_method ?? 'none'));
+
+        // 1. Jika metode TOTP (Google Authenticator), cek dengan TotpAuthenticator
+        if ($method === 'totp' && !empty($this->two_factor_secret)) {
+            if (\App\Support\TotpAuthenticator::verifyCode($this->two_factor_secret, $cleanCode)) {
+                return true;
+            }
+        }
+
+        // 2. Cek kode OTP Email / WhatsApp jika masih berlaku
+        if (!empty($this->two_factor_otp_code) && !empty($this->two_factor_otp_expires_at)) {
+            $exp = \Carbon\Carbon::parse($this->two_factor_otp_expires_at);
+            if ($exp->isFuture() && \Illuminate\Support\Facades\Hash::check($cleanCode, $this->two_factor_otp_code)) {
+                try {
+                    \Illuminate\Support\Facades\DB::table('users')
+                        ->where('id', $this->id)
+                        ->update([
+                            'two_factor_otp_code' => null,
+                            'two_factor_otp_expires_at' => null,
+                        ]);
+                } catch (\Throwable $e) {}
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**

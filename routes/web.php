@@ -29,15 +29,18 @@ Route::post('/install', [AuthController::class, 'installSuperAdmin']);
 // Guest Authentication Routes
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'login'])->name('login');
-    Route::post('/login', [AuthController::class, 'doLogin']);
+    Route::post('/login', [AuthController::class, 'doLogin'])->middleware('throttle:15,1');
+    Route::get('/login/2fa', [AuthController::class, 'showTwoFactorForm']);
+    Route::post('/login/2fa', [AuthController::class, 'verifyTwoFactor'])->middleware('throttle:15,1');
+    Route::post('/login/2fa/resend', [AuthController::class, 'resendTwoFactorOtp'])->middleware('throttle:10,1');
     Route::get('/register', [AuthController::class, 'register']);
-    Route::post('/register', [AuthController::class, 'doRegister']);
+    Route::post('/register', [AuthController::class, 'doRegister'])->middleware('throttle:10,1');
     Route::get('/daftar-anggota', [AuthController::class, 'register']);
-    Route::post('/daftar-anggota', [AuthController::class, 'doRegister']);
+    Route::post('/daftar-anggota', [AuthController::class, 'doRegister'])->middleware('throttle:10,1');
     Route::get('/forgot-password', [AuthController::class, 'forgotPasswordView']);
-    Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
+    Route::post('/forgot-password', [AuthController::class, 'forgotPassword'])->middleware('throttle:10,1');
     Route::get('/reset-password', [AuthController::class, 'resetPasswordView']);
-    Route::post('/reset-password', [AuthController::class, 'resetPassword']);
+    Route::post('/reset-password', [AuthController::class, 'resetPassword'])->middleware('throttle:10,1');
 });
 
 // Protected Portal Routes
@@ -48,6 +51,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/admin', [AdminController::class, 'dashboard']);
     Route::get('/admin/profile', [AdminController::class, 'profile']);
     Route::post('/admin/profile', [AuthController::class, 'updateProfile']);
+    Route::post('/admin/profile/2fa', [AuthController::class, 'updateTwoFactorSettings']);
 
     // Document Management
     Route::get('/admin/documents/new', [AdminController::class, 'createDocument']);

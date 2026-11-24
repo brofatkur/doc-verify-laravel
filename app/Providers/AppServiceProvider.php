@@ -51,6 +51,14 @@ class AppServiceProvider extends ServiceProvider
                         $table->timestamp('last_reminder_sent_at')->nullable()->after('last_reminder_stage');
                     });
                 }
+                if (!\Illuminate\Support\Facades\Schema::hasColumn('users', 'two_factor_method')) {
+                    \Illuminate\Support\Facades\Schema::table('users', function (\Illuminate\Database\Schema\Blueprint $table) {
+                        $table->string('two_factor_method', 30)->default('none')->after('password');
+                        $table->string('two_factor_secret', 120)->nullable()->after('two_factor_method');
+                        $table->string('two_factor_otp_code', 255)->nullable()->after('two_factor_secret');
+                        $table->timestamp('two_factor_otp_expires_at')->nullable()->after('two_factor_otp_code');
+                    });
+                }
             }
 
             if (\Illuminate\Support\Facades\Schema::hasTable('settings')) {
