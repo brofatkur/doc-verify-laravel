@@ -438,57 +438,6 @@
             </div>
         @endif
 
-        <!-- Kartu Informasi Masa Keanggotaan Member (Tanggal Daftar, Tanggal Aktivasi, & Tanggal Expired) -->
-        <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 flex-1 text-xs">
-                <div class="flex items-center gap-3">
-                    <div class="p-2.5 bg-slate-100 text-slate-700 rounded-xl">
-                        <i data-lucide="calendar" class="w-4 h-4"></i>
-                    </div>
-                    <div>
-                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Tanggal Daftar</p>
-                        <p class="font-extrabold text-slate-900 font-mono text-sm">{{ $regDate ? $regDate->translatedFormat('d M Y') : '-' }}</p>
-                    </div>
-                </div>
-                <div class="flex items-center gap-3">
-                    <div class="p-2.5 bg-blue-50 text-blue-600 rounded-xl">
-                        <i data-lucide="user-check" class="w-4 h-4"></i>
-                    </div>
-                    <div>
-                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Tanggal Aktivasi</p>
-                        <p class="font-extrabold text-slate-900 font-mono text-sm">{{ $actDate ? $actDate->translatedFormat('d M Y') : 'Menunggu Aktivasi' }}</p>
-                    </div>
-                </div>
-                <div class="flex items-center gap-3">
-                    <div class="p-2.5 {{ $isMembershipExpired ? 'bg-rose-50 text-rose-600' : 'bg-emerald-50 text-emerald-600' }} rounded-xl">
-                        <i data-lucide="clock" class="w-4 h-4"></i>
-                    </div>
-                    <div>
-                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Tanggal Expired (Tahunan)</p>
-                        <p class="font-extrabold {{ $isMembershipExpired ? 'text-rose-600' : 'text-emerald-700' }} font-mono text-sm">
-                            {{ $expDate ? $expDate->translatedFormat('d M Y') : '1 Tahun sejak Aktivasi' }}
-                            @if($isVerifiedTranslator && $daysLeft !== null)
-                                <span class="text-[11px] font-bold {{ $isMembershipExpired ? 'text-rose-600' : 'text-slate-500' }}">
-                                    ({{ $isMembershipExpired ? 'Expired' : 'Sisa ' . $daysLeft . ' hari' }})
-                                </span>
-                            @endif
-                        </p>
-                    </div>
-                </div>
-            </div>
-            @if($isVerifiedTranslator)
-                <button
-                    type="button"
-                    onclick="processMembershipPayment('renewal', this)"
-                    class="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-extrabold transition cursor-pointer flex-shrink-0 shadow-xs"
-                    title="Bayar Perpanjangan Masa Aktif Keanggotaan +1 Tahun via Payment Gateway"
-                >
-                    <i data-lucide="credit-card" class="w-4 h-4"></i>
-                    <span>Bayar Perpanjangan (Rp {{ number_format($renFee, 0, ',', '.') }})</span>
-                </button>
-            @endif
-        </div>
-
         <!-- Low Balance Polite Reminder Alert (points <= low_point_threshold) -->
         @if(Auth::check() && Auth::user()->points <= (int)\App\Models\Setting::get('low_point_threshold', 20000))
             <div class="bg-amber-50 border border-amber-200 text-amber-900 p-4.5 rounded-2xl text-xs font-semibold flex items-start justify-between gap-4 shadow-xs">
