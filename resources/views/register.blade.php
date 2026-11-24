@@ -421,6 +421,10 @@
                 </div>
             </form>
         </div>
+
+        <footer class="mt-8 text-center text-xs text-slate-500">
+            &copy; {{ date('Y') }} IPPTI (Ikatan Penerjemah dan Pengalih Bahasa Tersumpah di Indonesia). Seluruh Hak Cipta Dilindungi.
+        </footer>
     </div>
 
     <script>

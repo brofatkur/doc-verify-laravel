@@ -198,7 +198,7 @@
                         <span class="px-3 py-1 rounded-full text-xs font-black bg-emerald-600 text-white uppercase tracking-wider">
                             IPPTI (50%)
                         </span>
-                        <span class="text-xs font-bold text-emerald-950">Ikatan Penerjemah Indonesia</span>
+                        <span class="text-xs font-bold text-emerald-950">Ikatan Penerjemah dan Pengalih Bahasa Tersumpah di Indonesia</span>
                     </div>
                     <i data-lucide="landmark" class="w-5 h-5 text-emerald-600"></i>
                 </div>

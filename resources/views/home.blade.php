@@ -192,7 +192,7 @@
 
     <!-- Footer -->
     <footer id="footer-text" class="py-6 px-6 border-t border-slate-200 text-center text-xs text-slate-500 z-10 bg-white/70">
-        &copy; {{ date('Y') }} DocVerify IPPTI. Keamanan Terjemahan Tersumpah Resmi.
+        &copy; {{ date('Y') }} IPPTI (Ikatan Penerjemah dan Pengalih Bahasa Tersumpah di Indonesia). Keamanan Terjemahan Tersumpah Resmi.
     </footer>
 
     <!-- Disambiguation Modal Popup (REV-08) -->
@@ -263,7 +263,7 @@
                 upload_qr_desc: "Mendukung jepretan kamera langsung & unggahan gambar",
                 desc_qr: "Gunakan kamera perangkat Anda untuk memindai kode QR verifikasi pada dokumen fisik, atau unggah foto/tangkapan layar kode QR.",
                 nav_verify_trans: "Verifikasi Penerjemah",
-                footer: "DocVerify IPPTI. Keamanan Terjemahan Tersumpah Resmi.",
+                footer: "IPPTI (Ikatan Penerjemah dan Pengalih Bahasa Tersumpah di Indonesia). Keamanan Terjemahan Tersumpah Resmi.",
                 scan_loading: "Membaca Berkas...",
                 scan_err_canvas: "Gagal memproses kanvas gambar.",
                 scan_err_qr: "Tidak dapat menemukan kode QR yang terbaca. Coba pindai kembali dengan gambar yang lebih jelas.",

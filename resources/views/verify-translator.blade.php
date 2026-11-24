@@ -135,7 +135,7 @@
 
     <!-- Footer -->
     <footer id="footer-text" class="max-w-4xl w-full mx-auto text-center text-[10px] text-slate-650 pt-8 border-t border-slate-900 mt-12">
-        &copy; {{ date('Y') }} Ikatan Penerjemah Pemerintah Indonesia (IPPTI) & Kementerian Hukum Republik Indonesia.
+        &copy; {{ date('Y') }} Ikatan Penerjemah dan Pengalih Bahasa Tersumpah di Indonesia (IPPTI) & Kementerian Hukum Republik Indonesia.
     </footer>
 
     <script>
@@ -163,7 +163,7 @@
                 footer_kemenkumham: `Kementerian Hukum Republik Indonesia &copy; Copyright ${currentYear}`,
                 official_photo: "Foto Resmi",
                 back_home: "Kembali ke Beranda",
-                footer_copy: `Ikatan Penerjemah Pemerintah Indonesia (IPPTI) & Kementerian Hukum Republik Indonesia.`
+                footer_copy: `Ikatan Penerjemah dan Pengalih Bahasa Tersumpah di Indonesia (IPPTI) & Kementerian Hukum Republik Indonesia.`
             },
             en: {
                 card_title: "IPPTI Official Registry Card",
@@ -177,7 +177,7 @@
                 footer_kemenkumham: `Ministry of Law of the Republic of Indonesia &copy; Copyright ${currentYear}`,
                 official_photo: "Official Photo",
                 back_home: "Back to Home",
-                footer_copy: `Association of Indonesian Government Translators (IPPTI) & Ministry of Law RI.`
+                footer_copy: `Association of Sworn Translators and Interpreters in Indonesia (IPPTI) & Ministry of Law RI.`
             },
             zh: {
                 card_title: "IPPTI 官方注册卡",
@@ -191,7 +191,7 @@
                 footer_kemenkumham: `印度尼西亚共和国法律部 &copy; Copyright ${currentYear}`,
                 official_photo: "官方照片",
                 back_home: "返回首页",
-                footer_copy: `印尼政府翻译员协会 (IPPTI) 和印度尼西亚共和国法律部。`
+                footer_copy: `印度尼西亚宣誓翻译员与口译员协会 (IPPTI) 和印度尼西亚共和国法律部。`
             },
             ar: {
                 card_title: "بطاقة التسجيل الرسمية لـ IPPTI",
@@ -205,7 +205,7 @@
                 footer_kemenkumham: `وزارة القانون في جمهورية إندونيسيا &copy; Copyright ${currentYear}`,
                 official_photo: "الصورة الرسمية",
                 back_home: "العودة إلى الصفحة الرئيسية",
-                footer_copy: `جمعية المترجمين الحكوميين الإندونيسيين (IPPTI) ووزارة القانون في جمهورية إندونيسيا.`
+                footer_copy: `جمعية المترجمين المحلفين والمترجمين الفوريين في إندونيسيا (IPPTI) ووزارة القانون في جمهورية إندونيسيا.`
             }
         };
 

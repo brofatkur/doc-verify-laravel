@@ -109,7 +109,7 @@
 
     <!-- Footer -->
     <footer class="py-8 border-t border-slate-200 text-center text-xs text-slate-400 bg-white">
-        &copy; {{ date('Y') }} IPPTI (Ikatan Penerjemah Tersumpah Indonesia). All rights reserved.
+        &copy; {{ date('Y') }} IPPTI (Ikatan Penerjemah dan Pengalih Bahasa Tersumpah di Indonesia). All rights reserved.
     </footer>
 
     <script>

@@ -421,7 +421,7 @@
 
     <!-- Bottom Copyright Credit -->
     <div class="text-center text-[10px] text-slate-400 uppercase tracking-widest space-y-1 py-4 no-print">
-        <p>&copy; {{ date('Y') }} DocVerify IPPTI. Seluruh Hak Cipta Dilindungi.</p>
+        <p>&copy; {{ date('Y') }} IPPTI (Ikatan Penerjemah dan Pengalih Bahasa Tersumpah di Indonesia). Seluruh Hak Cipta Dilindungi.</p>
         <p id="label-bottom-credit" class="font-semibold text-slate-400"></p>
     </div>
 

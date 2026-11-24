@@ -145,7 +145,7 @@
 
     <!-- Footer -->
     <footer id="footer-text" class="py-6 px-6 border-t border-slate-900 text-center text-xs text-slate-500 z-10 bg-slate-950/40">
-        &copy; {{ date('Y') }} DocVerify IPPTI. Keamanan Terjemahan Tersumpah Resmi.
+        &copy; {{ date('Y') }} IPPTI (Ikatan Penerjemah dan Pengalih Bahasa Tersumpah di Indonesia). Keamanan Terjemahan Tersumpah Resmi.
     </footer>
 
     <script>
@@ -162,7 +162,7 @@
                 desc_trans: "Cari penerjemah tersumpah terdaftar berdasarkan Nama, Nomor SK Menteri Hukum RI, Nomor Anggota, atau Arah Bahasa.",
                 not_found_trans: "Penerjemah tidak ditemukan.",
                 nav_verify_doc: "Verifikasi Dokumen",
-                footer: "DocVerify IPPTI. Keamanan Terjemahan Tersumpah Resmi.",
+                footer: "IPPTI (Ikatan Penerjemah dan Pengalih Bahasa Tersumpah di Indonesia). Keamanan Terjemahan Tersumpah Resmi.",
                 results_header: "Hasil Pencarian:",
                 search_loading: "Mencari...",
                 member_prefix: "No. Anggota: "
