@@ -26,18 +26,10 @@
         </div>
 
         <h2 class="mt-3 text-2xl font-extrabold text-white">
-            Masukkan Kode Keamanan 6-Digit
+            Verifikasi Google Authenticator
         </h2>
         <p class="mt-2 text-xs sm:text-sm text-slate-400 leading-relaxed">
-            @if(($method ?? 'otp') === 'totp')
-                Buka aplikasi <strong class="text-white">Google Authenticator</strong> / Authy di ponsel Anda dan masukkan 6-digit kode verifikasi untuk akun <strong class="text-emerald-400">{{ $maskedEmail ?? '' }}</strong>.
-            @else
-                Kami telah mengirimkan 6-digit Kode OTP ke Email (<strong class="text-emerald-400">{{ $maskedEmail ?? '' }}</strong>)
-                @if(!empty($maskedWhatsapp))
-                    &amp; WhatsApp (<strong class="text-emerald-400">{{ $maskedWhatsapp }}</strong>)
-                @endif
-                yang terdaftar pada akun Anda.
-            @endif
+            Buka aplikasi <strong class="text-white">Google Authenticator</strong> / Authy di ponsel Anda dan masukkan 6-digit kode verifikasi untuk akun <strong class="text-emerald-400">{{ $maskedEmail ?? '' }}</strong>.
         </p>
     </div>
 
@@ -59,7 +51,7 @@
                 @csrf
                 <div>
                     <label for="code" class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 text-center">
-                        Kode OTP / Google Authenticator (6 Digit)
+                        Kode Google Authenticator (6 Digit)
                     </label>
                     <input
                         id="code"
@@ -85,15 +77,7 @@
                 </button>
             </form>
 
-            <div class="pt-4 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
-                <form action="/login/2fa/resend" method="POST">
-                    @csrf
-                    <button type="submit" class="text-emerald-400 hover:text-emerald-300 font-bold hover:underline flex items-center gap-1.5 cursor-pointer">
-                        <i data-lucide="send" class="w-3.5 h-3.5"></i>
-                        <span>Kirim Kode OTP via Email &amp; WhatsApp</span>
-                    </button>
-                </form>
-
+            <div class="pt-4 border-t border-slate-800 flex items-center justify-center text-xs">
                 <a href="/login" class="text-slate-400 hover:text-slate-200 font-semibold hover:underline">
                     Kembali ke Login
                 </a>

@@ -43,14 +43,10 @@ class AuthController extends Controller
         if ($user && Hash::check($credentials['password'], $user->password)) {
             \Illuminate\Support\Facades\RateLimiter::clear($throttleKey);
 
-            // Check if 2FA (OTP Email/WhatsApp or Google Authenticator TOTP) is enabled
+            // Check if 2FA (Google Authenticator TOTP) is enabled
             if ($user->hasTwoFactorEnabled()) {
                 $request->session()->put('2fa_pending_user_id', $user->id);
                 $request->session()->put('2fa_pending_expires', now()->addMinutes(10)->timestamp);
-
-                if (strtolower((string)$user->two_factor_method) === 'otp') {
-                    $user->sendTwoFactorOtp();
-                }
 
                 return redirect('/login/2fa');
             }
@@ -175,7 +171,7 @@ class AuthController extends Controller
         }
 
         $request->validate([
-            'two_factor_method' => 'required|in:none,otp,totp',
+            'two_factor_method' => 'required|in:none,totp',
             'totp_secret' => 'nullable|string|max:64',
             'totp_verify_code' => 'nullable|string|max:10',
         ]);

@@ -171,18 +171,12 @@ class User extends Authenticatable
     }
 
     /**
-     * Cek apakah user mengaktifkan Two-Factor Authentication (2FA)
+     * Cek apakah user mengaktifkan Two-Factor Authentication (2FA Google Authenticator)
      */
     public function hasTwoFactorEnabled(): bool
     {
         $method = strtolower((string)($this->two_factor_method ?? 'none'));
-        if ($method === 'totp' && !empty($this->two_factor_secret)) {
-            return true;
-        }
-        if ($method === 'otp') {
-            return true;
-        }
-        return false;
+        return $method === 'totp' && !empty($this->two_factor_secret);
     }
 
     /**
