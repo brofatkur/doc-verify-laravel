@@ -19,6 +19,7 @@ Route::middleware('throttle:60,1')->group(function () {
     Route::get('/search-translators', [AuthController::class, 'searchTranslators']);
     Route::get('/verify-translator/{translatorId}', [AuthController::class, 'showPublicTranslator']);
     Route::get('/api/check-member/{memberNo}', [AuthController::class, 'checkMember']);
+    Route::get('/uploads/{filename}', [AuthController::class, 'serveUpload'])->where('filename', '[A-Za-z0-9._-]+');
 });
 
 // Install Super Admin Route

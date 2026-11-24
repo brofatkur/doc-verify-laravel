@@ -132,18 +132,12 @@ class AuthController extends Controller
 
         $profilePicturePath = null;
         if ($request->hasFile('profile_picture')) {
-            $file = $request->file('profile_picture');
-            $fileName = 'profile-reg-' . time() . '-' . uniqid() . '.' . $file->getClientOriginalExtension();
-            $file->move(public_path('uploads'), $fileName);
-            $profilePicturePath = '/uploads/' . $fileName;
+            $profilePicturePath = $this->storeUploadedFile($request->file('profile_picture'), 'profile-reg-' . time() . '-' . uniqid());
         }
 
         $skDocumentPath = null;
         if ($request->hasFile('sk_document')) {
-            $file = $request->file('sk_document');
-            $fileName = 'sk-doc-' . time() . '-' . uniqid() . '.' . $file->getClientOriginalExtension();
-            $file->move(public_path('uploads'), $fileName);
-            $skDocumentPath = '/uploads/' . $fileName;
+            $skDocumentPath = $this->storeUploadedFile($request->file('sk_document'), 'sk-doc-' . time() . '-' . uniqid());
         }
 
         if ($existingBySk) {
@@ -372,19 +366,17 @@ class AuthController extends Controller
         }
 
         if ($request->hasFile('profile_picture')) {
-            $file = $request->file('profile_picture');
-            $fileName = 'profile-' . $user->id . '-' . time() . '.' . $file->getClientOriginalExtension();
-            
-            $file->move(public_path('uploads'), $fileName);
-            $updateData['profile_picture'] = '/uploads/' . $fileName;
+            $savedPhoto = $this->storeUploadedFile($request->file('profile_picture'), 'profile-' . $user->id . '-' . time());
+            if ($savedPhoto) {
+                $updateData['profile_picture'] = $savedPhoto;
+            }
         }
 
         if ($request->hasFile('sk_document')) {
-            $file = $request->file('sk_document');
-            $fileName = 'sk-doc-' . $user->id . '-' . time() . '.' . $file->getClientOriginalExtension();
-            
-            $file->move(public_path('uploads'), $fileName);
-            $updateData['sk_document_path'] = '/uploads/' . $fileName;
+            $savedSk = $this->storeUploadedFile($request->file('sk_document'), 'sk-doc-' . $user->id . '-' . time());
+            if ($savedSk) {
+                $updateData['sk_document_path'] = $savedSk;
+            }
         }
 
         $before = $user->toArray();
@@ -594,5 +586,74 @@ class AuthController extends Controller
         \Illuminate\Support\Facades\Auth::login($user);
 
         return redirect('/admin')->with('success', 'Instalasi berhasil! Anda telah masuk sebagai Super Admin.');
+    }
+
+    /**
+     * Store uploaded file safely with multi-directory fallback (public/uploads -> storage/app/public/uploads)
+     * so permission mismatches on public/uploads never cause FileException.
+     */
+    protected function storeUploadedFile(\Illuminate\Http\UploadedFile $file, string $basePrefix): ?string
+    {
+        $ext = strtolower($file->extension() ?: $file->getClientOriginalExtension() ?: 'jpg');
+        $ext = preg_replace('/[^a-z0-9]/', '', $ext) ?: 'jpg';
+        $fileName = $basePrefix . '.' . $ext;
+
+        $publicDir = public_path('uploads');
+        $storageDir = storage_path('app/public/uploads');
+
+        // 1. Try storage/app/public/uploads first or as guaranteed writable directory
+        if (!is_dir($storageDir)) {
+            @mkdir($storageDir, 0775, true);
+        }
+        if (!is_dir($publicDir)) {
+            @mkdir($publicDir, 0775, true);
+        }
+
+        // If public/uploads is writable, move there and also copy to storage/app/public/uploads
+        if (is_dir($publicDir) && is_writable($publicDir)) {
+            try {
+                $file->move($publicDir, $fileName);
+                if (is_dir($storageDir) && is_writable($storageDir)) {
+                    @copy($publicDir . '/' . $fileName, $storageDir . '/' . $fileName);
+                }
+                return '/uploads/' . $fileName;
+            } catch (\Throwable $e) {
+                // Fallback below
+            }
+        }
+
+        // 2. Fallback: write to storage/app/public/uploads (always writable by php-fpm)
+        try {
+            $file->move($storageDir, $fileName);
+            if (is_dir($publicDir) && is_writable($publicDir)) {
+                @copy($storageDir . '/' . $fileName, $publicDir . '/' . $fileName);
+            }
+            return '/uploads/' . $fileName;
+        } catch (\Throwable $e) {
+            error_log('[UPLOAD FALLBACK ERROR]: ' . $e->getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Serve uploaded file from public/uploads or storage/app/public/uploads fallback
+     */
+    public function serveUpload(string $filename)
+    {
+        $safeName = basename($filename);
+        $candidates = [
+            public_path('uploads/' . $safeName),
+            storage_path('app/public/uploads/' . $safeName),
+        ];
+
+        foreach ($candidates as $path) {
+            if (is_file($path) && is_readable($path)) {
+                return response()->file($path, [
+                    'Cache-Control' => 'public, max-age=86400',
+                ]);
+            }
+        }
+
+        abort(404);
     }
 }
